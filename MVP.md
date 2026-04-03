@@ -1,353 +1,357 @@
-# GigLedger — MVP Specification
+# GigLedger — MVP Specification (Research-Backed)
 
-## 1. Project Overview
-
-**Product Name:** GigLedger
-**Domain:** GigLedger.com
-**Tagline:** "Know Your Real Earnings"
-**Type:** PWA (Progressive Web App) — works as website + iOS/Android app
-
-**Core Value:** Gig workers upload a screenshot of their earnings → instantly see their true net income after costs → share a result card.
-
-**Target Users:**
-- Uber / Lyft drivers in the US
-- DoorDash, Instacart, Amazon Flex delivery drivers
-- Any gig economy worker wanting to know their real earnings
-- 59M+ Americans in gig work, 16M+ using it as primary income
-
-**Core Insight:**
-Platforms show gross income. GigLedger tells the truth: what you actually take home.
+> **Last Updated:** April 2026
+> **Research Sources:** Uber Help Center, DoorDash Help, Instacart, IRS Notice 2026-10, Everee 2025 Gig Driver Report, The Gig Calculator, Reddit r/uberdrivers, The Rideshare Guy
 
 ---
 
-## 2. Core Features (MVP)
+## 1. Research Findings (真实调研结果)
 
-### 2.1 Screenshot Upload + OCR (Primary) ⭐
+### 1.1 IRS 标准里程费率（2026）
 
-**Flow:**
-1. User opens site → taps "Upload Screenshot"
-2. Selects photo from gallery OR takes new photo
-3. Image sent to Google Cloud Vision API
-4. System extracts: total earnings, tips, bonuses, trip count
-5. User enters: hours worked, miles driven
-6. Results displayed instantly
+**正确数字：$0.725/英里（72.5 cents）**
+⚠️ 注意：MVP 文档里写的是 $0.70，这是 2025 年数字，2026 年已更新。
 
-**Supported in MVP:**
-- Uber Driver — Earnings screen (weekly/daily)
-- Manual entry — fallback for all other platforms
+IRS 官方公告：Notice 2026-10
 
-**Tech:** Google Cloud Vision API
-- Free tier: 1,000 calls/month
-- Accuracy on Uber screenshots: ~85% (acceptable for MVP)
-- Fallback: manual correction if OCR misreads
-
-### 2.2 True Income Calculator ⭐
-
-**Inputs:**
-- Gross earnings (from OCR or manual)
-- Tips / bonuses (from OCR)
-- Hours worked (user input)
-- Miles driven (user input)
-- Cost per mile (default: IRS 2026 rate = $0.70/mile)
-
-**Outputs:**
-- **Net Income** = Gross − (Miles × Cost/mile)
-- **True Hourly Rate** = Net Income / Hours
-- **Cost Breakdown**: fuel estimate, vehicle depreciation
-- **Comparison**: "Better than X% of gig workers this week"
-
-**IRS 2026 standard mileage rate: $0.70/mile**
-(include note: users should consult tax professional)
-
-### 2.3 Shareable Result Card ⭐
-
-**Generated via HTML5 Canvas — no server needed.**
-
-```
-┌─────────────────────────────────┐
-│  📊 GigLedger                   │
-│  ─────────────────────────────── │
-│  Your True Earnings             │
-│                                 │
-│  Gross:          $342.50       │
-│  Vehicle Cost:   -$89.60        │
-│  ─────────────────────────────── │
-│  NET INCOME:     $252.90       │
-│                                 │
-│  💰 $28.10 / hour               │
-│  ⏱️ 9 hours  |  🚗 128 miles     │
-│                                 │
-│  📊 Better than 73% of drivers  │
-│                                 │
-│  gigledger.com                  │
-└─────────────────────────────────┘
-```
-
-**Share targets:**
-- Twitter/X (deep link with auto text)
-- WhatsApp (deep link)
-- Instagram Story (share card image)
-- Copy link
-- Copy image
-
-### 2.4 Weekly Tracker (localStorage) ⭐
-
-- Add multiple entries (one per day/platform)
-- Weekly gross, net, and hourly rate
-- Best day indicator
-- Data stored in browser (no account needed)
-
-### 2.5 Multi-Platform Manual Entry
-
-- Select platform: Uber / DoorDash / Instacart / Lyft / Amazon Flex / Other
-- Enter earnings manually
-- Same calculator + result card
-- Platform icon shown on result card
+| 类型 | 2026 费率 |
+|------|----------|
+| Business mileage（自雇/工作） | **$0.725/mile** |
+| Medical mileage | $0.205/mile |
+| Charity mileage | $0.14/mile |
 
 ---
 
-## 3. PWA Specification
+### 1.2 各平台 App 显示内容（真实数据）
 
-### What makes it a PWA:
+#### Uber Driver App — Weekly Earnings Screen
 
-| Feature | Implementation |
-|---------|---------------|
-| Installable | Service Worker + Web App Manifest |
-| Offline | Service Worker caches shell |
-| App-like UI | Full-screen, no browser chrome when installed |
-| iOS Add to Home | manifest.json + iOS meta tags |
-| Fast load | Static generation, Cloudflare CDN |
-| Responsive | Mobile-first, works 375px+ |
+Uber 是唯一**自动追踪里程和时间**的平台。
 
-### manifest.json:
-```json
-{
-  "name": "GigLedger - Know Your Real Earnings",
-  "short_name": "GigLedger",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#0F172A",
-  "theme_color": "#2563EB",
-  "icons": [...]
-}
+**App 上 Weekly Earnings 页面显示的数据：**
+
+```
+This Week
+─────────────────────────────────
+💰  Total Earnings:     $423.50
+🕐  Online Time:        28.5 hours
+📍  Total Miles:        487 miles
+─────────────────────────────────
+$14.86/hr  (average)
+─────────────────────────────────
+
+Breakdown:
+• Trips:              $338.40
+• Promotions:          $42.00
+• Tips:                $43.10
+─────────────────────────────────
+
+You can tap each day to see trip details
 ```
 
-### Service Worker:
-- Cache app shell (HTML, CSS, JS)
-- Work offline with cached version
-- Update in background when new version available
+**关键发现：**
+- ✅ Earnings：Uber 已经扣完平台佣金，驾驶员看到的数字是"Uber 给的"
+- ✅ Miles：Uber GPS 自动追踪（但这个数字是"接单里程"，不包括空载里程）
+- ✅ Hours：Uber 记录的是"在线时间"，不是纯驾驶时间
+- ⚠️ **Tips 延迟**：Uber Tips 通常在行程完成后 1-2 小时到账
+- ⚠️ **Uber 没有显示任何成本** — 油费、折旧、保养、保险完全不显示
+
+**平台 Take Rate（Uber 佣金）：**
+- Uber 官方披露：约 20-25% 的乘客票价归平台
+- 实际案例：一个驾驶员 Uber Take Rate 约 20%，另一个因商业保险成本 Take Rate 达到负 75%
 
 ---
 
-## 4. Tech Stack
+#### DoorDash Dasher App — Earnings
 
-| Component | Choice |
-|-----------|--------|
-| Framework | Next.js 16 (App Router) |
-| Styling | TailwindCSS v4 |
-| Deployment | Cloudflare Workers + Workers Assets |
-| OCR | Google Cloud Vision API |
-| Image Generation | HTML5 Canvas API (client-side) |
-| Storage | localStorage (no backend for MVP) |
-| Domain | gigledger.com |
-| PWA | next-pwa or manual Service Worker |
+**App 上显示的数据：**
+
+```
+This Week
+─────────────────────────────────
+💰  Earnings:          $312.80
+📦  Deliveries:        47
+🏆  Promotions:        $28.00
+💸  Tips:              $84.70
+─────────────────────────────────
+
+Current Tier: Silver
+Acceptance Rate: 68%
+On-Time: 96%
+Rating: 4.92
+
+Per-delivery breakdown (example):
+• 3.2 mi  •  $8.45  •  22 min
+```
+
+**关键发现：**
+- ✅ Earnings：Base Pay + Promotions + Tips（全部给驾驶员）
+- ✅ Deliveries count：自动统计
+- ❌ **Miles：不自动追踪** — 每个 delivery offer 页面显示距离
+- ❌ **Hours：不自动追踪** — 需要驾驶员自己记录
+- ⚠️ Tips 有时延迟到账
+- ⚠️ DoorDash 有"Peak Pay"（高峰加价），需要单独看
+
+**核心成本问题：** DoorDash 驾驶员需要手动记录总里程数，因为 DoorDash 不追踪。
 
 ---
 
-## 5. Site Structure
+#### Instacart Shopper App — Earnings
+
+**Batch Summary 页面显示：**
 
 ```
-/                     → Landing page (hero + CTA)
-/analyze              → Upload + OCR + Calculator
-/result               → Result card + share
-/tracker              → Weekly tracker (localStorage)
-/about                → About + disclaimer
-/privacy              → Privacy policy
+Batch #28471 — Completed
+─────────────────────────────────
+Base Pay:              $9.20
+Batch Rate:            $5.50
+Item Bonus:            $2.30
+Customer Tip:          $18.00
+─────────────────────────────────
+This Batch Total:      $35.00
+
+⏱ Est. time: 38 min
+📍 Distance: 4.2 mi
+🛒 Items: 24 (2 heavy)
+```
+
+**关键发现：**
+- ✅ Per-batch earnings 明细
+- ✅ Tips 通常显示但**延迟到账**（有时 48-72 小时）
+- ❌ Miles：不自动追踪
+- ❌ Hours：不自动追踪
+- ⚠️ Heavy items（重物）额外付费
+- ⚠️ Instacart 2025 年降薪：Base pay 最低降到 $4/batch
+
+---
+
+### 1.3 真实用户痛点（Reddit / 调查报告）
+
+**数据来源：Everee 2025 Gig Driver Report（419名美国驾驶员调查）**
+
+| 痛点 | 数据 |
+|------|------|
+| 使用 2+ 平台 | 68% 的驾驶员同时用多个平台 |
+| 快速拿到收入 | 57% 认为"快速拿到收入"是选择平台的首要标准 |
+| 收入不透明 | 大多数驾驶员不知道自己的真实时薪 |
+| 税务困惑 | 大量驾驶员对自雇税（15.3%）毫无概念 |
+
+**Reddit r/uberdrivers 高频问题：**
+- "我每周实际赚了多少钱？"
+- "Uber 显示的 $X/hr 是真实的吗？"
+- "我需要报多少税？"
+- "同时跑 DoorDash + Uber，哪个更划算？"
+- "我的净收入到底有多少？"
+
+**最常见的错误：**
+1. **低估里程**：忘记空载里程（从家到接单地点的路上）
+2. **用 gross 数字**：以为 App 上显示的就是"赚到的"
+3. **忽略小开支**：停车费、手机费、零食，看似小钱积累很多
+
+---
+
+### 1.4 各平台数据获取能力总结
+
+| 平台 | Earnings | Miles | Hours | Tips 延迟 | 截图可行性 |
+|------|---------|-------|-------|----------|-----------|
+| **Uber** | ✅ 准确 | ✅ GPS追踪 | ✅ 在线时间 | ⚠️ 1-2小时 | ✅ 最佳 |
+| **DoorDash** | ✅ 准确 | ❌ 不追踪 | ❌ 不追踪 | ⚠️ 不定 | ✅ 可行 |
+| **Instacart** | ✅ per-batch | ❌ 不追踪 | ❌ 不追踪 | ⚠️ 48h+ | ✅ 可行 |
+| **Lyft** | ✅ 准确 | ✅ GPS追踪 | ✅ 在线时间 | ⚠️ 1-2小时 | ✅ 可行 |
+| **Amazon Flex** | ✅ 准确 | ❌ 不追踪 | ❌ 不追踪 | ⚠️ 偶有延迟 | ✅ 可行 |
+
+---
+
+## 2. 修正后的产品设计
+
+### 2.1 核心洞察（基于真实调研）
+
+**原来的假设：** Uber App 显示的是 gross income
+
+**真实情况：** Uber App 显示的是已经扣完平台佣金的数字，比真正的 gross 更接近 net。
+
+**真正的痛点不是"扣佣金"，而是：**
+1. **成本完全不透明** — 油费、折旧、保养、保险完全不显示
+2. **里程计算不完整** — Uber 的里程是接单里程，不含空载里程
+3. **自雇税不知道** — 15.3% 自雇税，Q1/Q4 报税时大量欠税
+4. **多平台对比困难** — 68% 的人同时跑 2+ 平台，没有统一视图
+
+---
+
+### 2.2 平台差异化输入设计
+
+各平台的输入表单应该不同：
+
+#### Uber 专用表单
+```
+截图上传 → OCR 自动提取：
+- Earnings: $423.50 ✅
+- Total Miles: 487 mi ✅
+- Online Hours: 28.5h ✅
+
+用户补填（Uber不追踪的成本）：
+- 空载里程（Uber之外开的里程）：___ miles
+- 其他开支（停车、高速费等）：$___ 
+```
+
+#### DoorDash 专用表单
+```
+截图上传（Weekly Earnings）：
+- Earnings: $312.80 ✅
+- Deliveries: 47 ✅
+- Tips: $84.70 ✅
+
+用户补填（DoorDash不追踪）：
+- 本周总里程：___ miles（用户自己记录）
+- 本周总小时数：___ hours（用户自己记录）
+- 停车费/高速费：$___
+```
+
+#### Instacart 专用表单
+```
+截图上传（Weekly Summary）：
+- 总 Earnings：$___ （需要手动加总）
+- 完成 Batches 数：___
+
+用户补填：
+- 总里程：___ miles
+- 总小时数：___ hours
+- Tips 是否全部到账（可能还在pending）
 ```
 
 ---
 
-## 6. Design System
+### 2.3 成本计算器（修正版）
 
-### Colors
-| Role | Hex | Usage |
-|------|-----|-------|
-| Primary | #2563EB | Buttons, links |
-| Emerald | #10B981 | Positive numbers, income |
-| Yellow | #FBBF24 | CTA buttons, highlights |
-| Red | #EF4444 | Costs, warnings |
-| Dark Navy | #0F172A | Dark mode, footer |
-| Slate White | #F8FAFC | Light backgrounds |
-| Slate Dark | #1E293B | Primary text |
+**IRS 2026 标准：$0.725/mile**
 
-### Typography
-- **Headings / Numbers:** Inter (700, 800)
-- **Money amounts:** JetBrains Mono (monospace — feels precise)
-- **Body:** Inter (400, 500)
+#### 完整成本项（高级模式）
 
-### Design Principles
-- Trust-inspiring (financial tool = must feel reliable)
-- Card-based with soft shadows
-- Green = positive, Red = cost, Yellow = CTA
-- Numbers always in monospace
-- Mobile-first (80% traffic from phone)
+| 成本项 | 说明 | 估算方式 |
+|--------|------|---------|
+| 里程成本 | 油费+折旧+保养+保险 | Miles × $0.725 |
+| 空载里程 | Uber 追踪的是接单里程，空载里程不包含 | 用户手动输入 |
+| 停车/高速 | 实际开支 | 用户手动输入 |
+| 手机费 | 工作用手机的比例 | 用户手动输入 |
+| 自雇税 | 净收入 × 15.3% | 可选显示 |
 
-### Component Library
+#### 三种模式
+
+**简单模式（默认）：**
+> Net = Earnings − (Miles × $0.725)
+
+**中等模式：**
+> Net = Earnings − (Miles × $0.725) − 其他开支
+
+**完整模式（含税）：**
+> Net = Earnings − (Miles × $0.725) − 其他开支 − (Net × 15.3%)
+
+---
+
+### 2.4 多平台汇总视图（核心差异化功能）
+
+这是竞品没有做、用户最需要的功能：
+
 ```
-Primary button:  bg-blue-600 hover:bg-blue-700 text-white rounded-xl
-CTA button:     bg-yellow-400 hover:bg-yellow-500 text-slate-900 rounded-xl
-Result card:    bg-white shadow-xl rounded-2xl p-6
-Money (income): text-emerald-600 font-mono text-2xl
-Money (cost):   text-red-500 font-mono
-Platform icon:  w-10 h-10 rounded-lg bg-slate-100
+本周汇总（4/1 - 4/3）
+
+平台      | Earnings | 里程  | 小时 | Net Income
+----------|----------|-------|------|-----------
+Uber      | $423.50  | 487mi | 28.5h| $270.19
+DoorDash  | $312.80  | 203mi | 18h  | $165.62
+Instacart | $156.00  | 45mi  | 6h   | $123.38
+----------|----------|-------|------|-----------
+合计      | $892.30  | 735mi | 52.5h| $559.19
+
+本周真实时薪：$10.65/hr
+
+💡 税务提示：你本周的税务抵扣 = $735 × $0.725 = $533.00
 ```
 
 ---
 
-## 7. SEO Strategy
+## 3. 修正后的功能优先级
 
-### Target Keywords
-| Keyword | Monthly Searches | Priority |
-|---------|----------------|---------|
-| uber earnings calculator | 8,100 | 🔥🔥🔥 |
-| gig worker earnings | 1,900 | 🔥🔥 |
-| doordash earnings calculator | 6,600 | 🔥🔥🔥 |
+### Phase 1（核心 MVP）
+
+| 功能 | 说明 | 优先级 |
+|------|------|--------|
+| Uber 截图OCR | Weekly Earnings 页面截图，自动提取3个数字 | 🔴 必须 |
+| Uber 成本计算 | 用 $0.725/mile 算净收入 + 时薪 | 🔴 必须 |
+| IRS 税务抵扣提示 | 显示本周可抵扣金额 | 🔴 必须 |
+| 分享卡片 | Canvas 生成结果图 | 🟡 重要 |
+| 情感化结果展示 | 不只是数字，要有冲击感 | 🟡 重要 |
+
+### Phase 2（扩展）
+
+| 功能 | 说明 | 优先级 |
+|------|------|--------|
+| DoorDash 手动输入 | 不同表单 | 🟡 重要 |
+| 多平台汇总 | 核心差异化 | 🔴 重要 |
+| 税务估算（15.3%）| 季度预估税 | 🟡 中 |
+| 周跟踪器 | localStorage | 🟡 中 |
+
+### Phase 3（增长）
+
+| 功能 | 说明 |
+|------|------|
+| DoorDash/Instacart OCR | 更复杂（per-batch） |
+| PDF 年度报告 | 报税用 |
+| 多平台对比推荐 | "今天DoorDash更划算" |
+
+---
+
+## 4. 修正后的关键数据
+
+| 项目 | 错误值（原有MVP）| 正确值 |
+|------|-----------------|--------|
+| IRS 里程费率 | $0.70/mile | **$0.725/mile（2026）** |
+| Uber earnings 性质 | gross（扣佣金前） | **已是扣佣金后净值** |
+| DoorDash 里程 | 自动追踪 | **❌ 需手动输入** |
+| DoorDash 时间 | 自动追踪 | **❌ 需手动输入** |
+| Instacart Tips | 即时到账 | **⚠️ 延迟48h+** |
+| 多平台用户比例 | 未调查 | **68%** |
+| Uber 平均周收入 | 假设 | **$513/周（2025数据）** |
+
+---
+
+## 5. 真实截图模板（OCR 参考）
+
+### Uber Weekly Earnings 截图
+需识别字段（优先级排序）：
+1. **$XXX.XX** — Total Earnings（本行最大字体）
+2. **XXX miles** — Total Miles
+3. **XX.X hours** — Online Time
+4. Breakdown: Trips / Promotions / Tips（3行）
+
+### DoorDash Weekly Summary 截图
+需识别字段：
+1. **$XXX.XX** — Total Earnings
+2. **XX deliveries** — 完成单数
+3. Breakdown: Base / Promotions / Tips
+
+### Instacart Weekly Summary
+需识别字段：
+1. Per-batch earnings（需要加总）
+2. 完成 batches 数
+3. Tips（注意是否pending状态）
+
+---
+
+## 6. SEO 关键词（重新确认）
+
+基于调研，用户真实搜索词：
+
+| 搜索词 | 月搜索量 | 价值 |
+|--------|---------|------|
+| uber driver earnings calculator | 8,100 | 🔥🔥🔥 |
 | how much do uber drivers make | 18,100 | 🔥🔥🔥🔥🔥 |
-| uber driver pay calculator | 3,600 | 🔥🔥🔥 |
-| gig economy earnings | 1,200 | 🔥🔥 |
+| doordash earnings calculator | 6,600 | 🔥🔥🔥 |
+| gig worker tax calculator | 1,200 | 🔥🔥 |
+| mileage deduction calculator | 2,400 | 🔥🔥 |
+| uber vs doordash earnings | 1,900 | 🔥🔥 |
+| instacart earnings | 3,600 | 🔥🔥🔥 |
 
-### Page Meta Strategy
-```
-/ (Landing):
-  Title: GigLedger - Uber Earnings Calculator & Gig Worker Pay Tracker
-  H1: Uber Earnings Calculator — Know Your Real Pay
-  Description: Upload your Uber earnings screenshot. See your true net income after gas and vehicle costs. Free, 5 seconds.
-
-/analyze:
-  Title: Calculate Your True Gig Earnings — GigLedger
-  H1: Calculate Your True Earnings
-  Description: Enter your gross earnings, miles driven, and hours worked. Get your real net income instantly.
-
-SEO geo: None needed. .com = US default.
-```
-
----
-
-## 8. Monetization
-
-### MVP (Free)
-- Unlimited screenshot uploads
-- Weekly tracker
-- Share cards
-
-### Phase 2 (One-time payment)
-- **$9.99 one-time**: PDF Annual Earnings Report (for tax filing)
-- No subscription — gig workers hate subscriptions
-
-### Phase 3 (Affiliate)
-- Car insurance comparison (Progressive, GEICO — $20-50 per signup)
-- Credit cards for gig workers ($50 per approved application)
-- Gas credit cards (3-5% cash back on gas)
-
----
-
-## 9. Growth Strategy
-
-### Content (TikTok + Instagram Reels)
-**Model:** Truth-bombing content
-
-> "You think you made $450 this week? After gas and wear-and-tear, you actually made $280."
-
-Format:
-1. Hook: "You think you made $X? Let's check"
-2. Demo: Upload screenshot → real number revealed
-3. Shock: "Wait, that's only $X/hour?!"
-4. CTA: "Check yours at GigLedger.com"
-
-Target accounts: Uber driver TikTok creators (collaborate), Facebook driver groups
-
-### Referral
-- "Share your result card → get friend 3 free analyses"
-- Viral loop built into product (sharing is the feature)
-
----
-
-## 10. Privacy & Legal
-
-- **No account required** (MVP: localStorage only)
-- No data sold or shared
-- Clear disclaimer: "GigLedger is for informational purposes only"
-- "Not affiliated with Uber, DoorDash, or any gig platform"
-- "Cost estimates are approximations — consult a tax professional"
-- Privacy policy: no cookies, no tracking, OCR data not stored
-
----
-
-## 11. Out of Scope (Future)
-
-- Bank/Platform API integrations (requires OAuth, complex)
-- Automatic GPS mileage tracking
-- Tax filing integration
-- Native iOS/Android app (PWA sufficient for MVP)
-- Multi-user accounts
-- Employer payroll features
-
----
-
-## 12. Success Metrics (MVP)
-
-- [ ] Landing page loads < 2s on 4G
-- [ ] OCR reads Uber earnings screenshot correctly ≥ 80%
-- [ ] Result card generates and shares on iOS Safari
-- [ ] Result card generates and shares on Android Chrome
-- [ ] Weekly tracker persists after page refresh
-- [ ] PWA installs to iOS home screen correctly
-- [ ] 10 beta users share a result card
-- [ ] Domain resolves correctly
-
----
-
-## 13. Development Phases
-
-### Phase 1: MVP (2 weeks)
-- [ ] Landing page
-- [ ] Screenshot upload + Google Vision OCR
-- [ ] Income calculator
-- [ ] Result card (Canvas)
-- [ ] Share buttons
-- [ ] Manual entry
-- [ ] PWA manifest + Service Worker
-- [ ] Deploy to Cloudflare Workers
-- [ ] Domain binding
-
-### Phase 2: Tracker (Month 2)
-- [ ] Weekly summary page
-- [ ] Multiple platform entries
-- [ ] History page
-- [ ] Better OCR error handling
-
-### Phase 3: Growth (Month 3)
-- [ ] DoorDash OCR support
-- [ ] PDF Annual Report ($9.99)
-- [ ] TikTok content launch
-- [ ] Google Ads for "uber earnings calculator"
-
-### Phase 4: Ecosystem (Month 6)
-- [ ] Tax estimator (quarterly)
-- [ ] Insurance comparison
-- [ ] Platform comparison ("Which platform pays better this week?")
-
----
-
-## 14. Competitive Landscape
-
-| Feature | GigLedger | Everlance | Hurdlr | Stride |
-|---------|-----------|-----------|--------|--------|
-| No signup | ✅ | ❌ | ❌ | ✅ |
-| Screenshot OCR | ✅ | ❌ | ❌ | ❌ |
-| Share cards | ✅ | ❌ | ❌ | ❌ |
-| Free (core) | ✅ | ❌ ($12/mo) | ❌ | ✅ |
-| PWA / Mobile-first | ✅ | ❌ (App) | ❌ (App) | ✅ (Web) |
-| Tax estimate | Future | ✅ | ✅ | ✅ |
-
-**GigLedger's edge:** Speed + simplicity + shareability. Others are full financial apps, we are a "truth mirror."
+**最重要的一句话（用户搜索意图）：**
+> "how much do uber drivers really make after expenses"
+> （Uber司机扣完费用后实际赚多少）
