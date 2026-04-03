@@ -1,4 +1,4 @@
-export default function PrivacyPage() {
+export default async function PrivacyPage() {
   return (
     <main className="min-h-screen bg-slate-50">
       <div className="max-w-2xl mx-auto px-4 py-12">
@@ -36,11 +36,6 @@ export default function PrivacyPage() {
               icon: '🌐',
               content: 'Our website may link to external sites. We are not responsible for the privacy practices of third-party sites.'
             },
-            {
-              title: 'Open Source',
-              icon: '💻',
-              content: 'GigLedger is built with transparency in mind. Our code is available on GitHub for anyone to review.'
-            },
           ].map(({ title, icon, content }) => (
             <div key={title} className="card p-6">
               <h2 className="font-bold text-slate-800 mb-2 flex items-center gap-2">
@@ -51,9 +46,7 @@ export default function PrivacyPage() {
           ))}
 
           <div className="card p-6 bg-slate-100">
-            <p className="text-slate-500 text-sm">
-              Last updated: April 2026
-            </p>
+            <p className="text-slate-500 text-sm">Last updated: April 2026</p>
             <p className="text-slate-500 text-sm mt-2">
               Questions? Contact us at <span className="text-blue-600">hello@gigledger.xyz</span>
             </p>

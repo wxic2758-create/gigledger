@@ -1,4 +1,4 @@
-export default function AboutPage() {
+export default async function AboutPage() {
   return (
     <main className="min-h-screen bg-slate-50">
       <div className="max-w-2xl mx-auto px-4 py-12">
@@ -14,12 +14,12 @@ export default function AboutPage() {
             {
               title: 'How We Calculate',
               icon: '🧮',
-              content: 'We use the IRS standard mileage rate for vehicle costs. For 2026, that\'s $0.70 per mile. This covers fuel, depreciation, maintenance, and insurance. Your net income = gross earnings − (miles driven × $0.70). Your true hourly rate = net income ÷ hours worked.'
+              content: 'We use the IRS standard mileage rate for vehicle costs. For 2026, that\'s $0.725 per mile. This covers fuel, depreciation, maintenance, and insurance. Your net income = gross earnings − (miles driven × $0.725). Your true hourly rate = net income ÷ hours worked.'
             },
             {
               title: 'The Tax Deduction',
               icon: '💡',
-              content: 'The miles you drive for gig work are tax-deductible. At $0.70/mile, if you drive 500 miles in a week, that\'s $350 in deductible expenses. GigLedger shows you this number so you\'re not surprised at tax time.'
+              content: 'The miles you drive for gig work are tax-deductible. At $0.725/mile, if you drive 500 miles in a week, that\'s $362.50 in deductible expenses. GigLedger shows you this number so you\'re not surprised at tax time.'
             },
             {
               title: 'Not Affiliated',

@@ -1,0 +1,108 @@
+{
+  "common": {
+    "siteName": "GigLedger",
+    "tagline": "Conoce Tus Ganancias Reales",
+    "getStarted": "Comenzar →",
+    "calculate": "Calcular",
+    "tracker": "Seguimiento",
+    "about": "Acerca de",
+    "privacy": "Privacidad",
+    "free": "Gratis",
+    "noSignup": "Sin registro necesario"
+  },
+  "hero": {
+    "title": "Conoce Tus Ganancias Reales",
+    "subtitle": "Sube tu captura de ganancias. Ve tu ingreso neto real después de gasolina y costos del vehículo. Gratis, 5 segundos.",
+    "cta": "🚀 Calcular Mis Ganancias",
+    "trackerCta": "📊 Seguimiento Semanal",
+    "trustSignals": "✓ Sin registro  ✓ 100% gratis  ✓ Resultados en 5 segundos"
+  },
+  "howItWorks": {
+    "title": "Cómo funciona",
+    "step1": { "title": "Sube tu Captura", "desc": "Toma o sube una captura de pantalla de tus ganancias de Uber o DoorDash" },
+    "step2": { "title": "Ingresa tus Costos", "desc": "Agrega tus horas trabajadas y millas manejadas (usamos la tasa IRS de $0.725/milla)" },
+    "step3": { "title": "Ve tu Verdad", "desc": "Obtén tu ingreso neto real, tarifa por hora y cómo te comparas con otros trabajadores" }
+  },
+  "features": {
+    "title": "Todo lo que necesitas",
+    "screenshotOcr": { "title": "OCR de Captura", "desc": "Sube tu captura de ganancias al instante" },
+    "trueIncome": { "title": "Ingreso Real", "desc": "Ve el ingreso neto después de gasolina y costos" },
+    "shareCards": { "title": "Tarjetas para Compartir", "desc": "Genera tarjetas hermosas para compartir" },
+    "weeklyTracker": { "title": "Seguimiento Semanal", "desc": "Rastrea tus ganancias con el tiempo" },
+    "taxEstimate": { "title": "Estimación de Impuestos", "desc": "Conoce tu deducción de millaje IRS" },
+    "pwa": { "title": "PWA", "desc": "Funciona como app en tu teléfono" },
+    "privacyFirst": { "title": "Privacidad Primero", "desc": "Sin cuenta, tus datos se quedan en tu dispositivo" },
+    "fiveSeconds": { "title": "5 Segundos", "desc": "De subir a resultados al instante" }
+  },
+  "analyze": {
+    "uploadTitle": "Sube tu Captura",
+    "uploadDesc": "Toma una captura de pantalla de tu página de ganancias",
+    "skipManual": "Omitir captura, ingresar manualmente →",
+    "calculateTitle": "Calcula Tus Ganancias Reales",
+    "calculateDesc": "Ingresa tus números para ver la verdad",
+    "changeScreenshot": "Cambiar",
+    "platform": "Plataforma",
+    "baseEarnings": "Ganancias Base *",
+    "tips": "Propinas",
+    "bonuses": "Bonos",
+    "hoursWorked": "Horas Trabajadas *",
+    "milesDriven": "Millas Manejadas *",
+    "costPerMile": "Costo por Milla (IRS 2026: $0.725)",
+    "costPerMileNote": "Tasa estándar IRS 2026: $0.725/milla",
+    "calculateBtn": "Calcular Mis Ganancias Reales →",
+    "resultTitle": "Tus Ganancias Reales",
+    "netIncome": "Ingreso Neto",
+    "hourlyRate": "Tarifa por Hora",
+    "hours": "Horas",
+    "miles": "Millas",
+    "grossEarnings": "Ganancias Brutas",
+    "vehicleCost": "Costo del Vehículo",
+    "netAfterCost": "Neto Después de Costos",
+    "comparison": "Mejor que el {percent}% de los trabajadores",
+    "taxDeduction": "Deducción Fiscal: {amount} en gastos de vehículo",
+    "shareCard": "📤 Generar Tarjeta",
+    "calculateAgain": "Calcular de Nuevo",
+    "viewTracker": "📊 Seguimiento"
+  },
+  "result": {
+    "ready": "✨ ¡Tu Tarjeta está Lista!",
+    "readyDesc": "Descárgala o compártela con tus amigos trabajadores",
+    "download": "⬇️ Descargar Imagen",
+    "copyImage": "📋 Copiar Imagen",
+    "tip": "💡 Consejo: ¡Comparte esta tarjeta en grupos de conductores de Uber/DoorDash! Más conductores deberían conocer sus ganancias reales."
+  },
+  "tracker": {
+    "title": "📊 Seguimiento Semanal",
+    "titleDesc": "Tus registros guardados localmente",
+    "addEntry": "+ Agregar",
+    "weekSummary": "Esta Semana",
+    "gross": "Bruto",
+    "net": "Neto",
+    "hours": "Horas",
+    "avgHourly": "Prom $/hr",
+    "entriesThisWeek": "registros esta semana",
+    "noEntries": "Sin registros aún",
+    "noEntriesDesc": "Calcula tus ganancias para agregar registros",
+    "startCalculating": "Comenzar a Calcular →",
+    "totalEntries": "registros totales",
+    "clearAll": "Borrar Todo",
+    "confirmClear": "¿Borrar todos los registros?",
+    "confirmClearDesc": "Esto eliminará permanentemente todos los {count} registros. Esta acción no se puede deshacer.",
+    "cancel": "Cancelar",
+    "deleteAll": "Borrar Todo",
+    "delete": "Eliminar",
+    "privacyNote": "🔒 Todos los datos se guardan localmente en tu navegador. No se envía nada a ningún servidor."
+  },
+  "footer": {
+    "notAffiliated": "No afiliado a Uber, DoorDash o cualquier plataforma gig.",
+    "disclaimer": "Solo para fines informativos. Consulta a un profesional de impuestos para asesoramiento fiscal.",
+    "rights": "© {year} GigLedger. Todos los derechos reservados."
+  },
+  "seo": {
+    "homeTitle": "GigLedger - Calculadora de Ganancias Uber & Rastreador de Pagos Gig",
+    "homeDesc": "Sube tu captura de ganancias de Uber. Ve tu ingreso neto real después de gasolina y costos del vehículo. Gratis, 5 segundos.",
+    "analyzeTitle": "Calcula Tus Ganancias Reales — GigLedger",
+    "aboutTitle": "Acerca de GigLedger — Conoce Tus Ganancias Reales",
+    "privacyTitle": "Política de Privacidad — GigLedger"
+  }
+}

@@ -2,12 +2,14 @@
 
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { generateShareCard, downloadCard } from '@/lib/card-generator'
 import { formatMoney } from '@/lib/calculator'
 import { getPlatformById } from '@/lib/platforms'
 import Link from 'next/link'
 
 function ResultContent() {
+  const t = useTranslations('result')
   const params = useSearchParams()
   const router = useRouter()
   const [cardDataUrl, setCardDataUrl] = useState<string | null>(null)
@@ -48,7 +50,7 @@ function ResultContent() {
   }
 
   function handleTwitter() {
-    const text = encodeURIComponent(`💰 Just checked my real gig earnings with @GigLedger: $${net.toFixed(2)} net, $${hourly.toFixed(2)}/hr! How do you compare? gigledger.xyz`)
+    const text = encodeURIComponent(`💰 Just checked my real gig earnings: $${net.toFixed(2)} net, $${hourly.toFixed(2)}/hr! How do you compare? gigledger.xyz`)
     window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank')
   }
 
@@ -61,28 +63,21 @@ function ResultContent() {
           new ClipboardItem({ 'image/png': blob })
         ])
       })
-      .catch(() => {
-        // Fallback: download
-        handleDownload()
-      })
+      .catch(() => handleDownload())
   }
 
   return (
     <main className="min-h-screen bg-slate-50">
       <div className="max-w-2xl mx-auto px-4 py-10">
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-slate-800 mb-2">✨ Your Share Card is Ready!</h1>
-          <p className="text-slate-500 text-sm">Download or share it with your gig worker friends</p>
+          <h1 className="text-2xl font-bold text-slate-800 mb-2">{t('ready')}</h1>
+          <p className="text-slate-500 text-sm">{t('readyDesc')}</p>
         </div>
 
         {/* Card preview */}
         <div className="card overflow-hidden mb-6">
           {cardDataUrl ? (
-            <img
-              src={cardDataUrl}
-              alt="Share card"
-              className="w-full aspect-square object-cover"
-            />
+            <img src={cardDataUrl} alt="Share card" className="w-full aspect-square object-cover" />
           ) : (
             <div className="w-full aspect-square bg-slate-900 flex items-center justify-center">
               <div className="animate-spin w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full" />
@@ -90,7 +85,6 @@ function ResultContent() {
           )}
         </div>
 
-        {/* Quick stats */}
         <div className="grid grid-cols-3 gap-3 mb-6">
           <div className="card p-3 text-center">
             <p className="text-slate-400 text-xs">Net Income</p>
@@ -106,38 +100,21 @@ function ResultContent() {
           </div>
         </div>
 
-        {/* Share buttons */}
         <div className="space-y-3">
-          <button onClick={handleDownload} className="btn-primary w-full !py-4 text-lg">
-            ⬇️ Download Image
-          </button>
+          <button onClick={handleDownload} className="btn-primary w-full !py-4 text-lg">{t('download')}</button>
           <div className="grid grid-cols-3 gap-3">
-            <button onClick={handleWhatsApp} className="btn-secondary !py-3 text-sm">
-              📱 WhatsApp
-            </button>
-            <button onClick={handleTwitter} className="btn-secondary !py-3 text-sm">
-              🐦 Twitter
-            </button>
-            <button onClick={handleCopyImage} className="btn-secondary !py-3 text-sm">
-              📋 Copy Image
-            </button>
+            <button onClick={handleWhatsApp} className="btn-secondary !py-3 text-sm">📱 WhatsApp</button>
+            <button onClick={handleTwitter} className="btn-secondary !py-3 text-sm">🐦 Twitter</button>
+            <button onClick={handleCopyImage} className="btn-secondary !py-3 text-sm">{t('copyImage')}</button>
           </div>
           <div className="flex gap-3">
-            <Link href="/analyze" className="btn-secondary flex-1 text-center">
-              🔄 Calculate Again
-            </Link>
-            <Link href="/tracker" className="btn-secondary flex-1 text-center">
-              📊 Weekly Tracker
-            </Link>
+            <Link href="/analyze" className="btn-secondary flex-1 text-center">🔄 Calculate Again</Link>
+            <Link href="/tracker" className="btn-secondary flex-1 text-center">📊 Tracker</Link>
           </div>
         </div>
 
-        {/* Tip */}
         <div className="mt-8 bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-center">
-          <p className="text-yellow-800 text-sm">
-            💡 <strong>Tip:</strong> Share this card in your Uber/DoorDash driver groups!
-            More drivers should know their real earnings.
-          </p>
+          <p className="text-yellow-800 text-sm">{t('tip')}</p>
         </div>
       </div>
     </main>

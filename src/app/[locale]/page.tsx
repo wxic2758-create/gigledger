@@ -1,11 +1,15 @@
+'use client'
+
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 
 export default function HomePage() {
+  const t = useTranslations()
+
   return (
     <main>
       {/* Hero */}
       <section className="relative overflow-hidden bg-slate-900 text-white">
-        {/* Background glow */}
         <div className="absolute inset-0">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-blue-600/20 rounded-full blur-[100px]" />
           <div className="absolute bottom-0 left-1/4 w-[600px] h-[300px] bg-emerald-500/10 rounded-full blur-[80px]" />
@@ -18,35 +22,29 @@ export default function HomePage() {
           </div>
 
           <h1 className="text-4xl md:text-6xl font-extrabold mb-4 leading-tight">
-            Know Your{' '}
-            <span className="bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
-              Real Earnings
-            </span>
+            Know Your <br /><span className="bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">Real Earnings</span>
           </h1>
 
           <p className="text-slate-300 text-lg md:text-xl max-w-2xl mx-auto mb-10">
-            Upload your earnings screenshot. See your true net income after gas and vehicle costs.
-            <br />Free, 5 seconds.
+            {t('hero.subtitle')}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/analyze" className="btn-cta">
-              🚀 Calculate My Earnings
+              {t('hero.cta')}
             </Link>
             <Link href="/tracker" className="btn-secondary !text-white !bg-slate-800 hover:!bg-slate-700 !rounded-xl !px-8 !py-4">
-              📊 Weekly Tracker
+              {t('hero.trackerCta')}
             </Link>
           </div>
 
-          {/* Trust signals */}
           <div className="flex justify-center gap-8 mt-12 text-sm text-slate-500">
-            <span>✓ No signup required</span>
-            <span>✓ 100% free</span>
+            <span>✓ {t('common.noSignup')}</span>
+            <span>✓ {t('common.free')}</span>
             <span>✓ Results in 5 seconds</span>
           </div>
         </div>
 
-        {/* Wave */}
         <div className="absolute bottom-0 left-0 right-0">
           <svg viewBox="0 0 1440 60" fill="none" className="w-full h-12">
             <path d="M0 60L48 55C96 50 192 40 288 35C384 30 480 30 576 32C672 34 768 38 864 42C960 46 1056 50 1152 50C1248 50 1344 46 1392 44L1440 42V60H0Z" fill="#F8FAFC"/>
@@ -56,24 +54,20 @@ export default function HomePage() {
 
       {/* How it works */}
       <section className="py-16 max-w-4xl mx-auto px-4">
-        <h2 className="text-2xl md:text-3xl font-bold text-slate-800 text-center mb-10">How it works</h2>
+        <h2 className="text-2xl md:text-3xl font-bold text-slate-800 text-center mb-10">{t('howItWorks.title')}</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {[
-            { step: '1', icon: '📸', title: 'Upload Screenshot', desc: 'Take or upload a screenshot of your Uber or DoorDash earnings page' },
-            { step: '2', icon: '🧮', title: 'Enter Your Costs', desc: 'Add your hours worked and miles driven (we use the IRS rate of $0.70/mile)' },
-            { step: '3', icon: '💰', title: 'See Your Truth', desc: 'Get your real net income, hourly rate, and how you compare to other gig workers' },
-          ].map(({ step, icon, title, desc }) => (
+          {[1, 2, 3].map((step) => (
             <div key={step} className="text-center">
               <div className="relative inline-block mb-4">
                 <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-blue-600/30">
-                  {icon}
+                  {step === 1 ? '📸' : step === 2 ? '🧮' : '💰'}
                 </div>
                 <div className="absolute -top-1 -right-1 w-6 h-6 bg-yellow-400 text-slate-900 rounded-full flex items-center justify-center text-xs font-bold">
                   {step}
                 </div>
               </div>
-              <h3 className="font-bold text-slate-800 mb-2">{title}</h3>
-              <p className="text-slate-500 text-sm leading-relaxed">{desc}</p>
+              <h3 className="font-bold text-slate-800 mb-2">{t(`howItWorks.step${step}.title`)}</h3>
+              <p className="text-slate-500 text-sm leading-relaxed">{t(`howItWorks.step${step}.desc`)}</p>
             </div>
           ))}
         </div>
@@ -82,22 +76,22 @@ export default function HomePage() {
       {/* Features */}
       <section className="py-12 bg-white">
         <div className="max-w-5xl mx-auto px-4">
-          <h2 className="text-2xl md:text-3xl font-bold text-slate-800 text-center mb-10">Everything you need</h2>
+          <h2 className="text-2xl md:text-3xl font-bold text-slate-800 text-center mb-10">{t('features.title')}</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
-              { icon: '📸', title: 'Screenshot OCR', desc: 'Upload your earnings screenshot instantly' },
-              { icon: '🧮', title: 'True Income', desc: 'See net income after gas and costs' },
-              { icon: '📤', title: 'Share Cards', desc: 'Generate beautiful cards to share' },
-              { icon: '📊', title: 'Weekly Tracker', desc: 'Track your earnings over time' },
-              { icon: '💸', title: 'Tax Estimate', desc: 'Know your IRS mileage deduction' },
-              { icon: '📱', title: 'PWA', desc: 'Works like an app on your phone' },
-              { icon: '🔒', title: 'Privacy First', desc: 'No account, data stays on device' },
-              { icon: '⚡', title: '5 Seconds', desc: 'From upload to results instantly' },
-            ].map(({ icon, title, desc }) => (
-              <div key={title} className="p-4 rounded-xl hover:bg-slate-50 transition-colors">
+              { key: 'screenshotOcr', icon: '📸' },
+              { key: 'trueIncome', icon: '🧮' },
+              { key: 'shareCards', icon: '📤' },
+              { key: 'weeklyTracker', icon: '📊' },
+              { key: 'taxEstimate', icon: '💸' },
+              { key: 'pwa', icon: '📱' },
+              { key: 'privacyFirst', icon: '🔒' },
+              { key: 'fiveSeconds', icon: '⚡' },
+            ].map(({ key, icon }) => (
+              <div key={key} className="p-4 rounded-xl hover:bg-slate-50 transition-colors">
                 <div className="text-2xl mb-2">{icon}</div>
-                <h3 className="font-semibold text-slate-800 text-sm mb-1">{title}</h3>
-                <p className="text-slate-500 text-xs leading-relaxed">{desc}</p>
+                <h3 className="font-semibold text-slate-800 text-sm mb-1">{t(`features.${key}.title`)}</h3>
+                <p className="text-slate-500 text-xs leading-relaxed">{t(`features.${key}.desc`)}</p>
               </div>
             ))}
           </div>

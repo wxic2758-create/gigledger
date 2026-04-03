@@ -1,0 +1,108 @@
+{
+  "common": {
+    "siteName": "GigLedger",
+    "tagline": "Know Your Real Earnings",
+    "getStarted": "Get Started →",
+    "calculate": "Calculate",
+    "tracker": "Tracker",
+    "about": "About",
+    "privacy": "Privacy",
+    "free": "Free",
+    "noSignup": "No signup required"
+  },
+  "hero": {
+    "title": "Know Your Real Earnings",
+    "subtitle": "Upload your earnings screenshot. See your true net income after gas and vehicle costs. Free, 5 seconds.",
+    "cta": "🚀 Calculate My Earnings",
+    "trackerCta": "📊 Weekly Tracker",
+    "trustSignals": "✓ No signup required  ✓ 100% free  ✓ Results in 5 seconds"
+  },
+  "howItWorks": {
+    "title": "How it works",
+    "step1": { "title": "Upload Screenshot", "desc": "Take or upload a screenshot of your Uber or DoorDash earnings page" },
+    "step2": { "title": "Enter Your Costs", "desc": "Add your hours worked and miles driven (we use the IRS rate of $0.725/mile)" },
+    "step3": { "title": "See Your Truth", "desc": "Get your real net income, hourly rate, and how you compare to other gig workers" }
+  },
+  "features": {
+    "title": "Everything you need",
+    "screenshotOcr": { "title": "Screenshot OCR", "desc": "Upload your earnings screenshot instantly" },
+    "trueIncome": { "title": "True Income", "desc": "See net income after gas and costs" },
+    "shareCards": { "title": "Share Cards", "desc": "Generate beautiful cards to share" },
+    "weeklyTracker": { "title": "Weekly Tracker", "desc": "Track your earnings over time" },
+    "taxEstimate": { "title": "Tax Estimate", "desc": "Know your IRS mileage deduction" },
+    "pwa": { "title": "PWA", "desc": "Works like an app on your phone" },
+    "privacyFirst": { "title": "Privacy First", "desc": "No account, data stays on device" },
+    "fiveSeconds": { "title": "5 Seconds", "desc": "From upload to results instantly" }
+  },
+  "analyze": {
+    "uploadTitle": "Upload Your Screenshot",
+    "uploadDesc": "Take a screenshot of your earnings page",
+    "skipManual": "Skip screenshot, enter manually →",
+    "calculateTitle": "Calculate Your Real Earnings",
+    "calculateDesc": "Enter your numbers to see the truth",
+    "changeScreenshot": "Change",
+    "platform": "Platform",
+    "baseEarnings": "Base Earnings *",
+    "tips": "Tips",
+    "bonuses": "Bonuses",
+    "hoursWorked": "Hours Worked *",
+    "milesDriven": "Miles Driven *",
+    "costPerMile": "Cost per Mile (IRS 2026: $0.725)",
+    "costPerMileNote": "IRS standard mileage rate 2026: $0.725/mile",
+    "calculateBtn": "Calculate My Real Earnings →",
+    "resultTitle": "Your Real Earnings",
+    "netIncome": "Net Income",
+    "hourlyRate": "Hourly Rate",
+    "hours": "Hours",
+    "miles": "Miles",
+    "grossEarnings": "Gross Earnings",
+    "vehicleCost": "Vehicle Cost",
+    "netAfterCost": "Net After Cost",
+    "comparison": "Better than {percent}% of gig workers",
+    "taxDeduction": "Tax Deduction: {amount} in vehicle expenses",
+    "shareCard": "📤 Generate Share Card",
+    "calculateAgain": "Calculate Again",
+    "viewTracker": "📊 Tracker"
+  },
+  "result": {
+    "ready": "✨ Your Share Card is Ready!",
+    "readyDesc": "Download or share it with your gig worker friends",
+    "download": "⬇️ Download Image",
+    "copyImage": "📋 Copy Image",
+    "tip": "💡 Tip: Share this card in your Uber/DoorDash driver groups! More drivers should know their real earnings."
+  },
+  "tracker": {
+    "title": "📊 Weekly Tracker",
+    "titleDesc": "Your entries stored locally",
+    "addEntry": "+ Add Entry",
+    "weekSummary": "This Week",
+    "gross": "Gross",
+    "net": "Net",
+    "hours": "Hours",
+    "avgHourly": "Avg $/hr",
+    "entriesThisWeek": "entries this week",
+    "noEntries": "No entries yet",
+    "noEntriesDesc": "Calculate your earnings to add entries",
+    "startCalculating": "Start Calculating →",
+    "totalEntries": "total entries",
+    "clearAll": "Clear All",
+    "confirmClear": "Clear all entries?",
+    "confirmClearDesc": "This will permanently delete all {count} entries. This action cannot be undone.",
+    "cancel": "Cancel",
+    "deleteAll": "Delete All",
+    "delete": "Delete",
+    "privacyNote": "🔒 All data is stored locally in your browser. Nothing is sent to any server."
+  },
+  "footer": {
+    "notAffiliated": "Not affiliated with Uber, DoorDash, or any gig platform.",
+    "disclaimer": "For informational purposes only. Consult a tax professional for tax advice.",
+    "rights": "© {year} GigLedger. All rights reserved."
+  },
+  "seo": {
+    "homeTitle": "GigLedger - Uber Earnings Calculator & Gig Worker Pay Tracker",
+    "homeDesc": "Upload your Uber earnings screenshot. See your true net income after gas and vehicle costs. Free, 5 seconds.",
+    "analyzeTitle": "Calculate Your True Gig Earnings — GigLedger",
+    "aboutTitle": "About GigLedger — Know Your Real Earnings",
+    "privacyTitle": "Privacy Policy — GigLedger"
+  }
+}

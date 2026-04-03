@@ -1,0 +1,108 @@
+{
+  "common": {
+    "siteName": "GigLedger",
+    "tagline": "了解你的真实收入",
+    "getStarted": "开始使用 →",
+    "calculate": "计算",
+    "tracker": "追踪器",
+    "about": "关于",
+    "privacy": "隐私政策",
+    "free": "免费",
+    "noSignup": "无需注册"
+  },
+  "hero": {
+    "title": "了解你的{newline}真实收入",
+    "subtitle": "上传你的收入截图。看看扣除油费和车辆成本后的真实净收入。免费，5秒搞定。",
+    "cta": "🚀 计算我的收入",
+    "trackerCta": "📊 周收入追踪",
+    "trustSignals": "✓ 无需注册  ✓ 100%免费  ✓ 5秒出结果"
+  },
+  "howItWorks": {
+    "title": "如何使用",
+    "step1": { "title": "上传截图", "desc": "拍摄或上传你的Uber或DoorDash收入页面截图" },
+    "step2": { "title": "输入成本", "desc": "输入你的工作时长和行驶里程（我们使用IRS标准每英里$0.725）" },
+    "step3": { "title": "看到真相", "desc": "获取你的真实净收入、时薪，以及与其他零工的比较" }
+  },
+  "features": {
+    "title": "你需要的一切",
+    "screenshotOcr": { "title": "截图识别", "desc": "即时上传收入截图" },
+    "trueIncome": { "title": "真实收入", "desc": "扣除油费和成本后的净收入" },
+    "shareCards": { "title": "分享卡片", "desc": "生成精美卡片分享" },
+    "weeklyTracker": { "title": "周收入追踪", "desc": "追踪你的收入变化" },
+    "taxEstimate": { "title": "税务估算", "desc": "了解你的IRS里程抵扣" },
+    "pwa": { "title": "PWA应用", "desc": "像App一样在手机上使用" },
+    "privacyFirst": { "title": "隐私优先", "desc": "无需账号，数据留在你的设备" },
+    "fiveSeconds": { "title": "5秒完成", "desc": "从上传到结果即时呈现" }
+  },
+  "analyze": {
+    "uploadTitle": "上传你的截图",
+    "uploadDesc": "拍摄你的收入页面截图",
+    "skipManual": "跳过截图，手动输入 →",
+    "calculateTitle": "计算你的真实收入",
+    "calculateDesc": "输入你的数字，看清真相",
+    "changeScreenshot": "更换",
+    "platform": "平台",
+    "baseEarnings": "基础收入 *",
+    "tips": "小费",
+    "bonuses": "奖金",
+    "hoursWorked": "工作时长 *",
+    "milesDriven": "行驶里程 *",
+    "costPerMile": "每英里成本 (IRS 2026: $0.725)",
+    "costPerMileNote": "IRS 2026年标准里程费率: $0.725/英里",
+    "calculateBtn": "计算我的真实收入 →",
+    "resultTitle": "你的真实收入",
+    "netIncome": "净收入",
+    "hourlyRate": "时薪",
+    "hours": "时长",
+    "miles": "里程",
+    "grossEarnings": "总收入",
+    "vehicleCost": "车辆成本",
+    "netAfterCost": "扣成本后净收入",
+    "comparison": "超过了{percent}%的零工",
+    "taxDeduction": "税务抵扣：{amount} 车辆费用可抵扣",
+    "shareCard": "📤 生成分享卡片",
+    "calculateAgain": "重新计算",
+    "viewTracker": "📊 查看追踪"
+  },
+  "result": {
+    "ready": "✨ 你的分享卡片已就绪！",
+    "readyDesc": "下载或分享给你的零工朋友们",
+    "download": "⬇️ 下载图片",
+    "copyImage": "📋 复制图片",
+    "tip": "💡 提示：在Uber/DoorDash司机群里分享这张卡片！让更多司机了解自己的真实收入。"
+  },
+  "tracker": {
+    "title": "📊 周收入追踪",
+    "titleDesc": "你的记录本地保存",
+    "addEntry": "+ 添加记录",
+    "weekSummary": "本周",
+    "gross": "总收入",
+    "net": "净收入",
+    "hours": "时长",
+    "avgHourly": "平均时薪",
+    "entriesThisWeek": "条记录",
+    "noEntries": "暂无记录",
+    "noEntriesDesc": "计算你的收入来添加记录",
+    "startCalculating": "开始计算 →",
+    "totalEntries": "条总记录",
+    "clearAll": "清空全部",
+    "confirmClear": "清空所有记录？",
+    "confirmClearDesc": "这将永久删除全部{count}条记录。此操作无法撤销。",
+    "cancel": "取消",
+    "deleteAll": "删除全部",
+    "delete": "删除",
+    "privacyNote": "🔒 所有数据都保存在你的浏览器本地。不会发送到任何服务器。"
+  },
+  "footer": {
+    "notAffiliated": "与Uber、DoorDash或任何零工平台无关。",
+    "disclaimer": "仅供信息参考。请咨询税务专业人员获取税务建议。",
+    "rights": "© {year} GigLedger. 保留所有权利。"
+  },
+  "seo": {
+    "homeTitle": "GigLedger - Uber收入计算器 & 零工收入追踪器",
+    "homeDesc": "上传你的Uber收入截图。看看扣除油费和车辆成本后的真实净收入。免费，5秒搞定。",
+    "analyzeTitle": "计算你的真实零工收入 — GigLedger",
+    "aboutTitle": "关于 GigLedger — 了解你的真实收入",
+    "privacyTitle": "隐私政策 — GigLedger"
+  }
+}
