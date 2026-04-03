@@ -175,11 +175,11 @@ export default function AnalyzePage() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Cost per Mile (IRS 2026: $0.70)</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Cost per Mile (IRS 2026: $0.725)</label>
                 <input type="number" step="0.01" min="0" value={costPerMile}
-                  onChange={e => setCostPerMile(e.target.value)} placeholder="0.70"
+                  onChange={e => setCostPerMile(e.target.value)} placeholder="0.725"
                   className="w-full px-3 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 outline-none font-mono text-lg" />
-                <p className="text-slate-400 text-xs mt-1">IRS standard mileage rate 2026: $0.70/mile</p>
+                <p className="text-slate-400 text-xs mt-1">IRS standard mileage rate 2026: $0.725/mile</p>
               </div>
               <button onClick={handleCalculate}
                 disabled={!grossEarnings || !hoursWorked || !milesDriven}

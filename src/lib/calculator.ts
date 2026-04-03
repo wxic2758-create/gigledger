@@ -15,7 +15,8 @@ export interface CalculatorResult {
   taxDeduction: number
 }
 
-export const IRS_MILEAGE_RATE_2026 = 0.70
+// IRS Standard Mileage Rate 2026: 72.5 cents/mile (Notice 2026-10)
+export const IRS_MILEAGE_RATE_2026 = 0.725
 
 export function calculate(input: CalculatorInput): CalculatorResult {
   const costPerMile = input.costPerMile ?? IRS_MILEAGE_RATE_2026
