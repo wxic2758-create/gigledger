@@ -9,27 +9,32 @@ export default async function AboutPage() {
             {
               title: 'Our Mission',
               icon: '🎯',
-              content: 'GigLedger helps gig workers understand their true earnings. We believe every Uber driver, DoorDash delivery person, and gig worker deserves to know how much they really make — after accounting for the real costs of doing business.'
+              content:
+                'GigLedger helps gig workers understand their true earnings. We believe every Uber driver, DoorDash delivery person, and gig worker deserves to know how much they really make — after accounting for the real costs of doing business.',
             },
             {
               title: 'How We Calculate',
               icon: '🧮',
-              content: 'We use the IRS standard mileage rate for vehicle costs. For 2026, that\'s $0.725 per mile. This covers fuel, depreciation, maintenance, and insurance. Your net income = gross earnings − (miles driven × $0.725). Your true hourly rate = net income ÷ hours worked.'
+              content:
+                "We use the IRS standard mileage rate for vehicle costs. For 2026, that's $0.725 per mile. This covers fuel, depreciation, maintenance, and insurance. Your net income = gross earnings − (miles driven × $0.725). Your true hourly rate = net income ÷ hours worked.",
             },
             {
               title: 'The Tax Deduction',
               icon: '💡',
-              content: 'The miles you drive for gig work are tax-deductible. At $0.725/mile, if you drive 500 miles in a week, that\'s $362.50 in deductible expenses. GigLedger shows you this number so you\'re not surprised at tax time.'
+              content:
+                'The miles you drive for gig work are tax-deductible. At $0.725/mile, if you drive 500 miles in a week, that\'s $362.50 in deductible expenses. GigLedger shows you this number so you\'re not surprised at tax time.',
             },
             {
               title: 'Not Affiliated',
               icon: '⚠️',
-              content: 'GigLedger is not affiliated with, endorsed by, or connected to Uber, Lyft, DoorDash, Instacart, Amazon Flex, or any other gig platform. We\'re an independent tool built by gig workers, for gig workers.'
+              content:
+                'GigLedger is not affiliated with, endorsed by, or connected to Uber, Lyft, DoorDash, Instacart, Amazon Flex, or any other gig platform. We\'re an independent tool built by gig workers, for gig workers.',
             },
             {
               title: 'For Informational Purposes Only',
               icon: '📋',
-              content: 'GigLedger provides estimates for informational purposes. Our calculations are based on the IRS standard mileage rate and general cost assumptions. For tax advice specific to your situation, please consult a qualified tax professional.'
+              content:
+                'GigLedger provides estimates for informational purposes. Our calculations are based on the IRS standard mileage rate and general cost assumptions. For tax advice specific to your situation, please consult a qualified tax professional.',
             },
           ].map(({ title, icon, content }) => (
             <div key={title} className="card p-6">

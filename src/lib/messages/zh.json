@@ -11,25 +11,26 @@
     "noSignup": "无需注册"
   },
   "hero": {
-    "title": "了解你的{newline}真实收入",
-    "subtitle": "上传你的收入截图。看看扣除油费和车辆成本后的真实净收入。免费，5秒搞定。",
-    "cta": "🚀 计算我的收入",
-    "trackerCta": "📊 周收入追踪",
-    "trustSignals": "✓ 无需注册  ✓ 100%免费  ✓ 5秒出结果"
+    "title": "了解你的真实收入",
+    "subtitle": "扣除油费和车辆成本后，你真正赚了多少钱。",
+    "cta": {
+      "start": "开始使用 →",
+      "analyze": "试用计算器"
+    }
   },
   "howItWorks": {
     "title": "如何使用",
     "step1": {
       "title": "上传截图",
-      "desc": "拍摄或上传你的Uber或DoorDash收入页面截图"
+      "desc": "拍摄或上传你的收入截图"
     },
     "step2": {
       "title": "输入成本",
-      "desc": "输入你的工作时长和行驶里程（我们使用IRS标准每英里$0.725）"
+      "desc": "添加你的工作小时数和行驶里程"
     },
     "step3": {
       "title": "看到真相",
-      "desc": "获取你的真实净收入、时薪，以及与其他零工的比较"
+      "desc": "获得你的真实净收入和时薪"
     }
   },
   "features": {
@@ -130,9 +131,9 @@
     "quickLinks": "快速链接",
     "legal": "法律",
     "privacy": "隐私",
-    "disclaimer": "仅供信息参考。",
+    "disclaimer": "仅供参考。",
     "notAffiliated": "与任何平台无关联。",
-    "rights": "© {year} GigLedger. 保留所有权利。"
+    "rights": "© {year} GigLedger."
   },
   "seo": {
     "homeTitle": "GigLedger - Uber收入计算器 & 零工收入追踪器",
@@ -147,5 +148,17 @@
     "analyze": "计算",
     "about": "关于",
     "getStarted": "开始使用"
+  },
+  "platforms": {
+    "title": "支持的平台",
+    "subtitle": "支持主流零工平台",
+    "uber": "追踪Uber收入",
+    "doordash": "DoorDash配送收入",
+    "instacart": "Instacart购物收入计算"
+  },
+  "cta": {
+    "title": "准备好了解你的真实收入了吗？",
+    "subtitle": "加入成千上万的零工工作者，追踪真实收入。",
+    "button": "免费开始 →"
   }
 }

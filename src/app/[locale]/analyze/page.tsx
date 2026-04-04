@@ -2,13 +2,13 @@
 
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { useI18n } from '@/context/I18nContext'
 import { platforms, getPlatformById } from '@/lib/platforms'
 import { calculate, formatMoney, IRS_MILEAGE_RATE_2026 } from '@/lib/calculator'
 import { addEntry } from '@/lib/storage'
 
 export default function AnalyzePage() {
-  const t = useTranslations('analyze')
+  const { t } = useI18n()
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
 

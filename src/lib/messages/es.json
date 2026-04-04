@@ -12,24 +12,25 @@
   },
   "hero": {
     "title": "Conoce Tus Ganancias Reales",
-    "subtitle": "Sube tu captura de ganancias. Ve tu ingreso neto real después de gasolina y costos del vehículo. Gratis, 5 segundos.",
-    "cta": "🚀 Calcular Mis Ganancias",
-    "trackerCta": "📊 Seguimiento Semanal",
-    "trustSignals": "✓ Sin registro  ✓ 100% gratis  ✓ Resultados en 5 segundos"
+    "subtitle": "La verdad sobre cuánto ganas después de gasolina y costos del vehículo.",
+    "cta": {
+      "start": "Comenzar →",
+      "analyze": "Probar Calculadora"
+    }
   },
   "howItWorks": {
-    "title": "Cómo funciona",
+    "title": "Cómo Funciona",
     "step1": {
       "title": "Sube tu Captura",
-      "desc": "Toma o sube una captura de pantalla de tus ganancias de Uber o DoorDash"
+      "desc": "Toma o sube una captura de pantalla de tus ganancias"
     },
     "step2": {
       "title": "Ingresa tus Costos",
-      "desc": "Agrega tus horas trabajadas y millas manejadas (usamos la tasa IRS de $0.725/milla)"
+      "desc": "Añade tus horas trabajadas y millas manejadas"
     },
     "step3": {
-      "title": "Ve tu Verdad",
-      "desc": "Obtén tu ingreso neto real, tarifa por hora y cómo te comparas con otros trabajadores"
+      "title": "Ve la Verdad",
+      "desc": "Obtén tu ingreso neto real y tu tarifa por hora"
     }
   },
   "features": {
@@ -132,7 +133,7 @@
     "privacy": "Privacidad",
     "disclaimer": "Solo con fines informativos.",
     "notAffiliated": "No afiliado a ninguna plataforma.",
-    "rights": "© {year} GigLedger. Todos los derechos reservados."
+    "rights": "© {year} GigLedger."
   },
   "seo": {
     "homeTitle": "GigLedger - Calculadora de Ganancias Uber & Rastreador de Pagos Gig",
@@ -143,9 +144,21 @@
   },
   "nav": {
     "home": "Inicio",
-    "tracker": "Seguimiento",
+    "tracker": "Rastreador",
     "analyze": "Calcular",
     "about": "Acerca",
     "getStarted": "Comenzar"
+  },
+  "platforms": {
+    "title": "Plataformas Soportadas",
+    "subtitle": "Funciona con plataformas populares",
+    "uber": "Rastrea tus ganancias de Uber",
+    "doordash": "Ganancias de DoorDash",
+    "instacart": "Calculadora de Instacart"
+  },
+  "cta": {
+    "title": "¿Listo para Conocer tus Ganancias Reales?",
+    "subtitle": "Únete a miles de trabajadores que rastrean sus ganancias.",
+    "button": "Comenzar Gratis →"
   }
 }

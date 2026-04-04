@@ -1,15 +1,16 @@
 'use client'
+import { useI18n } from '@/context/I18nContext'
 
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+
 import { generateShareCard, downloadCard } from '@/lib/card-generator'
 import { formatMoney } from '@/lib/calculator'
 import { getPlatformById } from '@/lib/platforms'
 import Link from 'next/link'
 
 function ResultContent() {
-  const t = useTranslations('result')
+  const { t } = useI18n()
   const params = useSearchParams()
   const router = useRouter()
   const [cardDataUrl, setCardDataUrl] = useState<string | null>(null)

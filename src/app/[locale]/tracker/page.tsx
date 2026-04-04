@@ -1,14 +1,15 @@
 'use client'
+import { useI18n } from '@/context/I18nContext'
 
 import { useState, useEffect } from 'react'
-import { useTranslations } from 'next-intl'
+
 import { getEntries, deleteEntry, clearAllEntries, getWeeklyTotals, type TrackerEntry } from '@/lib/storage'
 import { formatMoney } from '@/lib/calculator'
 import { platforms } from '@/lib/platforms'
 import Link from 'next/link'
 
 export default function TrackerPage() {
-  const t = useTranslations('tracker')
+  const { t, locale } = useI18n()
   const [entries, setEntries] = useState<TrackerEntry[]>([])
   const [totals, setTotals] = useState({ gross: 0, net: 0, hours: 0, avgHourly: 0, count: 0 })
   const [showClearConfirm, setShowClearConfirm] = useState(false)
@@ -120,7 +121,7 @@ export default function TrackerPage() {
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl p-6 max-w-sm w-full">
               <h3 className="font-bold text-slate-800 mb-2">{t('confirmClear')}</h3>
-              <p className="text-slate-500 text-sm mb-4">{t('confirmClearDesc', { count: entries.length })}</p>
+              <p className="text-slate-500 text-sm mb-4">{t('confirmClearDesc')}</p>
               <div className="flex gap-3">
                 <button onClick={() => setShowClearConfirm(false)} className="btn-secondary flex-1">{t('cancel')}</button>
                 <button onClick={handleClearAll} className="bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded-xl flex-1">{t('deleteAll')}</button>

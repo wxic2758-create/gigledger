@@ -13,12 +13,15 @@
   "hero": {
     "title": "Know Your Real Earnings",
     "subtitle": "Upload your earnings screenshot. See your true net income after gas and vehicle costs. Free, 5 seconds.",
-    "cta": "🚀 Calculate My Earnings",
+    "cta": {
+      "start": "Get Started →",
+      "analyze": "Try Calculator"
+    },
     "trackerCta": "📊 Weekly Tracker",
     "trustSignals": "✓ No signup required  ✓ 100% free  ✓ Results in 5 seconds"
   },
   "howItWorks": {
-    "title": "How it works",
+    "title": "How It Works",
     "step1": {
       "title": "Upload Screenshot",
       "desc": "Take or upload a screenshot of your Uber or DoorDash earnings page"
@@ -147,5 +150,17 @@
     "analyze": "Calculate",
     "about": "About",
     "getStarted": "Get Started"
+  },
+  "platforms": {
+    "title": "Supported Platforms",
+    "subtitle": "Works with popular gig platforms",
+    "uber": "Track your Uber earnings with automatic net calculation",
+    "doordash": "DoorDash delivery earnings with mileage tracking",
+    "instacart": "Instacart shopper earnings calculator"
+  },
+  "cta": {
+    "title": "Ready to Know Your Real Earnings?",
+    "subtitle": "Join thousands of gig workers who track their true earnings with GigLedger.",
+    "button": "Start for Free →"
   }
 }
