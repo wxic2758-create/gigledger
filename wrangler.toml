@@ -1,0 +1,5 @@
+name = "gigledger-mvp"
+compatibility_date = "2024-12-12"
+
+[pages]
+pages_build_output_dir = "./dist"
