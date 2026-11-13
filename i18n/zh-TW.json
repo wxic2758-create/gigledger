@@ -302,8 +302,10 @@
       "net": "淨收入",
       "costs": "固定成本",
       "costsNote": "本月",
+    "expenses": "一次性支出",
+    "expensesNote": "本月 · 營業比例",
       "profit": "實際利潤",
-      "profitNote": "淨收入減固定成本",
+    "profitNote": "淨收入減固定成本與一次性支出",
       "tax": "預留稅款"
     },
     "taxNote": "僅供預估 · 非稅務建議",
@@ -334,6 +336,23 @@
       "body": "記錄付款金額與平台手續費。原型會立即使用這些資料。",
       "add": "加入收入"
     },
+  "expenses": {
+    "title": "一次性支出",
+    "body": "用於外包、廣告、設備等單次花費。這些項目不會進入每日底線，也不要重複記錄已存在固定成本中的訂閱。",
+    "add": "加入支出"
+  },
+  "csv": {
+    "title": "CSV 匯入 / 匯出",
+    "export": "匯出 CSV",
+    "import": "匯入 CSV",
+    "importing": "匯入中…",
+    "template": "下載範本",
+    "result": "已匯入 {imported} 筆。{failed} 筆未匯入。",
+    "failedDownload": "下載未匯入資料",
+    "invalidFile": "請先選擇一個 CSV 檔案。",
+    "importFailed": "CSV 匯入失敗。請檢查檔案後再試一次。",
+    "emptyFile": "CSV 檔案是空的。"
+  },
     "fields": {
       "name": "名稱",
       "amount": "金額（USD）",
@@ -342,7 +361,10 @@
       "date": "日期",
       "source": "收入來源",
       "client": "客戶或專案",
-      "platformFee": "平台手續費（USD）"
+    "platformFee": "平台手續費（USD）",
+    "category": "類別",
+    "merchant": "商家或說明",
+    "notes": "備註（可選）"
     },
     "cycles": {
       "daily": "每天",
@@ -356,6 +378,8 @@
       "upwork": "Upwork",
       "fiverr": "Fiverr",
       "stripe": "Stripe",
+    "paypal": "PayPal",
+    "other": "其他",
       "direct": "直接客戶"
     },
     "table": {
@@ -367,11 +391,17 @@
       "date": "日期",
       "source": "來源",
       "fee": "手續費",
-      "net": "淨額"
+    "net": "淨額",
+    "category": "類別",
+    "merchant": "商家",
+    "businessUse": "營業使用比例",
+    "businessAmount": "營業金額",
+    "notes": "備註"
     },
     "empty": {
       "fixed": "尚未加入固定成本。",
-      "income": "尚未加入收入。"
+    "income": "尚未加入收入。",
+    "expenses": "尚未加入一次性支出。"
     },
     "disclaimer": "僅供預估。這不是稅務建議，也不包含銀行同步、抓取平台帳號或代為報稅。",
     "signIn": "登入",

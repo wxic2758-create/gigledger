@@ -302,8 +302,10 @@
       "net": "Net income",
       "costs": "Fixed costs",
       "costsNote": "This month",
+    "expenses": "One-time expenses",
+    "expensesNote": "This month · Business use",
       "profit": "True profit",
-      "profitNote": "Net income minus fixed costs",
+    "profitNote": "Net income minus fixed costs and one-time expenses",
       "tax": "Tax reserve"
     },
     "taxNote": "Estimate only · Not tax advice",
@@ -334,6 +336,23 @@
       "body": "Record the payment amount and platform fee. The prototype uses these entries immediately.",
       "add": "Add income"
     },
+  "expenses": {
+    "title": "One-time expenses",
+    "body": "Use this for individual purchases such as outsourcing, ads, or equipment. These do not enter Daily Floor and should not duplicate a subscription already in fixed costs.",
+    "add": "Add expense"
+  },
+  "csv": {
+    "title": "CSV import / export",
+    "export": "Export CSV",
+    "import": "Import CSV",
+    "importing": "Importing…",
+    "template": "Download template",
+    "result": "Imported {imported} rows. {failed} rows were not imported.",
+    "failedDownload": "Download unimported rows",
+    "invalidFile": "Choose a CSV file first.",
+    "importFailed": "CSV import failed. Please check the file and try again.",
+    "emptyFile": "The CSV file is empty."
+  },
     "fields": {
       "name": "Name",
       "amount": "Amount (USD)",
@@ -342,7 +361,10 @@
       "date": "Date",
       "source": "Source",
       "client": "Client or project",
-      "platformFee": "Platform fee (USD)"
+    "platformFee": "Platform fee (USD)",
+    "category": "Category",
+    "merchant": "Merchant or description",
+    "notes": "Notes (optional)"
     },
     "cycles": {
       "daily": "Daily",
@@ -356,6 +378,8 @@
       "upwork": "Upwork",
       "fiverr": "Fiverr",
       "stripe": "Stripe",
+    "paypal": "PayPal",
+    "other": "Other",
       "direct": "Direct client"
     },
     "table": {
@@ -367,11 +391,17 @@
       "date": "Date",
       "source": "Source",
       "fee": "Fee",
-      "net": "Net"
+    "net": "Net",
+    "category": "Category",
+    "merchant": "Merchant",
+    "businessUse": "Business use",
+    "businessAmount": "Business amount",
+    "notes": "Notes"
     },
     "empty": {
       "fixed": "No fixed costs added yet.",
-      "income": "No income added yet."
+    "income": "No income added yet.",
+    "expenses": "No one-time expenses added yet."
     },
     "disclaimer": "Estimates only. This is not tax advice, bank sync, platform scraping, or tax filing.",
     "signIn": "Sign in",

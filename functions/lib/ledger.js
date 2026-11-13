@@ -7,7 +7,7 @@ export const cycles = {
   yearly: 1,
 };
 
-export const incomeSources = ["upwork", "fiverr", "stripe", "direct"];
+export const incomeSources = ["upwork", "fiverr", "stripe", "paypal", "direct", "other"];
 
 const finite = (value) => Number.isFinite(value) && value >= 0;
 
@@ -54,14 +54,37 @@ export const normalizeDraft = async (input) => {
     const source = incomeSources.includes(item?.source) ? item.source : null;
     const occurredOn = date(item?.date);
     const clientName = text(item?.client, 120);
+    const externalRef = text(item?.externalRef, 160);
     if (!source || !occurredOn || !finite(amount) || !finite(platformFee) || platformFee > amount) continue;
     normalizedIncome.push({
-      externalRef: await hash(`${occurredOn}|${source}|${clientName || ""}|${amount}|${platformFee}`),
+      externalRef: externalRef || await hash(`${occurredOn}|${source}|${clientName || ""}|${amount}|${platformFee}`),
       occurredOn,
       source,
       clientName,
       amount,
       platformFee,
+    });
+  }
+
+  const expensesData = Array.isArray(data.expenses) ? data.expenses.slice(0, 500) : [];
+  const normalizedExpenses = [];
+  for (const item of expensesData) {
+    const amount = Number(item?.amount);
+    const businessUse = Number(item?.businessUse ?? 100);
+    const occurredOn = date(item?.date);
+    const category = text(item?.category, 80);
+    const merchant = text(item?.merchant, 120);
+    const notes = text(item?.notes, 300);
+    const externalRef = text(item?.externalRef, 160);
+    if (!category || !occurredOn || !finite(amount) || !finite(businessUse) || businessUse > 100) continue;
+    normalizedExpenses.push({
+      externalRef: externalRef || await hash(`${occurredOn}|${category}|${merchant || ""}|${amount}|${businessUse}`),
+      occurredOn,
+      category,
+      merchant,
+      amount,
+      businessUse,
+      notes,
     });
   }
 
@@ -80,6 +103,7 @@ export const normalizeDraft = async (input) => {
   return {
     fixedCosts: normalizedFixed,
     income: normalizedIncome,
+    expenses: normalizedExpenses,
     taxReserveRate,
     cashOnHand,
   };
@@ -124,6 +148,27 @@ export const saveWorkspaceDraft = async (db, workspaceId, draft) => {
     ));
   }
 
+  for (const item of draft.expenses) {
+    statements.push(db.prepare(
+      `INSERT INTO expenses
+        (id, workspace_id, external_ref, occurred_on, category, merchant, amount, business_use, notes, source, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'manual', ?, ?)
+       ON CONFLICT(workspace_id, external_ref) DO NOTHING`,
+    ).bind(
+      crypto.randomUUID(),
+      workspaceId,
+      item.externalRef,
+      item.occurredOn,
+      item.category,
+      item.merchant,
+      item.amount,
+      item.businessUse,
+      item.notes,
+      timestamp,
+      timestamp,
+    ));
+  }
+
   for (const item of draft.income) {
     statements.push(db.prepare(
       `INSERT INTO income_entries
@@ -158,8 +203,12 @@ export const loadWorkspace = async (db, workspaceId) => {
      FROM fixed_costs WHERE workspace_id = ? ORDER BY created_at DESC`,
   ).bind(workspaceId).all();
   const income = await db.prepare(
-    `SELECT id, occurred_on, source, client_name, amount, platform_fee, created_at, updated_at
+    `SELECT id, external_ref, occurred_on, source, client_name, amount, platform_fee, created_at, updated_at
      FROM income_entries WHERE workspace_id = ? ORDER BY occurred_on DESC, created_at DESC`,
+  ).bind(workspaceId).all();
+  const expenses = await db.prepare(
+    `SELECT id, occurred_on, category, merchant, amount, business_use, notes, source, created_at, updated_at
+     FROM expenses WHERE workspace_id = ? ORDER BY occurred_on DESC, created_at DESC`,
   ).bind(workspaceId).all();
 
   return {
@@ -183,11 +232,24 @@ export const loadWorkspace = async (db, workspaceId) => {
     })),
     income: (income.results || []).map((item) => ({
       id: item.id,
+      externalRef: item.external_ref,
       date: item.occurred_on,
       source: item.source,
       client: item.client_name,
       amount: item.amount,
       platformFee: item.platform_fee,
+      createdAt: item.created_at,
+      updatedAt: item.updated_at,
+    })),
+    expenses: (expenses.results || []).map((item) => ({
+      id: item.id,
+      date: item.occurred_on,
+      category: item.category,
+      merchant: item.merchant,
+      amount: item.amount,
+      businessUse: item.business_use,
+      notes: item.notes,
+      source: item.source,
       createdAt: item.created_at,
       updatedAt: item.updated_at,
     })),

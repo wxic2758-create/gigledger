@@ -3,7 +3,7 @@
   const locale = root.dataset.locale === "zh-TW" ? "zh-TW" : "en";
   const messages = JSON.parse(document.getElementById("proto-messages").textContent);
   const dashboardMode = Boolean(document.querySelector("[data-dashboard]"));
-  const state = { fixedCosts: [], income: [], taxReserveRate: "", cashOnHand: "" };
+  const state = { fixedCosts: [], income: [], expenses: [], taxReserveRate: "", cashOnHand: "" };
 
   const currency = new Intl.NumberFormat(locale === "zh-TW" ? "zh-TW" : "en-US", {
     style: "currency", currency: "USD", maximumFractionDigits: 2,
@@ -38,10 +38,14 @@
     const monthlyFixedCosts = state.fixedCosts.reduce(
       (sum, item) => sum + (Number(item.amount) || 0) * (Number(item.multiplier) || 0) / 12, 0,
     );
+    const monthlyExpenses = state.expenses.reduce(
+      (sum, item) => sum + (Number(item.amount) || 0) * (Number(item.businessUse) || 0) / 100, 0,
+    );
     const rate = Number(state.taxReserveRate) / 100;
     return {
       dailyFloor, grossIncome, platformFees, netIncome, monthlyFixedCosts,
-      trueProfit: netIncome - monthlyFixedCosts,
+      monthlyExpenses,
+      trueProfit: netIncome - monthlyFixedCosts - monthlyExpenses,
       taxReserve: Number.isFinite(rate) && state.taxReserveRate !== "" && rate >= 0
         ? netIncome * rate
         : null,
@@ -58,6 +62,7 @@
     const taxNode = document.querySelector("[data-proto='metric-tax']");
     if (taxNode) taxNode.textContent = result.taxReserve === null ? messages.taxUnset : money(result.taxReserve);
     set("metric-costs", money(result.monthlyFixedCosts));
+    set("metric-expenses", money(result.monthlyExpenses));
   };
 
   const renderFixedCosts = () => {
@@ -107,10 +112,35 @@
     });
   };
 
+  const renderExpenses = () => {
+    const tbody = document.querySelector("[data-proto='expense-rows']");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+    if (!state.expenses.length) {
+      const row = document.createElement("tr");
+      row.innerHTML = `<td colspan="6">${messages.empty.expenses}</td>`;
+      tbody.appendChild(row);
+      return;
+    }
+    state.expenses.forEach((item) => {
+      const row = document.createElement("tr");
+      const businessAmount = (Number(item.amount) || 0) * (Number(item.businessUse) || 0) / 100;
+      const dateCell = document.createElement("td"); dateCell.textContent = item.date;
+      const category = document.createElement("td"); category.textContent = item.category;
+      const merchant = document.createElement("td"); merchant.textContent = item.merchant || "";
+      const amount = document.createElement("td"); amount.textContent = money(Number(item.amount));
+      const use = document.createElement("td"); use.textContent = `${Number(item.businessUse)}%`;
+      const business = document.createElement("td"); business.textContent = money(businessAmount);
+      row.append(dateCell, category, merchant, amount, use, business);
+      tbody.appendChild(row);
+    });
+  };
+
   const render = () => {
     renderMetrics();
     renderFixedCosts();
     renderIncome();
+    renderExpenses();
   };
 
   const fixedForm = document.querySelector("[data-proto-form='fixed']");
@@ -151,6 +181,26 @@
     });
   }
 
+  const expenseForm = document.querySelector("[data-proto-form='expense']");
+  if (expenseForm) {
+    expenseForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const data = new FormData(expenseForm);
+      state.expenses.push({
+        date: String(data.get("date") || today()),
+        category: String(data.get("category") || ""),
+        merchant: String(data.get("merchant") || ""),
+        amount: Number(data.get("amount")) || 0,
+        businessUse: Number(data.get("businessUse")) || 100,
+        notes: String(data.get("notes") || ""),
+      });
+      expenseForm.reset();
+      expenseForm.elements.date.value = today();
+      expenseForm.elements.businessUse.value = "100";
+      render();
+    });
+  }
+
   const showMessage = (message) => {
     const node = document.querySelector("[data-save-message]");
     if (!node) return;
@@ -172,6 +222,7 @@
         body: JSON.stringify({
           fixedCosts: state.fixedCosts,
           income: state.income,
+          expenses: state.expenses,
           taxReserveRate: state.taxReserveRate,
           cashOnHand: state.cashOnHand,
           locale,
@@ -189,6 +240,57 @@
   };
 
   document.querySelector("[data-save-google]")?.addEventListener("click", saveDraft);
+  const csvMessage = (node, message) => {
+    if (!node) return;
+    node.textContent = message;
+    node.hidden = false;
+  };
+  const csvFailedCsv = (rows) => {
+    const headers = ["line_number", "reason", "date", "source", "amount", "platform_fee", "client", "external_ref", "notes"];
+    const escape = (value) => {
+      const raw = value === null || value === undefined ? "" : String(value);
+      return /[",\n\r]/.test(raw) ? `"${raw.replaceAll("\"", "\"\"")}"` : raw;
+    };
+    const line = (row) => headers.map((header) => escape(row[header])).join(",");
+    return [headers.join(","), ...rows.map(line)].join("\n");
+  };
+  document.querySelector("[data-csv-import]")?.addEventListener("change", async (event) => {
+    const input = event.target;
+    const label = document.querySelector("[data-csv-import-label]");
+    const status = document.querySelector("[data-csv-message]");
+    const failedStatus = document.querySelector("[data-csv-failed-message]");
+    const failedLink = document.querySelector("[data-csv-failed-download]");
+    const file = input.files?.[0];
+    if (!status || !failedStatus || !failedLink || !file) {
+      csvMessage(status, messages.csv.invalidFile);
+      return;
+    }
+    const original = label?.textContent || messages.csv.import;
+    if (label) label.textContent = messages.csv.importing;
+    status.hidden = true;
+    failedStatus.hidden = true;
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      const response = await fetch("/api/workspace/csv", { method: "POST", body, credentials: "same-origin" });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data?.error || "import_failed");
+      csvMessage(status, messages.csv.result.replaceAll("{imported}", String(data.imported || 0)).replaceAll("{failed}", String(data.failed || 0)));
+      if (data.failedRows?.length) {
+        const blob = new Blob([csvFailedCsv(data.failedRows)], { type: "text/csv;charset=utf-8" });
+        failedLink.href = URL.createObjectURL(blob);
+        failedStatus.hidden = false;
+      }
+      const dashboardMode = Boolean(document.querySelector("[data-dashboard]"));
+      if (dashboardMode && data.imported) await loadDashboard();
+    } catch (error) {
+      const reason = error?.message === "empty_file" ? messages.csv.emptyFile : messages.csv.importFailed;
+      csvMessage(status, reason);
+    } finally {
+      if (label) label.textContent = original;
+      input.value = "";
+    }
+  });
   const confirmDelete = () => {
     if (!window.confirm(messages.deleteConfirm)) return;
     window.location.assign("/api/workspace?type=account");
@@ -230,6 +332,14 @@
         client: item.client || "",
         amount: Number(item.amount) || 0,
         platformFee: Number(item.platformFee) || 0,
+      }));
+      state.expenses = (data.ledger.expenses || []).map((item) => ({
+        date: item.date,
+        category: item.category,
+        merchant: item.merchant || "",
+        amount: Number(item.amount) || 0,
+        businessUse: Number(item.businessUse) || 100,
+        notes: item.notes || "",
       }));
       const settingsForm = document.querySelector('[data-proto-form="settings"]');
       if (settingsForm) {
@@ -312,6 +422,7 @@
     state.income = monthlyIncome > 0 ? [{
       date: today(), source: "direct", client: "Rough monthly income", amount: monthlyIncome, platformFee: 0,
     }] : [];
+    state.expenses = [];
     state.taxReserveRate = String(document.querySelector("[data-flow-tax]")?.value || "");
     state.cashOnHand = String(document.querySelector("[data-flow-cash]")?.value || "");
     const settingsForm = document.querySelector('[data-proto-form="settings"]');

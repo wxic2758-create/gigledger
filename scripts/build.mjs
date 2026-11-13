@@ -497,6 +497,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
         <article><span>${esc(t.app.metrics.fees)}</span><strong data-proto="metric-fees">$0.00</strong></article>
         <article><span>${esc(t.app.metrics.net)}</span><strong data-proto="metric-net">$0.00</strong></article>
         <article><span>${esc(t.app.metrics.costs)}</span><strong data-proto="metric-costs">$0.00</strong><small>${esc(t.app.metrics.costsNote)}</small></article>
+        <article><span>${esc(t.app.metrics.expenses)}</span><strong data-proto="metric-expenses">$0.00</strong><small>${esc(t.app.metrics.expensesNote)}</small></article>
         <article class="profit-card"><span>${esc(t.app.metrics.profit)}</span><strong data-proto="metric-profit">$0.00</strong><small>${esc(t.app.metrics.profitNote)}</small></article>
         <article><span>${esc(t.app.metrics.tax)}</span><strong data-proto="metric-tax">$0.00</strong><small>${esc(t.app.taxNote)}</small></article>
       </div>
@@ -545,6 +546,17 @@ const appPage = ({ locale, t, mode = "app" }) => {
         <p>${esc(t.app.income.body)}</p>
       </div>
       <div class="app-grid">
+        <div class="csv-actions">
+          <h3>${esc(t.app.csv.title)}</h3>
+          <a class="button button-ghost" href="/api/workspace/csv?template=1">${esc(t.app.csv.template)}</a>
+          <a class="button button-ghost" href="/api/workspace/csv?export=income">${esc(t.app.csv.export)}</a>
+          <label class="button button-dark csv-import-button">
+            <input type="file" accept=".csv,text/csv" data-csv-import hidden>
+            <span data-csv-import-label>${esc(t.app.csv.import)}</span>
+          </label>
+          <p class="form-message" data-csv-message role="status" aria-live="polite" hidden></p>
+          <p class="form-message" data-csv-failed-message role="status" aria-live="polite" hidden><a href="#" download="gigledger-unimported.csv" data-csv-failed-download>${esc(t.app.csv.failedDownload)}</a></p>
+        </div>
         <form class="app-form app-settings-form" data-proto-form="settings" novalidate>
           <label><span>${esc(t.app.taxRateLabel)}</span><input name="taxReserveRate" type="number" min="0" max="100" step="0.1" placeholder="${esc(t.app.taxRatePlaceholder)}"></label>
           <label><span>${esc(t.app.cashLabel)}</span><input name="cashOnHand" type="number" min="0" step="0.01"></label>
@@ -562,6 +574,31 @@ const appPage = ({ locale, t, mode = "app" }) => {
           <table>
             <thead><tr><th>${esc(t.app.table.date)}</th><th>${esc(t.app.table.source)}</th><th>${esc(t.app.table.amount)}</th><th>${esc(t.app.table.fee)}</th><th>${esc(t.app.table.net)}</th></tr></thead>
             <tbody data-proto="income-rows"></tbody>
+          </table>
+        </div>
+      </div>
+      <p class="app-note">${esc(t.app.disclaimer)}</p>
+    </section>
+
+    <section class="app-section shell" id="expenses">
+      <div class="app-section-head">
+        <h2>${esc(t.app.expenses.title)}</h2>
+        <p>${esc(t.app.expenses.body)}</p>
+      </div>
+      <div class="app-grid">
+        <form class="app-form" data-proto-form="expense" novalidate>
+          <label><span>${esc(t.app.fields.date)}</span><input name="date" type="date" value="${new Date().toISOString().slice(0, 10)}" required></label>
+          <label><span>${esc(t.app.fields.category)}</span><input name="category" required></label>
+          <label><span>${esc(t.app.fields.merchant)}</span><input name="merchant"></label>
+          <label><span>${esc(t.app.fields.amount)}</span><input name="amount" type="number" min="0" step="0.01" required></label>
+          <label><span>${esc(t.app.fields.businessUse)}</span><input name="businessUse" type="number" min="0" max="100" value="100" required></label>
+          <label><span>${esc(t.app.fields.notes)}</span><input name="notes"></label>
+          <button class="button button-dark" type="submit">${esc(t.app.expenses.add)}</button>
+        </form>
+        <div class="app-table-wrap">
+          <table>
+            <thead><tr><th>${esc(t.app.table.date)}</th><th>${esc(t.app.table.category)}</th><th>${esc(t.app.table.merchant)}</th><th>${esc(t.app.table.amount)}</th><th>${esc(t.app.table.businessUse)}</th><th>${esc(t.app.table.businessAmount)}</th></tr></thead>
+            <tbody data-proto="expense-rows"></tbody>
           </table>
         </div>
       </div>

@@ -64,6 +64,15 @@
 }
 .app-form .button { margin-top: 6px; }
 .app-settings-form { grid-column: 1 / -1; }
+.csv-actions {
+  grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+  padding: 16px; background: var(--paper); border: 1px dashed var(--line); border-radius: 16px;
+}
+.csv-actions h3 { width: 100%; margin: 0; font-size: 13px; letter-spacing: -.02em; }
+.csv-actions .button { min-height: 42px; }
+.csv-import-button { position: relative; cursor: pointer; }
+.csv-import-button input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.csv-actions .form-message { width: 100%; margin: 0; }
 .app-table-wrap {
   min-width: 0; overflow: auto; background: var(--white);
   border: 1px solid var(--line); border-radius: 18px;

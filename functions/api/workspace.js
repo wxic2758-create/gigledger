@@ -44,7 +44,7 @@ export const onRequestPost = async ({ env, request }) => {
     return json({ error: "invalid_json" }, 400);
   }
   const draft = await normalizeDraft(payload);
-  if (!draft.fixedCosts.length && !draft.income.length) {
+  if (!draft.fixedCosts.length && !draft.income.length && !draft.expenses.length) {
     return json({ error: "empty_draft" }, 400);
   }
   await saveWorkspaceDraft(env.DB, workspace.id, draft);
@@ -60,6 +60,7 @@ export const onRequestDelete = async ({ env, request }) => {
   if (type === "account") {
     await env.DB.batch([
       env.DB.prepare("DELETE FROM income_entries WHERE workspace_id IN (SELECT id FROM workspaces WHERE owner_id = ?)").bind(userId),
+      env.DB.prepare("DELETE FROM expenses WHERE workspace_id IN (SELECT id FROM workspaces WHERE owner_id = ?)").bind(userId),
       env.DB.prepare("DELETE FROM fixed_costs WHERE workspace_id IN (SELECT id FROM workspaces WHERE owner_id = ?)").bind(userId),
       env.DB.prepare("DELETE FROM workspaces WHERE owner_id = ?").bind(userId),
       env.DB.prepare("DELETE FROM users WHERE id = ?").bind(userId),
