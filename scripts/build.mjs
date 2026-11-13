@@ -420,6 +420,64 @@ const appPage = ({ locale, t, mode = "app" }) => {
     </nav>
   </header>
   <main id="main">
+    <section class="app-flow shell" id="onboarding" ${mode === "dashboard" ? "hidden" : ""}>
+      <div class="flow-head">
+        <p class="app-steps-kicker">${esc(t.app.flow.kicker)}</p>
+        <h1>${esc(t.app.flow.title)}</h1>
+        <p>${esc(t.app.flow.subtitle)}</p>
+      </div>
+
+      <div class="flow-panel" data-flow-step="1">
+        <div class="flow-progress"><span data-flow-current>1</span> / 3</div>
+        <h2>${esc(t.app.flow.templatesTitle)}</h2>
+        <p>${esc(t.app.flow.templatesNote)}</p>
+        <div class="template-grid" data-template-grid>
+          ${t.app.flow.templates.map((item) => `
+            <label class="template-card">
+              <input type="checkbox" name="template" value="${esc(item.key)}" data-template-key="${esc(item.key)}">
+              <span>${esc(item.label)}</span>
+              <span class="template-price"><b>$</b><input type="number" min="0" step="0.01" value="${Number(item.amount) || 0}" data-template-amount="${esc(item.key)}"></span>
+            </label>`).join("")}
+        </div>
+        <div class="flow-other">
+          <label><span>${esc(t.app.flow.otherTitle)}</span><input type="text" data-other-name placeholder="${esc(t.app.flow.otherTitle)}"></label>
+          <label><span>${esc(t.app.fields.amount)}</span><input type="number" min="0" step="0.01" data-other-amount></label>
+        </div>
+        <p class="app-note" data-skip-warning hidden>${esc(t.app.flow.skipWarning)}</p>
+      </div>
+
+      <div class="flow-panel" data-flow-step="2" hidden>
+        <div class="flow-progress"><span data-flow-current>2</span> / 3</div>
+        <h2>${esc(t.app.flow.incomeTitle)}</h2>
+        <p>${esc(t.app.flow.incomeNote)}</p>
+        <label><span>${esc(t.app.flow.incomeTitle)}</span><input type="number" min="0" step="0.01" data-flow-income></label>
+        <label><span>${esc(t.app.flow.cashTitle)}</span><input type="number" min="0" step="0.01" data-flow-cash></label>
+        <label><span>${esc(t.app.flow.taxTitle)}</span><input type="number" min="0" max="100" step="0.1" data-flow-tax placeholder="${esc(t.app.taxRatePlaceholder)}"></label>
+        <p class="app-note">${esc(t.app.flow.taxReference)}</p>
+      </div>
+
+      <div class="flow-panel" data-flow-step="3" hidden>
+        <div class="flow-progress"><span data-flow-current>3</span> / 3</div>
+        <h2>${esc(t.app.flow.resultTitle)}</h2>
+        <p>${esc(t.app.flow.resultNote)}</p>
+        <div class="flow-results">
+          <article class="flow-primary"><span>${esc(t.app.metrics.daily)}</span><strong data-flow-daily>$0.00</strong></article>
+          <article><span>${esc(t.app.flow.comparison)}</span><strong data-flow-comparison>$0.00</strong><small data-flow-gap hidden></small></article>
+          <article><span>${esc(t.app.flow.runway)}</span><strong data-flow-runway>${esc(t.app.flow.unset)}</strong></article>
+          <article><span>${esc(t.app.metrics.tax)}</span><strong data-flow-tax-result>${esc(t.app.flow.unset)}</strong><small>${esc(t.app.taxNote)}</small></article>
+        </div>
+        <div class="flow-actions">
+          <button class="button button-dark" type="button" data-flow-save>${esc(t.app.flow.save)}</button>
+          <a class="button button-ghost" href="#fixed-costs" data-flow-continue>${esc(t.app.flow.continueFull)}</a>
+        </div>
+      </div>
+
+      <div class="flow-nav">
+        <button class="button button-ghost" type="button" data-flow-back hidden>${esc(t.app.flow.back)}</button>
+        <button class="button button-dark" type="button" data-flow-next>${esc(t.app.flow.next)}</button>
+      </div>
+    </section>
+
     <section class="app-hero shell" id="dashboard" ${mode === "dashboard" ? "data-dashboard" : ""}>
       <div class="app-badge">${esc(t.app.badge)}</div>
       <h1>${esc(heading)}</h1>
@@ -516,7 +574,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
       <a href="/${t.alternatePath}app">${esc(t.nav.switchTo)}</a>
     </div>
   </footer>
-  <script src="/app-ledger.js?v=20261113-4" defer></script>
+  <script src="/app-ledger.js?v=20261113-6" defer></script>
   <script src="/app.js" defer></script>
 </body>
 </html>`;

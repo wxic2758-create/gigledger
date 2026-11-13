@@ -388,7 +388,69 @@
     "export": "Export JSON",
     "deleteAccount": "Delete account",
     "deleteConfirm": "This permanently deletes your account and ledger data. Continue?",
-    "deleteFailed": "Account deletion failed. Your data is still available."
+    "deleteFailed": "Account deletion failed. Your data is still available.",
+    "flow": {
+      "kicker": "3-minute start",
+      "title": "See your Daily Floor",
+      "subtitle": "Choose what you already pay for, add one rough income number, then save only if it helps.",
+      "step": "Step",
+      "stepOf": "of 3",
+      "templatesTitle": "Monthly subscriptions and tools",
+      "templatesNote": "Check what you use and adjust the price if needed.",
+      "otherTitle": "Other fixed cost",
+      "otherNote": "Rent, insurance, hosting, or anything recurring.",
+      "skipWarning": "Daily Floor will be $0 unless you add at least one fixed cost.",
+      "back": "Back",
+      "next": "Next",
+      "seeResults": "See my number",
+      "incomeTitle": "Rough monthly income",
+      "incomeNote": "Use a net number you actually receive. You can add exact entries later.",
+      "cashTitle": "Cash on hand (optional)",
+      "taxTitle": "Tax reserve rate (optional)",
+      "taxReference": "Common US self-employment reference: 25%-30%. Estimate only, not tax advice.",
+      "resultTitle": "Your number",
+      "resultNote": "This calculation stays on this page until you save it. Refreshing or leaving will clear it.",
+      "comparison": "Monthly income per day",
+      "ahead": "You are above your Daily Floor by",
+      "behind": "You are below your Daily Floor by",
+      "runway": "No-new-work runway",
+      "days": "days",
+      "unset": "Not set",
+      "save": "Save with Google",
+      "continueFull": "Continue to full ledger",
+      "templates": [
+        {
+          "key": "chatgpt",
+          "label": "ChatGPT Plus",
+          "amount": 20
+        },
+        {
+          "key": "claude",
+          "label": "Claude Pro",
+          "amount": 20
+        },
+        {
+          "key": "cursor",
+          "label": "Cursor Pro",
+          "amount": 20
+        },
+        {
+          "key": "notion",
+          "label": "Notion",
+          "amount": 10
+        },
+        {
+          "key": "figma",
+          "label": "Figma",
+          "amount": 15
+        },
+        {
+          "key": "copilot",
+          "label": "GitHub Copilot",
+          "amount": 10
+        }
+      ]
+    }
   },
   "start": {
     "kicker": "Start in three minutes",

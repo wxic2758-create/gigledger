@@ -242,6 +242,120 @@
     }
   };
 
+  const flowSection = document.querySelector("#onboarding");
+  const flowPanels = [...document.querySelectorAll("[data-flow-step]")];
+  const flowBack = document.querySelector("[data-flow-back]");
+  const flowNext = document.querySelector("[data-flow-next]");
+  const flowSave = document.querySelector("[data-flow-save]");
+  let flowStep = 1;
+
+  const selectedTemplates = () => [...document.querySelectorAll("[data-template-key]:checked")]
+    .map((checkbox) => {
+      const key = checkbox.dataset.templateKey;
+      const amountNode = document.querySelector(`[data-template-amount="${key}"]`);
+      const template = messages.flow.templates.find((item) => item.key === key);
+      return {
+        name: template?.label || key,
+        amount: Number(amountNode?.value || template?.amount || 0),
+        cycle: "monthly",
+        multiplier: 12,
+        businessUse: 100,
+      };
+    });
+
+  const otherFixedCost = () => {
+    const nameNode = document.querySelector("[data-other-name]");
+    const amountNode = document.querySelector("[data-other-amount]");
+    const name = String(nameNode?.value || "").trim();
+    const amount = Number(amountNode?.value || 0);
+    return name && amount > 0 ? { name, amount, cycle: "monthly", multiplier: 12, businessUse: 100 } : null;
+  };
+
+  const renderFlowResults = () => {
+    const result = calculate();
+    const dailyNode = document.querySelector("[data-flow-daily]");
+    const comparisonNode = document.querySelector("[data-flow-comparison]");
+    const gapNode = document.querySelector("[data-flow-gap]");
+    const runwayNode = document.querySelector("[data-flow-runway]");
+    const taxNode = document.querySelector("[data-flow-tax-result]");
+    if (dailyNode) dailyNode.textContent = dayMoney(result.dailyFloor);
+    const monthlyIncome = Number(document.querySelector("[data-flow-income]")?.value || 0);
+    if (comparisonNode) comparisonNode.textContent = dayMoney(monthlyIncome / 12);
+    if (gapNode) {
+      const gap = monthlyIncome / 12 - result.dailyFloor;
+      if (monthlyIncome > 0 && gap < 0) {
+        gapNode.textContent = `${messages.flow.behind} ${dayMoney(Math.abs(gap))}`;
+        gapNode.hidden = false;
+      } else if (monthlyIncome > 0 && gap > 0) {
+        gapNode.textContent = `${messages.flow.ahead} ${dayMoney(gap)}`;
+        gapNode.hidden = false;
+      } else {
+        gapNode.hidden = true;
+      }
+    }
+    const cash = Number(document.querySelector("[data-flow-cash]")?.value || 0);
+    if (runwayNode) {
+      runwayNode.textContent = cash > 0 && result.dailyFloor > 0
+        ? `${Math.floor(cash / result.dailyFloor)} ${messages.flow.days}`
+        : messages.flow.unset;
+    }
+    if (taxNode) taxNode.textContent = result.taxReserve === null
+      ? messages.flow.unset
+      : money(result.taxReserve);
+  };
+
+  const applyFlowToLedger = () => {
+    const templateCosts = selectedTemplates();
+    const otherCost = otherFixedCost();
+    state.fixedCosts = [...templateCosts, ...(otherCost ? [otherCost] : [])];
+    const monthlyIncome = Number(document.querySelector("[data-flow-income]")?.value || 0);
+    state.income = monthlyIncome > 0 ? [{
+      date: today(), source: "direct", client: "Rough monthly income", amount: monthlyIncome, platformFee: 0,
+    }] : [];
+    state.taxReserveRate = String(document.querySelector("[data-flow-tax]")?.value || "");
+    state.cashOnHand = String(document.querySelector("[data-flow-cash]")?.value || "");
+    const settingsForm = document.querySelector('[data-proto-form="settings"]');
+    if (settingsForm) {
+      settingsForm.elements.taxReserveRate.value = state.taxReserveRate;
+      settingsForm.elements.cashOnHand.value = state.cashOnHand;
+    }
+    render();
+    renderFlowResults();
+  };
+
+  const showFlowStep = (nextStep) => {
+    flowStep = Math.min(3, Math.max(1, nextStep));
+    flowPanels.forEach((panel) => {
+      panel.hidden = Number(panel.dataset.flowStep) !== flowStep;
+    });
+    const current = document.querySelector("[data-flow-current]");
+    if (current) current.textContent = String(flowStep);
+    if (flowBack) flowBack.hidden = flowStep === 1;
+    if (flowNext) {
+      flowNext.hidden = flowStep === 3;
+      flowNext.textContent = flowStep === 2 ? messages.flow.seeResults : messages.flow.next;
+    }
+    if (flowStep === 3) applyFlowToLedger();
+  };
+
+  flowBack?.addEventListener("click", () => showFlowStep(flowStep - 1));
+  flowNext?.addEventListener("click", () => {
+    if (flowStep === 1) {
+      const warning = document.querySelector("[data-skip-warning]");
+      if (warning) warning.hidden = Boolean(selectedTemplates().length || otherFixedCost());
+    }
+    showFlowStep(flowStep + 1);
+  });
+  flowSave?.addEventListener("click", saveDraft);
+  document.querySelector("[data-template-grid]")?.addEventListener("input", (event) => {
+    if (!event.target.matches("[type=checkbox]")) return;
+    const warning = document.querySelector("[data-skip-warning]");
+    if (warning) warning.hidden = Boolean(selectedTemplates().length || otherFixedCost());
+  });
+
+  flowSection?.classList.add("ready");
+  showFlowStep(1);
+
   loadDashboard();
   render();
 })();

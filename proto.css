@@ -106,3 +106,49 @@
   .app-table-wrap table { min-width: 520px; }
   .app-table-wrap th, .app-table-wrap td { padding: 12px 10px; }
 }
+
+.app-flow {
+  padding: 48px 0 36px;
+}
+.flow-head h1 {
+  font-family: var(--display); font-size: clamp(34px, 5vw, 56px);
+  letter-spacing: -.05em; line-height: 1.03; margin-top: 12px; max-width: 18ch;
+}
+.flow-head > p { margin-top: 14px; max-width: 58ch; color: var(--ink-soft); }
+.flow-panel {
+  margin-top: 30px; padding: 26px; background: var(--white);
+  border: 1px solid var(--line); border-radius: 20px; box-shadow: 10px 12px 0 var(--yellow);
+}
+.flow-progress { font-size: 11px; font-weight: 800; color: var(--orange-dark); margin-bottom: 14px; }
+.flow-panel h2 { font-family: var(--display); font-size: clamp(25px, 3vw, 35px); letter-spacing: -.04em; }
+.flow-panel > p { margin-top: 8px; color: var(--ink-soft); }
+.template-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 22px; }
+.template-card {
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px;
+  padding: 15px; background: var(--paper); border: 1px solid var(--line); border-radius: 13px; cursor: pointer;
+}
+.template-card input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--orange-dark); }
+.template-price { display: inline-flex; align-items: center; gap: 4px; font-weight: 800; }
+.template-price input { width: 76px; min-height: 38px; padding: 0 9px; border: 1px solid var(--line); border-radius: 9px; background: var(--white); }
+.flow-other { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 18px; }
+.flow-other label span, .flow-panel > label span { display: block; font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 7px; }
+.flow-other input, .flow-panel > label input { width: 100%; min-height: 46px; padding: 0 14px; background: var(--paper); border: 1px solid var(--line); border-radius: 10px; }
+.flow-panel > label { margin-top: 16px; }
+.flow-results { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 24px; }
+.flow-results article { padding: 18px; background: var(--paper); border: 1px solid var(--line); border-radius: 15px; }
+.flow-results .flow-primary { grid-column: 1 / -1; background: var(--orange); border-color: var(--orange); }
+.flow-results span { display: block; font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-soft); }
+.flow-results .flow-primary span { color: rgba(43, 27, 18, .72); }
+.flow-results strong { display: block; margin-top: 10px; font-family: var(--display); font-size: clamp(22px, 3vw, 33px); letter-spacing: -.045em; }
+.flow-results small { display: block; margin-top: 8px; font-size: 11px; color: var(--ink-soft); }
+.flow-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 22px; }
+.flow-nav { display: flex; justify-content: flex-end; gap: 12px; margin-top: 18px; }
+.dashboard-page .app-flow { display: none; }
+@media (max-width: 760px) {
+  .flow-panel { padding: 20px; }
+  .template-grid { grid-template-columns: 1fr; }
+  .flow-other { grid-template-columns: 1fr; }
+  .flow-results { grid-template-columns: 1fr; }
+  .flow-nav { justify-content: stretch; }
+  .flow-nav .button { flex: 1; }
+}

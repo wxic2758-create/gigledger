@@ -388,7 +388,69 @@
     "export": "匯出 JSON",
     "deleteAccount": "刪除帳號",
     "deleteConfirm": "這會永久刪除你的帳號與帳本資料。確定繼續嗎？",
-    "deleteFailed": "刪除帳號失敗。你的資料仍然可用。"
+    "deleteFailed": "刪除帳號失敗。你的資料仍然可用。",
+    "flow": {
+      "kicker": "三分鐘開始",
+      "title": "看清你的每日底線",
+      "subtitle": "先選擇你已經在付的項目，填一個大概收入，覺得有幫助再保存。",
+      "step": "步驟",
+      "stepOf": "共 3 步",
+      "templatesTitle": "每月訂閱與工具",
+      "templatesNote": "勾選你正在使用的項目，並視需要修改金額。",
+      "otherTitle": "其他固定成本",
+      "otherNote": "租金、保險、主機或其他週期性成本。",
+      "skipWarning": "如果沒有加入任何固定成本，每日底線會是 $0。",
+      "back": "上一步",
+      "next": "下一步",
+      "seeResults": "查看我的數字",
+      "incomeTitle": "大概月收入",
+      "incomeNote": "先填實際到手的淨額，之後可以再補精確紀錄。",
+      "cashTitle": "現有現金（可選）",
+      "taxTitle": "預留稅款比例（可選）",
+      "taxReference": "美國自僱常見參考：25%–30%。僅供預估，非稅務建議。",
+      "resultTitle": "你的數字",
+      "resultNote": "保存前，這次試算只留在目前頁面。刷新或離開會清空。",
+      "comparison": "月收入的每日金額",
+      "ahead": "你高於每日底線",
+      "behind": "你低於每日底線",
+      "runway": "不接新單的跑道",
+      "days": "天",
+      "unset": "未設定",
+      "save": "用 Google 保存",
+      "continueFull": "繼續使用完整帳本",
+      "templates": [
+        {
+          "key": "chatgpt",
+          "label": "ChatGPT Plus",
+          "amount": 20
+        },
+        {
+          "key": "claude",
+          "label": "Claude Pro",
+          "amount": 20
+        },
+        {
+          "key": "cursor",
+          "label": "Cursor Pro",
+          "amount": 20
+        },
+        {
+          "key": "notion",
+          "label": "Notion",
+          "amount": 10
+        },
+        {
+          "key": "figma",
+          "label": "Figma",
+          "amount": 15
+        },
+        {
+          "key": "copilot",
+          "label": "GitHub Copilot",
+          "amount": 10
+        }
+      ]
+    }
   },
   "start": {
     "kicker": "三分鐘開始",
