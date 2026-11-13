@@ -1,0 +1,322 @@
+{
+  "locale": "en",
+  "htmlLang": "en",
+  "dir": "ltr",
+  "skip": "Skip to content",
+  "path": "en/",
+  "alternatePath": "zh-TW/",
+  "meta": {
+    "title": "GigLedger — Know what you actually take home",
+    "description": "A simple ledger for freelancers. Track income, platform fees, expenses, and fixed costs, then see your true profit and tax reserve target.",
+    "ogTitle": "Know what you actually take home.",
+    "ogDescription": "One ledger for freelance income, fixed costs, true profit, and tax reserves."
+  },
+  "nav": {
+    "aria": "Primary navigation",
+    "why": "Why GigLedger",
+    "how": "How it works",
+    "faq": "FAQ",
+    "cta": "Join the waitlist",
+    "language": "Language",
+    "switchTo": "繁體中文",
+    "switchShort": "繁中",
+    "menuOpen": "Open menu",
+    "menuClose": "Close menu"
+  },
+  "hero": {
+    "kicker": "For freelancers and independent professionals",
+    "titleBefore": "Know what you",
+    "titleAccent": "actually take home.",
+    "sub": "Track income, platform fees, expenses, and fixed costs in one ledger. See your true profit, and how much to set aside for taxes.",
+    "primaryCta": "Join the waitlist",
+    "secondaryCta": "Try the calculator",
+    "trust": [
+      "Built for freelance income",
+      "Manual entry + CSV import",
+      "Estimates, not tax advice"
+    ],
+    "sampleLabel": "Sample data",
+    "visualAria": "GigLedger dashboard preview with sample income, fees, fixed costs, profit, and tax reserve."
+  },
+  "dashboard": {
+    "month": "This month",
+    "rows": [
+      { "label": "Gross income", "value": "$4,800", "tone": "default" },
+      { "label": "Platform fees", "value": "−$480", "tone": "muted" },
+      { "label": "Other expenses", "value": "−$480", "tone": "muted" },
+      { "label": "Fixed costs", "value": "−$900", "tone": "muted" },
+      { "label": "True profit", "value": "$2,940", "tone": "accent" }
+    ],
+    "dailyLabel": "Daily floor",
+    "dailyValue": "$30",
+    "dailyUnit": "/ day",
+    "taxLabel": "Tax reserve",
+    "taxValue": "$620",
+    "taxNote": "Estimate only",
+    "chartLabel": "Income over time",
+    "chart": [
+      { "month": "Jan", "height": 42 },
+      { "month": "Feb", "height": 58 },
+      { "month": "Mar", "height": 48 },
+      { "month": "Apr", "height": 72 },
+      { "month": "May", "height": 64 },
+      { "month": "Jun", "height": 88 }
+    ],
+    "annotation": "The number most tools miss."
+  },
+  "daily": {
+    "index": "01",
+    "kicker": "The daily number",
+    "title": "Your daily floor.",
+    "body": "Rent. Software. Insurance. The costs that keep running whether you bill a client or not. GigLedger turns them into one number you can act on.",
+    "value": "$30",
+    "unit": "per day",
+    "formula": "Monthly fixed costs × 12 ÷ 365",
+    "items": [
+      { "label": "Coworking", "value": "$18 / day" },
+      { "label": "Software", "value": "$7 / day" },
+      { "label": "Insurance", "value": "$5 / day" }
+    ],
+    "note": "Example: $900 in monthly business fixed costs at 100% business use."
+  },
+  "features": {
+    "index": "02",
+    "kicker": "What you get",
+    "title": "Everything you need to see what's left.",
+    "cards": [
+      {
+        "tag": "Income",
+        "title": "Scattered income, one place.",
+        "body": "Add or import earnings from Upwork, Fiverr, Stripe, and direct clients. Keep platform fees and net payouts attached to every entry.",
+        "tone": "dark",
+        "icon": "income"
+      },
+      {
+        "tag": "Fixed costs",
+        "title": "Fixed costs, finally visible.",
+        "body": "Turn recurring business costs into a daily number, with business-use percentages and no double counting.",
+        "tone": "light",
+        "icon": "calendar"
+      },
+      {
+        "tag": "Tax reserve",
+        "title": "Set aside the right amount.",
+        "body": "See a tax reserve target based on income and deductible costs. Clearly labeled as an estimate, not tax advice.",
+        "tone": "light",
+        "icon": "tax"
+      },
+      {
+        "tag": "Reports",
+        "title": "Reports you can hand over.",
+        "body": "Monthly, quarterly, and annual views you can export for your accountant, lender, or landlord.",
+        "tone": "sand",
+        "icon": "report"
+      }
+    ]
+  },
+  "steps": {
+    "index": "03",
+    "kicker": "How it works",
+    "title": "Three steps to a clearer number.",
+    "items": [
+      {
+        "number": "01",
+        "title": "Add your fixed costs",
+        "body": "Start with rent, software, insurance, or any recurring business cost. GigLedger converts it into a daily figure."
+      },
+      {
+        "number": "02",
+        "title": "Add or import income",
+        "body": "Enter a payment in seconds or import a CSV from your platform. Platform fees and net payouts stay attached."
+      },
+      {
+        "number": "03",
+        "title": "See what's actually left",
+        "body": "Your dashboard separates gross income, fees, costs, and true profit, then shows what to reserve for taxes."
+      }
+    ]
+  },
+  "audience": {
+    "title": "For work that doesn't fit one platform.",
+    "body": "Freelance income rarely arrives in a straight line. GigLedger is built for the mixed, monthly, messy reality of independent work.",
+    "items": [
+      {
+        "label": "Platform freelancers",
+        "body": "Upwork, Fiverr, Toptal, and marketplace sellers dealing with fees, payouts, and currency changes."
+      },
+      {
+        "label": "Independent creators",
+        "body": "Sponsorships, subscriptions, digital products, and direct client work in the same ledger."
+      },
+      {
+        "label": "Consultants and studios",
+        "body": "Project income, recurring costs, and a clean monthly view you can share."
+      }
+    ]
+  },
+  "honesty": {
+    "kicker": "No magic sync. Not yet.",
+    "title": "Start with what works. Add automation when it's reliable.",
+    "body": "GigLedger starts with manual entries and CSV import. Platform connections come later, after the core numbers are right.",
+    "yesTitle": "In the first version",
+    "yes": [
+      "Manual income and expense entry",
+      "CSV import with duplicate detection",
+      "Fixed costs and daily floor"
+    ],
+    "noTitle": "Not in the first version",
+    "no": [
+      "No bank passwords",
+      "No scraping your platform accounts",
+      "No tax filing on your behalf"
+    ]
+  },
+  "faq": {
+    "title": "Questions, answered.",
+    "body": "The short version: we would rather be clear than overpromise.",
+    "items": [
+      {
+        "q": "Does GigLedger file my taxes?",
+        "a": "No. GigLedger gives you an estimate and a reserve target. It does not file returns or provide tax advice."
+      },
+      {
+        "q": "Does it connect to Upwork or Stripe?",
+        "a": "Not in the first version. You can add income manually or import a CSV. Official integrations are planned after the core ledger is stable."
+      },
+      {
+        "q": "What counts as a fixed cost?",
+        "a": "Recurring business costs such as coworking, software, insurance, hosting, and accounting. Personal costs can be tracked separately and are not treated as deductible."
+      },
+      {
+        "q": "Can I use it outside the US?",
+        "a": "The first tax estimates are built for US self-employment. You can still use the ledger elsewhere, but tax rules vary by jurisdiction."
+      },
+      {
+        "q": "What happens to my data?",
+        "a": "You can export and delete your data. We do not ask for bank passwords or Social Security numbers. See the privacy notice for details."
+      },
+      {
+        "q": "When will it launch?",
+        "a": "The first version is in development. Join the waitlist and we'll send launch updates."
+      }
+    ]
+  },
+  "waitlist": {
+    "kicker": "Early access",
+    "title": "Know your real number before the next invoice.",
+    "body": "Join the waitlist for launch updates and early access.",
+    "label": "Email address",
+    "placeholder": "you@example.com",
+    "button": "Join the waitlist",
+    "note": "Only launch updates. Unsubscribe anytime.",
+    "privacy": "Privacy notice",
+    "success": "Preview only — the waitlist isn't connected yet, so your email wasn't stored.",
+    "preview": "Preview only. Connect the waitlist endpoint before launch.",
+    "error": "Enter a valid email address."
+  },
+  "footer": {
+    "tagline": "A clearer ledger for independent work.",
+    "product": "Product",
+    "why": "Why GigLedger",
+    "how": "How it works",
+    "faq": "FAQ",
+    "legal": "Legal",
+    "privacy": "Privacy",
+    "disclaimer": "Tax disclaimer",
+    "copyright": "© {year} GigLedger. All rights reserved.",
+    "status": "Pre-launch preview"
+  },
+  "legal": {
+    "privacyTitle": "Privacy notice",
+    "privacyDraft": "Pre-launch draft. This notice must be reviewed before launch.",
+    "privacyBody": [
+      "This preview page is a static site. It does not send or store the email address you type into the waitlist form.",
+      "There is no account system, and no income, expense, or tax data is collected because the product is not live yet.",
+      "Before launch, this notice must be replaced with the legal entity, contact details, retention period, processors, and instructions for requesting deletion."
+    ],
+    "disclaimerTitle": "Tax disclaimer",
+    "disclaimerBody": [
+      "GigLedger provides estimates for planning only. It is not a tax, legal, or accounting advisor.",
+      "Tax rules change and vary by jurisdiction. The first estimates are designed for US self-employment scenarios.",
+      "Consult a qualified professional before filing a return or making a tax decision."
+    ],
+    "back": "Back to GigLedger"
+  },
+  "thanks": {
+    "title": "You're on the list.",
+    "body": "We'll send launch updates and early-access details. No noise.",
+    "back": "Back to GigLedger"
+  },
+  "app": {
+    "title": "Prototype",
+    "badge": "Interactive prototype · No data is stored",
+    "heading": "Your real ledger, in three steps.",
+    "subheading": "This prototype shows the core calculation. Add fixed costs and income to see your daily floor and true take-home.",
+    "back": "Back to site",
+    "navAria": "Prototype navigation",
+    "nav": { "dashboard": "Dashboard", "fixed": "Fixed costs", "income": "Income", "how": "How it works" },
+    "metrics": {
+      "daily": "Daily floor",
+      "dailyNote": "Business fixed costs per active day",
+      "gross": "Gross income",
+      "fees": "Platform fees",
+      "net": "Net income",
+      "costs": "Fixed costs",
+      "costsNote": "This month",
+      "profit": "True profit",
+      "profitNote": "Net income minus fixed costs",
+      "tax": "Tax reserve"
+    },
+    "taxNote": "15% planning placeholder · Estimate only",
+    "onboarding": {
+      "kicker": "How this prototype works",
+      "steps": [
+        {
+          "title": "Start with what you must pay",
+          "body": "Add one recurring business cost. GigLedger turns it into a daily floor before any client pays you."
+        },
+        {
+          "title": "Record what you earn",
+          "body": "Add income and the platform fee. Net income updates immediately."
+        },
+        {
+          "title": "See what is actually left",
+          "body": "True profit subtracts monthly fixed costs from net income. Tax reserve stays separate."
+        }
+      ]
+    },
+    "fixed": {
+      "title": "Fixed costs",
+      "body": "Rent, software, insurance, and other recurring business costs. Each one is annualized, then divided by 365.",
+      "add": "Add fixed cost"
+    },
+    "income": {
+      "title": "Income",
+      "body": "Record the payment amount and platform fee. The prototype uses these entries immediately.",
+      "add": "Add income"
+    },
+    "fields": {
+      "name": "Name",
+      "amount": "Amount (USD)",
+      "cycle": "Cycle",
+      "businessUse": "Business use %",
+      "date": "Date",
+      "source": "Source",
+      "client": "Client or project",
+      "platformFee": "Platform fee (USD)"
+    },
+    "cycles": {
+      "daily": "Daily", "weekly": "Weekly", "biweekly": "Every 2 weeks",
+      "monthly": "Monthly", "quarterly": "Quarterly", "yearly": "Yearly"
+    },
+    "sources": {
+      "upwork": "Upwork", "fiverr": "Fiverr", "stripe": "Stripe", "direct": "Direct client"
+    },
+    "table": {
+      "name": "Name", "cycle": "Cycle", "amount": "Amount", "businessUse": "Business use",
+      "daily": "Daily cost", "date": "Date", "source": "Source", "fee": "Fee", "net": "Net"
+    },
+    "empty": { "fixed": "No fixed costs added yet.", "income": "No income added yet." },
+    "disclaimer": "Prototype only. Tax reserve is a planning placeholder, not tax advice."
+  }
+}

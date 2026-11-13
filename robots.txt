@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /en/thanks.html
+Disallow: /zh-TW/thanks.html
+
+Sitemap: https://gigledger.xyz/sitemap.xml

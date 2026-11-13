@@ -1,0 +1,322 @@
+{
+  "locale": "zh-TW",
+  "htmlLang": "zh-Hant-TW",
+  "dir": "ltr",
+  "skip": "跳至主要內容",
+  "path": "zh-TW/",
+  "alternatePath": "en/",
+  "meta": {
+    "title": "GigLedger — 看清你實際拿到多少",
+    "description": "為自由工作者而做的簡單帳本。記錄收入、平台手續費、支出與固定成本，看清實際利潤與預留稅款。",
+    "ogTitle": "看清你實際拿到多少。",
+    "ogDescription": "用一個帳本整理自由工作收入、固定成本、實際利潤與預留稅款。"
+  },
+  "nav": {
+    "aria": "主要導覽",
+    "why": "為什麼選 GigLedger",
+    "how": "運作方式",
+    "faq": "常見問題",
+    "cta": "加入等候名單",
+    "language": "語言",
+    "switchTo": "English",
+    "switchShort": "EN",
+    "menuOpen": "開啟選單",
+    "menuClose": "關閉選單"
+  },
+  "hero": {
+    "kicker": "為自由工作者與獨立專業者而做",
+    "titleBefore": "看清你",
+    "titleAccent": "實際拿到多少。",
+    "sub": "在同一個帳本裡記錄收入、平台手續費、支出與固定成本，看清實際利潤，也知道該為稅款預留多少。",
+    "primaryCta": "加入等候名單",
+    "secondaryCta": "試用計算器",
+    "trust": [
+      "為自由工作收入而做",
+      "手動輸入 + CSV 匯入",
+      "僅供預估，非稅務建議"
+    ],
+    "sampleLabel": "範例資料",
+    "visualAria": "GigLedger 儀表板預覽，包含範例收入、手續費、固定成本、利潤與預留稅款。"
+  },
+  "dashboard": {
+    "month": "本月",
+    "rows": [
+      { "label": "總收入", "value": "$4,800", "tone": "default" },
+      { "label": "平台手續費", "value": "−$480", "tone": "muted" },
+      { "label": "其他支出", "value": "−$480", "tone": "muted" },
+      { "label": "固定成本", "value": "−$900", "tone": "muted" },
+      { "label": "實際利潤", "value": "$2,940", "tone": "accent" }
+    ],
+    "dailyLabel": "每日底線",
+    "dailyValue": "$30",
+    "dailyUnit": "/ 天",
+    "taxLabel": "預留稅款",
+    "taxValue": "$620",
+    "taxNote": "僅供預估",
+    "chartLabel": "收入趨勢",
+    "chart": [
+      { "month": "1月", "height": 42 },
+      { "month": "2月", "height": 58 },
+      { "month": "3月", "height": 48 },
+      { "month": "4月", "height": 72 },
+      { "month": "5月", "height": 64 },
+      { "month": "6月", "height": 88 }
+    ],
+    "annotation": "多數工具漏掉的那個數字。"
+  },
+  "daily": {
+    "index": "01",
+    "kicker": "每日數字",
+    "title": "你的每日底線。",
+    "body": "租金、軟體、保險。不管你這個月有沒有接到案，這些成本都照樣在跑。GigLedger 把它們換算成一個能採取行動的數字。",
+    "value": "$30",
+    "unit": "每天",
+    "formula": "每月固定成本 × 12 ÷ 365",
+    "items": [
+      { "label": "共享空間", "value": "$18 / 天" },
+      { "label": "軟體", "value": "$7 / 天" },
+      { "label": "保險", "value": "$5 / 天" }
+    ],
+    "note": "範例：每月營業固定成本 $900，營業使用比例 100%。"
+  },
+  "features": {
+    "index": "02",
+    "kicker": "你會得到什麼",
+    "title": "看清剩下多少，需要的都在這裡。",
+    "cards": [
+      {
+        "tag": "收入",
+        "title": "收入四散，集中一處。",
+        "body": "把 Upwork、Fiverr、Stripe 與直接客戶的收入加入或匯入。每一筆都保留平台手續費與實際撥款。",
+        "tone": "dark",
+        "icon": "income"
+      },
+      {
+        "tag": "固定成本",
+        "title": "固定成本，終於看得見。",
+        "body": "把週期性的營業成本換算成每日數字，支援營業使用比例，也不會重複計算。",
+        "tone": "light",
+        "icon": "calendar"
+      },
+      {
+        "tag": "預留稅款",
+        "title": "該留的稅，先留下來。",
+        "body": "依收入與可扣抵成本估算應預留稅款，並清楚標示為預估，不是稅務建議。",
+        "tone": "light",
+        "icon": "tax"
+      },
+      {
+        "tag": "報表",
+        "title": "拿得出手的報表。",
+        "body": "月報、季報與年報，可匯出給會計師、貸款機構或房東。",
+        "tone": "sand",
+        "icon": "report"
+      }
+    ]
+  },
+  "steps": {
+    "index": "03",
+    "kicker": "運作方式",
+    "title": "三個步驟，看清一個數字。",
+    "items": [
+      {
+        "number": "01",
+        "title": "加入固定成本",
+        "body": "先從租金、軟體、保險或任何週期性營業成本開始。GigLedger 會換算成每日金額。"
+      },
+      {
+        "number": "02",
+        "title": "加入或匯入收入",
+        "body": "幾秒鐘輸入一筆款項，或從平台匯入 CSV。平台手續費與實際撥款會一起保留。"
+      },
+      {
+        "number": "03",
+        "title": "看清真正剩下多少",
+        "body": "儀表板分開呈現總收入、手續費、成本與實際利潤，再告訴你該預留多少稅款。"
+      }
+    ]
+  },
+  "audience": {
+    "title": "不屬於單一平台的工作，也適用。",
+    "body": "自由工作的收入很少是一條直線。GigLedger 是為混合、每月變動、有點混亂的獨立工作現實而做。",
+    "items": [
+      {
+        "label": "平台接案者",
+        "body": "在 Upwork、Fiverr、Toptal 接案，或經營 marketplace，需要處理手續費、撥款與幣別變動。"
+      },
+      {
+        "label": "獨立創作者",
+        "body": "贊助、訂閱、數位產品與直接客戶案，全部放進同一個帳本。"
+      },
+      {
+        "label": "顧問與小型工作室",
+        "body": "專案收入、週期性成本，以及一份能分享出去的清楚月報。"
+      }
+    ]
+  },
+  "honesty": {
+    "kicker": "沒有神奇同步。至少現在沒有。",
+    "title": "先從做得到的開始。自動化，等它真的可靠再說。",
+    "body": "GigLedger 先支援手動輸入與 CSV 匯入。平台串接會在核心數字正確之後才加入。",
+    "yesTitle": "第一版會有",
+    "yes": [
+      "手動輸入收入與支出",
+      "CSV 匯入與重複偵測",
+      "固定成本與每日底線"
+    ],
+    "noTitle": "第一版不會有",
+    "no": [
+      "不需要銀行密碼",
+      "不抓取你的平台帳號",
+      "不代替你報稅"
+    ]
+  },
+  "faq": {
+    "title": "常見問題。",
+    "body": "簡單說：我們寧可講清楚，也不想過度承諾。",
+    "items": [
+      {
+        "q": "GigLedger 會幫我報稅嗎？",
+        "a": "不會。GigLedger 提供預估與預留目標，不代為申報，也不提供稅務建議。"
+      },
+      {
+        "q": "會串接 Upwork 或 Stripe 嗎？",
+        "a": "第一版不會。你可以手動新增收入或匯入 CSV。核心帳本穩定後，才會規劃官方串接。"
+      },
+      {
+        "q": "什麼算固定成本？",
+        "a": "共享空間、軟體、保險、主機與會計等週期性營業成本。個人成本可以另外記錄，但不會被視為可扣抵。"
+      },
+      {
+        "q": "美國以外可以使用嗎？",
+        "a": "第一版的稅務預估是為美國自僱情境設計。其他地區仍可使用帳本，但稅務規則依轄區而異。"
+      },
+      {
+        "q": "我的資料會怎麼處理？",
+        "a": "你可以匯出與刪除資料。我們不會索取銀行密碼或社會安全碼。詳情請看隱私說明。"
+      },
+      {
+        "q": "什麼時候上線？",
+        "a": "第一版正在開發中。加入等候名單，我們會寄送上線消息。"
+      }
+    ]
+  },
+  "waitlist": {
+    "kicker": "搶先體驗",
+    "title": "下一張發票之前，先知道真正的數字。",
+    "body": "加入等候名單，取得上線消息與搶先體驗。",
+    "label": "電子郵件",
+    "placeholder": "you@example.com",
+    "button": "加入等候名單",
+    "note": "只寄上線消息，隨時可以退訂。",
+    "privacy": "隱私說明",
+    "success": "目前僅為預覽，等候名單尚未接通，因此沒有儲存你的電子郵件。",
+    "preview": "目前為預覽版。上線前請接上等候名單端點。",
+    "error": "請輸入有效的電子郵件。"
+  },
+  "footer": {
+    "tagline": "為獨立工作而做的清楚帳本。",
+    "product": "產品",
+    "why": "為什麼選 GigLedger",
+    "how": "運作方式",
+    "faq": "常見問題",
+    "legal": "法律",
+    "privacy": "隱私",
+    "disclaimer": "稅務免責",
+    "copyright": "© {year} GigLedger. 保留所有權利。",
+    "status": "上線前預覽"
+  },
+  "legal": {
+    "privacyTitle": "隱私說明",
+    "privacyDraft": "上線前草稿。正式上線前仍需完成法律審閱。",
+    "privacyBody": [
+      "這個預覽頁面是靜態網站，不會傳送或儲存你在等候名單表單輸入的電子郵件。",
+      "目前沒有帳號系統，產品也尚未上線，因此不會收集收入、支出或稅務資料。",
+      "正式上線前，本說明必須補上法律實體、聯絡方式、保存期限、處理者，以及要求刪除資料的方式。"
+    ],
+    "disclaimerTitle": "稅務免責聲明",
+    "disclaimerBody": [
+      "GigLedger 僅提供規劃用的預估，不是稅務、法律或會計顧問。",
+      "稅務規則會變動，也依轄區而異。第一版預估是為美國自僱情境設計。",
+      "申報或做出稅務決定前，請諮詢合格的專業人士。"
+    ],
+    "back": "回到 GigLedger"
+  },
+  "thanks": {
+    "title": "已加入名單。",
+    "body": "我們會寄送上線消息與搶先體驗資訊，不會濫發。",
+    "back": "回到 GigLedger"
+  },
+  "app": {
+    "title": "互動原型",
+    "badge": "互動原型 · 不會儲存資料",
+    "heading": "三個步驟，看清你的真實帳本。",
+    "subheading": "這個原型呈現核心計算。加入固定成本與收入，即可查看每日底線與實際到手金額。",
+    "back": "回到網站",
+    "navAria": "原型導覽",
+    "nav": { "dashboard": "儀表板", "fixed": "固定成本", "income": "收入", "how": "運作方式" },
+    "metrics": {
+      "daily": "每日底線",
+      "dailyNote": "每個活躍日的營業固定成本",
+      "gross": "總收入",
+      "fees": "平台手續費",
+      "net": "淨收入",
+      "costs": "固定成本",
+      "costsNote": "本月",
+      "profit": "實際利潤",
+      "profitNote": "淨收入減固定成本",
+      "tax": "預留稅款"
+    },
+    "taxNote": "15% 規劃用預設值 · 僅供預估",
+    "onboarding": {
+      "kicker": "這個原型怎麼用",
+      "steps": [
+        {
+          "title": "先看你必須付的成本",
+          "body": "加入一項週期性營業成本。就算還沒有客戶付款，GigLedger 也會先算出你的每日底線。"
+        },
+        {
+          "title": "記錄你賺到多少",
+          "body": "加入收入與平台手續費，淨收入會立即更新。"
+        },
+        {
+          "title": "看清真正剩下多少",
+          "body": "實際利潤會從淨收入扣除本月固定成本。預留稅款則另外呈現。"
+        }
+      ]
+    },
+    "fixed": {
+      "title": "固定成本",
+      "body": "租金、軟體、保險與其他週期性營業成本。系統會先年化，再除以 365。",
+      "add": "加入固定成本"
+    },
+    "income": {
+      "title": "收入",
+      "body": "記錄付款金額與平台手續費。原型會立即使用這些資料。",
+      "add": "加入收入"
+    },
+    "fields": {
+      "name": "名稱",
+      "amount": "金額（USD）",
+      "cycle": "週期",
+      "businessUse": "營業使用比例 %",
+      "date": "日期",
+      "source": "收入來源",
+      "client": "客戶或專案",
+      "platformFee": "平台手續費（USD）"
+    },
+    "cycles": {
+      "daily": "每天", "weekly": "每週", "biweekly": "每兩週",
+      "monthly": "每月", "quarterly": "每季", "yearly": "每年"
+    },
+    "sources": {
+      "upwork": "Upwork", "fiverr": "Fiverr", "stripe": "Stripe", "direct": "直接客戶"
+    },
+    "table": {
+      "name": "名稱", "cycle": "週期", "amount": "金額", "businessUse": "營業使用比例",
+      "daily": "每日成本", "date": "日期", "source": "來源", "fee": "手續費", "net": "淨額"
+    },
+    "empty": { "fixed": "尚未加入固定成本。", "income": "尚未加入收入。" },
+    "disclaimer": "僅為原型。預留稅款是規劃用預設值，不是稅務建議。"
+  }
+}

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://gigledger.xyz/en/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://gigledger.xyz/en/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant-TW" href="https://gigledger.xyz/zh-TW/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://gigledger.xyz/en/"/>
+  </url>
+  <url>
+    <loc>https://gigledger.xyz/en/privacy.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://gigledger.xyz/en/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant-TW" href="https://gigledger.xyz/zh-TW/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://gigledger.xyz/en/privacy.html"/>
+  </url>
+  <url>
+    <loc>https://gigledger.xyz/en/tax-disclaimer.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://gigledger.xyz/en/tax-disclaimer.html"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant-TW" href="https://gigledger.xyz/zh-TW/tax-disclaimer.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://gigledger.xyz/en/tax-disclaimer.html"/>
+  </url>
+  <url>
+    <loc>https://gigledger.xyz/zh-TW/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://gigledger.xyz/en/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant-TW" href="https://gigledger.xyz/zh-TW/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://gigledger.xyz/en/"/>
+  </url>
+  <url>
+    <loc>https://gigledger.xyz/zh-TW/privacy.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://gigledger.xyz/en/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant-TW" href="https://gigledger.xyz/zh-TW/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://gigledger.xyz/en/privacy.html"/>
+  </url>
+  <url>
+    <loc>https://gigledger.xyz/zh-TW/tax-disclaimer.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://gigledger.xyz/en/tax-disclaimer.html"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant-TW" href="https://gigledger.xyz/zh-TW/tax-disclaimer.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://gigledger.xyz/en/tax-disclaimer.html"/>
+  </url>
+</urlset>

@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prototype — GigLedger</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="/assets/favicon-32.png" sizes="32x32">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/proto.css">
+</head>
+<body class="app-proto">
+  <script type="application/json" id="proto-messages">{"title":"Prototype","badge":"Interactive prototype · No data is stored","heading":"Your real ledger, in three steps.","subheading":"This prototype shows the core calculation. Add fixed costs and income to see your daily floor and true take-home.","back":"Back to site","navAria":"Prototype navigation","nav":{"dashboard":"Dashboard","fixed":"Fixed costs","income":"Income","how":"How it works"},"metrics":{"daily":"Daily floor","dailyNote":"Business fixed costs per active day","gross":"Gross income","fees":"Platform fees","net":"Net income","costs":"Fixed costs","costsNote":"This month","profit":"True profit","profitNote":"Net income minus fixed costs","tax":"Tax reserve"},"taxNote":"15% planning placeholder · Estimate only","onboarding":{"kicker":"How this prototype works","steps":[{"title":"Start with what you must pay","body":"Add one recurring business cost. GigLedger turns it into a daily floor before any client pays you."},{"title":"Record what you earn","body":"Add income and the platform fee. Net income updates immediately."},{"title":"See what is actually left","body":"True profit subtracts monthly fixed costs from net income. Tax reserve stays separate."}]},"fixed":{"title":"Fixed costs","body":"Rent, software, insurance, and other recurring business costs. Each one is annualized, then divided by 365.","add":"Add fixed cost"},"income":{"title":"Income","body":"Record the payment amount and platform fee. The prototype uses these entries immediately.","add":"Add income"},"fields":{"name":"Name","amount":"Amount (USD)","cycle":"Cycle","businessUse":"Business use %","date":"Date","source":"Source","client":"Client or project","platformFee":"Platform fee (USD)"},"cycles":{"daily":"Daily","weekly":"Weekly","biweekly":"Every 2 weeks","monthly":"Monthly","quarterly":"Quarterly","yearly":"Yearly"},"sources":{"upwork":"Upwork","fiverr":"Fiverr","stripe":"Stripe","direct":"Direct client"},"table":{"name":"Name","cycle":"Cycle","amount":"Amount","businessUse":"Business use","daily":"Daily cost","date":"Date","source":"Source","fee":"Fee","net":"Net"},"empty":{"fixed":"No fixed costs added yet.","income":"No income added yet."},"disclaimer":"Prototype only. Tax reserve is a planning placeholder, not tax advice."}</script>
+  <header class="site-header">
+    <div class="shell header-inner">
+      
+  <a class="brand" href="/en/">
+    <img class="brand-mark" src="/assets/logo-mark-192.png" alt="" width="42" height="42">
+    <span class="brand-word"><b>Gig</b>Ledger</span>
+  </a>
+      <nav class="desktop-nav app-nav" aria-label="Prototype navigation">
+        <a href="#dashboard">Dashboard</a>
+        <a href="#fixed-costs">Fixed costs</a>
+        <a href="#income">Income</a>
+        <a href="#how-it-works">How it works</a>
+      </nav>
+      <div class="header-actions">
+        
+    <a class="lang-switch" href="/zh-TW/app" hreflang="zh-Hant-TW" lang="zh-Hant-TW">
+      <span class="lang-full">繁體中文</span>
+      <span class="lang-short">繁中</span>
+    </a>
+        <a class="button button-small button-orange" href="/en/">Back to site</a>
+        <button class="menu-button" type="button" aria-expanded="false" aria-controls="mobileNav" aria-label="Open menu">
+          <span></span><span></span>
+        </button>
+      </div>
+    </div>
+    <nav class="mobile-nav" id="mobileNav" aria-label="Prototype navigation">
+      <a href="#dashboard">Dashboard</a>
+      <a href="#fixed-costs">Fixed costs</a>
+      <a href="#income">Income</a>
+      <a href="#how-it-works">How it works</a>
+      
+    <a class="lang-switch" href="/zh-TW/app" hreflang="zh-Hant-TW" lang="zh-Hant-TW">
+      <span class="lang-full">繁體中文</span>
+      <span class="lang-short">繁中</span>
+    </a>
+    </nav>
+  </header>
+  <main id="main">
+    <section class="app-hero shell" id="dashboard">
+      <div class="app-badge">Interactive prototype · No data is stored</div>
+      <h1>Your real ledger, in three steps.</h1>
+      <p>This prototype shows the core calculation. Add fixed costs and income to see your daily floor and true take-home.</p>
+      <div class="app-metrics">
+        <article><span>Daily floor</span><strong data-proto="metric-daily">$0.00</strong><small>Business fixed costs per active day</small></article>
+        <article><span>Gross income</span><strong data-proto="metric-gross">$0.00</strong></article>
+        <article><span>Platform fees</span><strong data-proto="metric-fees">$0.00</strong></article>
+        <article><span>Net income</span><strong data-proto="metric-net">$0.00</strong></article>
+        <article><span>Fixed costs</span><strong data-proto="metric-costs">$0.00</strong><small>This month</small></article>
+        <article class="profit-card"><span>True profit</span><strong data-proto="metric-profit">$0.00</strong><small>Net income minus fixed costs</small></article>
+        <article><span>Tax reserve</span><strong data-proto="metric-tax">$0.00</strong><small>15% planning placeholder · Estimate only</small></article>
+      </div>
+    </section>
+
+    <section class="app-steps shell" id="how-it-works">
+      <p class="app-steps-kicker">How this prototype works</p>
+      <ol>
+        
+        <li>
+          <span>01</span>
+          <div><strong>Start with what you must pay</strong><p>Add one recurring business cost. GigLedger turns it into a daily floor before any client pays you.</p></div>
+        </li>
+        <li>
+          <span>02</span>
+          <div><strong>Record what you earn</strong><p>Add income and the platform fee. Net income updates immediately.</p></div>
+        </li>
+        <li>
+          <span>03</span>
+          <div><strong>See what is actually left</strong><p>True profit subtracts monthly fixed costs from net income. Tax reserve stays separate.</p></div>
+        </li>
+      </ol>
+    </section>
+
+    <section class="app-section shell" id="fixed-costs">
+      <div class="app-section-head">
+        <h2>Fixed costs</h2>
+        <p>Rent, software, insurance, and other recurring business costs. Each one is annualized, then divided by 365.</p>
+      </div>
+      <div class="app-grid">
+        <form class="app-form" data-proto-form="fixed" novalidate>
+          <label><span>Name</span><input name="name" required></label>
+          <label><span>Amount (USD)</span><input name="amount" type="number" min="0" step="0.01" required></label>
+          <label><span>Cycle</span><select name="cycle"><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="biweekly">Every 2 weeks</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select></label>
+          <label><span>Business use %</span><input name="businessUse" type="number" min="0" max="100" value="100" required></label>
+          <button class="button button-dark" type="submit">Add fixed cost</button>
+        </form>
+        <div class="app-table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Cycle</th><th>Amount</th><th>Business use</th><th>Daily cost</th></tr></thead>
+            <tbody data-proto="fixed-cost-rows"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="app-section shell" id="income">
+      <div class="app-section-head">
+        <h2>Income</h2>
+        <p>Record the payment amount and platform fee. The prototype uses these entries immediately.</p>
+      </div>
+      <div class="app-grid">
+        <form class="app-form" data-proto-form="income" novalidate>
+          <label><span>Date</span><input name="date" type="date" value="2026-11-13" required></label>
+          <label><span>Source</span><select name="source"><option value="upwork">Upwork</option><option value="fiverr">Fiverr</option><option value="stripe">Stripe</option><option value="direct">Direct client</option></select></label>
+          <label><span>Client or project</span><input name="client"></label>
+          <label><span>Amount (USD)</span><input name="amount" type="number" min="0" step="0.01" required></label>
+          <label><span>Platform fee (USD)</span><input name="platformFee" type="number" min="0" step="0.01" value="0"></label>
+          <button class="button button-dark" type="submit">Add income</button>
+        </form>
+        <div class="app-table-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Source</th><th>Amount</th><th>Fee</th><th>Net</th></tr></thead>
+            <tbody data-proto="income-rows"></tbody>
+          </table>
+        </div>
+      </div>
+      <p class="app-note">Prototype only. Tax reserve is a planning placeholder, not tax advice.</p>
+    </section>
+  </main>
+  <footer class="site-footer">
+    <div class="shell footer-bottom">
+      <p>© 2026 GigLedger. All rights reserved.</p>
+      <a href="/zh-TW//app">繁體中文</a>
+    </div>
+  </footer>
+  <script src="/app-proto.js" defer></script>
+  <script src="/app.js" defer></script>
+</body>
+</html>
