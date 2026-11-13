@@ -50,7 +50,7 @@ const logo = (locale) => `
 const languageSwitch = (t, current, suffix = "") => {
   const next = locales.find((l) => l.code !== current.code);
   return `
-    <a class="lang-switch" href="/${next.folder}/${suffix}" hreflang="${next.htmlLang}" lang="${next.htmlLang}">
+    <a class="lang-switch" href="/${next.folder}${suffix ? `/${suffix}` : ""}" hreflang="${next.htmlLang}" lang="${next.htmlLang}">
       <span class="lang-full">${esc(t.nav.switchTo)}</span>
       <span class="lang-short">${esc(t.nav.switchShort)}</span>
     </a>`;
@@ -523,7 +523,7 @@ const appPage = ({ locale, t }) => {
   <footer class="site-footer">
     <div class="shell footer-bottom">
       <p>${esc(t.footer.copyright.replace("{year}", String(new Date().getFullYear())))}</p>
-      <a href="/${t.alternatePath}/app">${esc(t.nav.switchTo)}</a>
+      <a href="/${t.alternatePath}app">${esc(t.nav.switchTo)}</a>
     </div>
   </footer>
   <script src="/app-proto.js" defer></script>
