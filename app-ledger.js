@@ -195,11 +195,9 @@
   };
   document.querySelector("[data-delete-account]")?.addEventListener("click", confirmDelete);
   const settingsForm = document.querySelector('[data-proto-form="settings"]');
-  settingsForm?.addEventListener("submit", (event) => {
-    event.preventDefault();
-    const data = new FormData(settingsForm);
-    state.taxReserveRate = String(data.get("taxReserveRate") || "");
-    state.cashOnHand = String(data.get("cashOnHand") || "");
+  settingsForm?.addEventListener("input", () => {
+    state.taxReserveRate = String(settingsForm.elements.taxReserveRate.value || "");
+    state.cashOnHand = String(settingsForm.elements.cashOnHand.value || "");
     render();
   });
 

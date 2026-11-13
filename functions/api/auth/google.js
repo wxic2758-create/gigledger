@@ -1,5 +1,5 @@
 import { createSessionToken, sessionCookie, sessionSecret, verifySessionToken } from "../../lib/session.js";
-import { normalizeDraft } from "../../lib/ledger.js";
+import { normalizeDraft, saveWorkspaceDraft } from "../../lib/ledger.js";
 
 const SITE_URL = "https://gigledger.xyz";
 const AUTH_STATE_COOKIE = "gigledger_oauth_state";
