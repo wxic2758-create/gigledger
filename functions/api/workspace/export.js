@@ -1,1 +1,1 @@
-export { onRequestGet } from "../workspace.js";
+export { onRequestExportGet as onRequestGet } from "../workspace.js";

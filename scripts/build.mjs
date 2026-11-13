@@ -426,8 +426,10 @@ const appPage = ({ locale, t, mode = "app" }) => {
       <p>${esc(subheading)}</p>
       <div class="account-actions">
         <button class="button button-dark" type="button" data-save-google>${esc(t.app.saveGoogle)}</button>
+        ${mode === "dashboard" ? `
         <a class="button button-ghost" href="/api/workspace/export">${esc(t.app.export)}</a>
         <button class="button button-danger" type="button" data-delete-account>${esc(t.app.deleteAccount)}</button>
+        ` : ""}
         <span class="account-note">${esc(t.app.saveNote)}</span>
         <p class="form-message account-message" role="status" aria-live="polite" data-save-message hidden></p>
       </div>
@@ -514,7 +516,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
       <a href="/${t.alternatePath}app">${esc(t.nav.switchTo)}</a>
     </div>
   </footer>
-  <script src="/app-ledger.js" defer></script>
+  <script src="/app-ledger.js?v=20261113-2" defer></script>
   <script src="/app.js" defer></script>
 </body>
 </html>`;

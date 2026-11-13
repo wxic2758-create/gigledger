@@ -178,8 +178,9 @@
         }),
       });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok || !data.authUrl) throw new Error("save_failed");
-      window.location.assign(data.authUrl);
+      const destination = data.authUrl || data.redirectUrl;
+      if (!response.ok || !destination) throw new Error("save_failed");
+      window.location.assign(destination);
     } catch {
       button.disabled = false;
       button.textContent = original;
@@ -188,11 +189,15 @@
   };
 
   document.querySelector("[data-save-google]")?.addEventListener("click", saveDraft);
-  document.addEventListener("submit", (event) => {
-    const form = event.target;
-    if (!form?.dataset?.protoForm || form.dataset.protoForm !== "settings") return;
+  const confirmDelete = () => {
+    if (!window.confirm(messages.deleteConfirm)) return;
+    window.location.assign("/api/workspace?type=account");
+  };
+  document.querySelector("[data-delete-account]")?.addEventListener("click", confirmDelete);
+  const settingsForm = document.querySelector('[data-proto-form="settings"]');
+  settingsForm?.addEventListener("submit", (event) => {
     event.preventDefault();
-    const data = new FormData(form);
+    const data = new FormData(settingsForm);
     state.taxReserveRate = String(data.get("taxReserveRate") || "");
     state.cashOnHand = String(data.get("cashOnHand") || "");
     render();
@@ -228,7 +233,7 @@
         amount: Number(item.amount) || 0,
         platformFee: Number(item.platformFee) || 0,
       }));
-      const settingsForm = document.querySelector("[data-proto-form='settings']");
+      const settingsForm = document.querySelector('[data-proto-form="settings"]');
       if (settingsForm) {
         settingsForm.elements.taxReserveRate.value = state.taxReserveRate;
         settingsForm.elements.cashOnHand.value = state.cashOnHand;
@@ -242,9 +247,3 @@
   loadDashboard();
   render();
 })();
-
-  const confirmDelete = () => {
-    if (!window.confirm(messages.deleteConfirm)) return;
-    window.location.assign("/api/workspace?type=account");
-  };
-  document.querySelector("[data-delete-account]")?.addEventListener("click", confirmDelete);
