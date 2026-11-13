@@ -67,7 +67,7 @@ const nav = (t, current) => `
       </nav>
       <div class="header-actions">
         ${languageSwitch(t, current)}
-        <a class="button button-small button-orange" href="#waitlist">${esc(t.nav.cta)}</a>
+        <a class="button button-small button-orange" href="/${current.folder}/app">${esc(t.nav.cta)}</a>
         <button class="menu-button" type="button" aria-expanded="false" aria-controls="mobileNav" aria-label="${esc(t.nav.menuOpen)}">
           <span></span><span></span>
         </button>
@@ -77,7 +77,7 @@ const nav = (t, current) => `
       <a href="#daily">${esc(t.nav.why)}</a>
       <a href="#how">${esc(t.nav.how)}</a>
       <a href="#faq">${esc(t.nav.faq)}</a>
-      <a href="#waitlist">${esc(t.nav.cta)}</a>
+      <a href="/${current.folder}/app">${esc(t.nav.cta)}</a>
       ${languageSwitch(t, current)}
     </nav>
   </header>`;
@@ -143,8 +143,8 @@ const hero = (t, current) => `
           <h1>${esc(t.hero.titleBefore)} <span class="accent-word">${esc(t.hero.titleAccent)}</span></h1>
           <p class="hero-sub">${esc(t.hero.sub)}</p>
           <div class="hero-actions">
-            <a class="button button-orange" href="#waitlist">${esc(t.hero.primaryCta)} <span aria-hidden="true">→</span></a>
-            <a class="text-link" href="/${current.folder}/app">${esc(t.hero.secondaryCta)} <span aria-hidden="true">→</span></a>
+            <a class="button button-orange" href="/${current.folder}/app">${esc(t.hero.primaryCta)} <span aria-hidden="true">→</span></a>
+            <a class="button button-ghost" href="/api/auth/google?locale=${current.code}">${esc(t.hero.secondaryCta)}</a>
           </div>
           <ul class="trust-list">
             ${t.hero.trust
@@ -294,27 +294,20 @@ const faqSection = (t) => `
       </div>
     </section>`;
 
-const waitlistSection = (t) => `
-    <section class="waitlist-section" id="waitlist">
+const startSection = (t) => `
+    <section class="waitlist-section" id="start">
       <div class="shell waitlist-grid">
         <div>
-          <p class="kicker">${esc(t.waitlist.kicker)}</p>
-          <h2>${esc(t.waitlist.title)}</h2>
-          <p>${esc(t.waitlist.body)}</p>
+          <p class="kicker">${esc(t.start.kicker)}</p>
+          <h2>${esc(t.start.title)}</h2>
+          <p>${esc(t.start.body)}</p>
         </div>
         <div class="waitlist-panel">
-          <form class="waitlist-form" data-waitlist
-            data-invalid-message="${esc(t.waitlist.error)}"
-            data-success-message="${esc(t.waitlist.success)}">
-            <label for="email">${esc(t.waitlist.label)}</label>
-            <div class="input-row">
-              <input id="email" name="email" type="email" autocomplete="email" required placeholder="${esc(t.waitlist.placeholder)}">
-              <button class="button button-dark" type="submit">${esc(t.waitlist.button)}</button>
-            </div>
-            <p class="form-message" role="status" aria-live="polite" data-message></p>
-            <p class="form-note">${esc(t.waitlist.note)} · <a href="/${t.locale}/privacy.html">${esc(t.waitlist.privacy)}</a></p>
-          </form>
-          <p class="preview-note">${esc(t.waitlist.preview)}</p>
+          <div class="start-actions">
+            <a class="button button-orange" href="/${t.locale}/app">${esc(t.start.calculate)} <span aria-hidden="true">→</span></a>
+            <a class="button button-ghost" href="/api/auth/google?locale=${t.locale}">${esc(t.start.signIn)}</a>
+          </div>
+          <p class="form-note">${esc(t.start.note)} · <a href="/${t.locale}/privacy.html">${esc(t.start.privacy)}</a></p>
         </div>
       </div>
     </section>`;
@@ -381,43 +374,26 @@ const legalPage = ({ locale, t, type }) => {
 </html>`;
 };
 
-const thanksPage = ({ locale, t }) => `<!doctype html>
-<html lang="${locale.htmlLang}" dir="${locale.dir}">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>${esc(t.thanks.title)} — GigLedger</title>
-  <meta name="robots" content="noindex">
-  <link rel="icon" href="/assets/favicon-32.png" sizes="32x32">
-  <link rel="stylesheet" href="/styles.css">
-</head>
-<body>
-  <main class="thanks-main shell">
-    ${logo(locale.folder)}
-    <p class="kicker">GigLedger</p>
-    <h1>${esc(t.thanks.title)}</h1>
-    <p>${esc(t.thanks.body)}</p>
-    <a class="button button-orange" href="/${locale.folder}/">${esc(t.thanks.back)}</a>
-  </main>
-</body>
-</html>`;
-
-const appPage = ({ locale, t }) => {
+const appPage = ({ locale, t, mode = "app" }) => {
   const option = (value) => `<option value="${value}">${esc(t.app.cycles[value])}</option>`;
   const sourceOption = (value) => `<option value="${value}">${esc(t.app.sources[value])}</option>`;
+  const title = mode === "dashboard" ? t.dashboard.title : t.app.title;
+  const heading = mode === "dashboard" ? t.dashboard.heading : t.app.heading;
+  const subheading = mode === "dashboard" ? t.dashboard.subheading : t.app.subheading;
+  const bodyClass = mode === "dashboard" ? "app-proto dashboard-page" : "app-proto";
   return `<!doctype html>
 <html lang="${locale.htmlLang}" dir="${locale.dir}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>${esc(t.app.title)} — GigLedger</title>
+  <title>${esc(title)} — GigLedger</title>
   <meta name="robots" content="noindex">
   <link rel="icon" href="/assets/favicon-32.png" sizes="32x32">
   <link rel="stylesheet" href="/styles.css">
   <link rel="stylesheet" href="/proto.css">
 </head>
-<body class="app-proto">
-  <script type="application/json" id="proto-messages">${JSON.stringify(t.app).replaceAll("</", "<\\/")}</script>
+<body class="${bodyClass}">
+  <script type="application/json" id="proto-messages">${JSON.stringify(mode === "dashboard" ? { ...t.app, dashboard: t.dashboard } : t.app).replaceAll("</", "<\\/")}</script>
   <header class="site-header">
     <div class="shell header-inner">
       ${logo(locale.folder)}
@@ -429,7 +405,7 @@ const appPage = ({ locale, t }) => {
       </nav>
       <div class="header-actions">
         ${languageSwitch(t, locale, "app")}
-        <a class="button button-small button-orange" href="/${locale.folder}/">${esc(t.app.back)}</a>
+        <a class="button button-small button-orange" href="/${locale.folder}/${mode === "dashboard" ? "dashboard/?reload=1" : "app"}">${esc(mode === "dashboard" ? t.dashboard.refresh : t.app.signIn)}</a>
         <button class="menu-button" type="button" aria-expanded="false" aria-controls="mobileNav" aria-label="${esc(t.nav.menuOpen)}">
           <span></span><span></span>
         </button>
@@ -444,10 +420,17 @@ const appPage = ({ locale, t }) => {
     </nav>
   </header>
   <main id="main">
-    <section class="app-hero shell" id="dashboard">
+    <section class="app-hero shell" id="dashboard" ${mode === "dashboard" ? "data-dashboard" : ""}>
       <div class="app-badge">${esc(t.app.badge)}</div>
-      <h1>${esc(t.app.heading)}</h1>
-      <p>${esc(t.app.subheading)}</p>
+      <h1>${esc(heading)}</h1>
+      <p>${esc(subheading)}</p>
+      <div class="account-actions">
+        <button class="button button-dark" type="button" data-save-google>${esc(t.app.saveGoogle)}</button>
+        <a class="button button-ghost" href="/api/workspace/export">${esc(t.app.export)}</a>
+        <button class="button button-danger" type="button" data-delete-account>${esc(t.app.deleteAccount)}</button>
+        <span class="account-note">${esc(t.app.saveNote)}</span>
+        <p class="form-message account-message" role="status" aria-live="polite" data-save-message hidden></p>
+      </div>
       <div class="app-metrics">
         <article><span>${esc(t.app.metrics.daily)}</span><strong data-proto="metric-daily">$0.00</strong><small>${esc(t.app.metrics.dailyNote)}</small></article>
         <article><span>${esc(t.app.metrics.gross)}</span><strong data-proto="metric-gross">$0.00</strong></article>
@@ -502,6 +485,11 @@ const appPage = ({ locale, t }) => {
         <p>${esc(t.app.income.body)}</p>
       </div>
       <div class="app-grid">
+        <form class="app-form app-settings-form" data-proto-form="settings" novalidate>
+          <label><span>${esc(t.app.taxRateLabel)}</span><input name="taxReserveRate" type="number" min="0" max="100" step="0.1" placeholder="${esc(t.app.taxRatePlaceholder)}"></label>
+          <label><span>${esc(t.app.cashLabel)}</span><input name="cashOnHand" type="number" min="0" step="0.01"></label>
+          <p class="app-note">${esc(t.app.taxReference)}</p>
+        </form>
         <form class="app-form" data-proto-form="income" novalidate>
           <label><span>${esc(t.app.fields.date)}</span><input name="date" type="date" value="${new Date().toISOString().slice(0, 10)}" required></label>
           <label><span>${esc(t.app.fields.source)}</span><select name="source">${["upwork","fiverr","stripe","direct"].map(sourceOption).join("")}</select></label>
@@ -526,7 +514,7 @@ const appPage = ({ locale, t }) => {
       <a href="/${t.alternatePath}app">${esc(t.nav.switchTo)}</a>
     </div>
   </footer>
-  <script src="/app-proto.js" defer></script>
+  <script src="/app-ledger.js" defer></script>
   <script src="/app.js" defer></script>
 </body>
 </html>`;
@@ -582,7 +570,7 @@ const page = ({ locale, t }) => `<!doctype html>
   ${audienceSection(t)}
   ${honestySection(t)}
   ${faqSection(t)}
-  ${waitlistSection(t)}
+  ${startSection(t)}
   ${footer(t)}
   <script src="/app.js" defer></script>
 </body>
@@ -601,10 +589,10 @@ for (const locale of locales) {
     join(folder, "tax-disclaimer.html"),
     legalPage({ locale, t, type: "disclaimer" }),
   );
-  await writeFile(join(folder, "thanks.html"), thanksPage({ locale, t }));
   await mkdir(join(folder, "app"), { recursive: true });
   await writeFile(join(folder, "app", "index.html"), appPage({ locale, t }));
-  await writeFile(join(folder, "app.html"), appPage({ locale, t }));
+  await mkdir(join(folder, "dashboard"), { recursive: true });
+  await writeFile(join(folder, "dashboard", "index.html"), appPage({ locale, t, mode: "dashboard" }));
 }
 
 await writeFile(
@@ -614,12 +602,14 @@ await writeFile(
 
 await writeFile(
   join(root, "robots.txt"),
-  `User-agent: *\nAllow: /\nDisallow: /en/thanks.html\nDisallow: /zh-TW/thanks.html\n\nSitemap: ${siteUrl}/sitemap.xml\n`,
+  `User-agent: *\nAllow: /\nDisallow: /en/app/\nDisallow: /zh-TW/app/\nDisallow: /en/dashboard/\nDisallow: /zh-TW/dashboard/\n\nSitemap: ${siteUrl}/sitemap.xml\n`,
 );
 
 await writeFile(
   join(root, "_redirects"),
-  `/en/app.html /en/app 308
+  `/en/thanks.html /en/ 308
+/zh-TW/thanks.html /zh-TW/ 308
+/en/app.html /en/app 308
 /zh-TW/app.html /zh-TW/app 308
 `,
 );

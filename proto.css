@@ -63,6 +63,7 @@
   background: var(--paper); border: 1px solid var(--line); border-radius: 10px;
 }
 .app-form .button { margin-top: 6px; }
+.app-settings-form { grid-column: 1 / -1; }
 .app-table-wrap {
   min-width: 0; overflow: auto; background: var(--white);
   border: 1px solid var(--line); border-radius: 18px;

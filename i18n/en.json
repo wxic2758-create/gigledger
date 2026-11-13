@@ -16,7 +16,7 @@
     "why": "Why GigLedger",
     "how": "How it works",
     "faq": "FAQ",
-    "cta": "Join the waitlist",
+    "cta": "Open calculator",
     "language": "Language",
     "switchTo": "繁體中文",
     "switchShort": "繁中",
@@ -28,8 +28,8 @@
     "titleBefore": "Know what you",
     "titleAccent": "actually take home.",
     "sub": "Track income, platform fees, expenses, and fixed costs in one ledger. See your true profit, and how much to set aside for taxes.",
-    "primaryCta": "Join the waitlist",
-    "secondaryCta": "Try the calculator",
+    "primaryCta": "Calculate now",
+    "secondaryCta": "Sign in with Google",
     "trust": [
       "Built for freelance income",
       "Manual entry + CSV import",
@@ -39,29 +39,71 @@
     "visualAria": "GigLedger dashboard preview with sample income, fees, fixed costs, profit, and tax reserve."
   },
   "dashboard": {
-    "month": "This month",
+    "title": "Dashboard",
+    "heading": "Your saved ledger.",
+    "subheading": "These entries are loaded from your GigLedger account. Add more below, then save changes with Google.",
+    "refresh": "Reload account",
+    "taxValue": "$735",
+    "dailyValue": "$29.59",
     "rows": [
-      { "label": "Gross income", "value": "$4,800", "tone": "default" },
-      { "label": "Platform fees", "value": "−$480", "tone": "muted" },
-      { "label": "Other expenses", "value": "−$480", "tone": "muted" },
-      { "label": "Fixed costs", "value": "−$900", "tone": "muted" },
-      { "label": "True profit", "value": "$2,940", "tone": "accent" }
+      {
+        "label": "Gross income",
+        "value": "$4,800",
+        "tone": "default"
+      },
+      {
+        "label": "Platform fees",
+        "value": "−$480",
+        "tone": "muted"
+      },
+      {
+        "label": "Other expenses",
+        "value": "−$480",
+        "tone": "muted"
+      },
+      {
+        "label": "Fixed costs",
+        "value": "−$900",
+        "tone": "muted"
+      },
+      {
+        "label": "True profit",
+        "value": "$2,940",
+        "tone": "accent"
+      }
     ],
+    "chart": [
+      {
+        "month": "Jan",
+        "height": 42
+      },
+      {
+        "month": "Feb",
+        "height": 58
+      },
+      {
+        "month": "Mar",
+        "height": 48
+      },
+      {
+        "month": "Apr",
+        "height": 72
+      },
+      {
+        "month": "May",
+        "height": 64
+      },
+      {
+        "month": "Jun",
+        "height": 88
+      }
+    ],
+    "month": "This month",
     "dailyLabel": "Daily floor",
-    "dailyValue": "$30",
     "dailyUnit": "/ day",
     "taxLabel": "Tax reserve",
-    "taxValue": "$620",
     "taxNote": "Estimate only",
     "chartLabel": "Income over time",
-    "chart": [
-      { "month": "Jan", "height": 42 },
-      { "month": "Feb", "height": 58 },
-      { "month": "Mar", "height": 48 },
-      { "month": "Apr", "height": 72 },
-      { "month": "May", "height": 64 },
-      { "month": "Jun", "height": 88 }
-    ],
     "annotation": "The number most tools miss."
   },
   "daily": {
@@ -69,13 +111,22 @@
     "kicker": "The daily number",
     "title": "Your daily floor.",
     "body": "Rent. Software. Insurance. The costs that keep running whether you bill a client or not. GigLedger turns them into one number you can act on.",
-    "value": "$30",
+    "value": "$29.59",
     "unit": "per day",
     "formula": "Monthly fixed costs × 12 ÷ 365",
     "items": [
-      { "label": "Coworking", "value": "$18 / day" },
-      { "label": "Software", "value": "$7 / day" },
-      { "label": "Insurance", "value": "$5 / day" }
+      {
+        "label": "Coworking",
+        "value": "$18 / day"
+      },
+      {
+        "label": "Software",
+        "value": "$7 / day"
+      },
+      {
+        "label": "Insurance",
+        "value": "$5 / day"
+      }
     ],
     "note": "Example: $900 in monthly business fixed costs at 100% business use."
   },
@@ -101,7 +152,7 @@
       {
         "tag": "Tax reserve",
         "title": "Set aside the right amount.",
-        "body": "See a tax reserve target based on income and deductible costs. Clearly labeled as an estimate, not tax advice.",
+        "body": "Set your own reserve rate, with a 25%-30% US self-employment reference range. Clearly labeled as an estimate, not tax advice.",
         "tone": "light",
         "icon": "tax"
       },
@@ -181,11 +232,11 @@
       },
       {
         "q": "Does it connect to Upwork or Stripe?",
-        "a": "Not in the first version. You can add income manually or import a CSV. Official integrations are planned after the core ledger is stable."
+        "a": "Not yet. You can add income manually or import a CSV. Official integrations are planned after the core ledger is stable."
       },
       {
         "q": "What counts as a fixed cost?",
-        "a": "Recurring business costs such as coworking, software, insurance, hosting, and accounting. Personal costs can be tracked separately and are not treated as deductible."
+        "a": "Recurring business costs such as coworking, software, insurance, hosting, and accounting. Personal costs can be tracked separately."
       },
       {
         "q": "Can I use it outside the US?",
@@ -197,22 +248,9 @@
       },
       {
         "q": "When will it launch?",
-        "a": "The first version is in development. Join the waitlist and we'll send launch updates."
+        "a": "The first version is in development. You can try the calculator now, and sign in with Google to save your ledger."
       }
     ]
-  },
-  "waitlist": {
-    "kicker": "Early access",
-    "title": "Know your real number before the next invoice.",
-    "body": "Join the waitlist for launch updates and early access.",
-    "label": "Email address",
-    "placeholder": "you@example.com",
-    "button": "Join the waitlist",
-    "note": "Only launch updates. Unsubscribe anytime.",
-    "privacy": "Privacy notice",
-    "success": "Preview only — the waitlist isn't connected yet, so your email wasn't stored.",
-    "preview": "Preview only. Connect the waitlist endpoint before launch.",
-    "error": "Enter a valid email address."
   },
   "footer": {
     "tagline": "A clearer ledger for independent work.",
@@ -230,21 +268,17 @@
     "privacyTitle": "Privacy notice",
     "privacyDraft": "Pre-launch draft. This notice must be reviewed before launch.",
     "privacyBody": [
-      "This preview page is a static site. It does not send or store the email address you type into the waitlist form.",
-      "There is no account system, and no income, expense, or tax data is collected because the product is not live yet.",
-      "Before launch, this notice must be replaced with the legal entity, contact details, retention period, processors, and instructions for requesting deletion."
+      "When you use “Sign in with Google”, GigLedger stores your Google account email and name, plus the ledger entries you save. Your Google password is never stored.",
+      "You can export your saved ledger from the dashboard, then request account deletion by deleting your workspace after export. Account deletion removes your Google email, name, income entries, fixed costs, and workspace settings.",
+      "Unsaved calculations remain on the current page only and are cleared when you refresh or leave the page.",
+      "This pre-launch draft still requires the legal entity, contact details, retention period, processors, and final deletion workflow before general launch."
     ],
     "disclaimerTitle": "Tax disclaimer",
     "disclaimerBody": [
       "GigLedger provides estimates for planning only. It is not a tax, legal, or accounting advisor.",
-      "Tax rules change and vary by jurisdiction. The first estimates are designed for US self-employment scenarios.",
+      "You choose your own reserve rate. GigLedger may show a common range of 25%–30% for US self-employment planning. It does not calculate your actual federal, self-employment, or state tax, and it does not file a return.",
       "Consult a qualified professional before filing a return or making a tax decision."
     ],
-    "back": "Back to GigLedger"
-  },
-  "thanks": {
-    "title": "You're on the list.",
-    "body": "We'll send launch updates and early-access details. No noise.",
     "back": "Back to GigLedger"
   },
   "app": {
@@ -254,7 +288,12 @@
     "subheading": "This prototype shows the core calculation. Add fixed costs and income to see your daily floor and true take-home.",
     "back": "Back to site",
     "navAria": "Prototype navigation",
-    "nav": { "dashboard": "Dashboard", "fixed": "Fixed costs", "income": "Income", "how": "How it works" },
+    "nav": {
+      "dashboard": "Dashboard",
+      "fixed": "Fixed costs",
+      "income": "Income",
+      "how": "How it works"
+    },
     "metrics": {
       "daily": "Daily floor",
       "dailyNote": "Business fixed costs per active day",
@@ -267,7 +306,7 @@
       "profitNote": "Net income minus fixed costs",
       "tax": "Tax reserve"
     },
-    "taxNote": "15% planning placeholder · Estimate only",
+    "taxNote": "Estimate only · Not tax advice",
     "onboarding": {
       "kicker": "How this prototype works",
       "steps": [
@@ -306,17 +345,58 @@
       "platformFee": "Platform fee (USD)"
     },
     "cycles": {
-      "daily": "Daily", "weekly": "Weekly", "biweekly": "Every 2 weeks",
-      "monthly": "Monthly", "quarterly": "Quarterly", "yearly": "Yearly"
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "biweekly": "Every 2 weeks",
+      "monthly": "Monthly",
+      "quarterly": "Quarterly",
+      "yearly": "Yearly"
     },
     "sources": {
-      "upwork": "Upwork", "fiverr": "Fiverr", "stripe": "Stripe", "direct": "Direct client"
+      "upwork": "Upwork",
+      "fiverr": "Fiverr",
+      "stripe": "Stripe",
+      "direct": "Direct client"
     },
     "table": {
-      "name": "Name", "cycle": "Cycle", "amount": "Amount", "businessUse": "Business use",
-      "daily": "Daily cost", "date": "Date", "source": "Source", "fee": "Fee", "net": "Net"
+      "name": "Name",
+      "cycle": "Cycle",
+      "amount": "Amount",
+      "businessUse": "Business use",
+      "daily": "Daily cost",
+      "date": "Date",
+      "source": "Source",
+      "fee": "Fee",
+      "net": "Net"
     },
-    "empty": { "fixed": "No fixed costs added yet.", "income": "No income added yet." },
-    "disclaimer": "Prototype only. Tax reserve is a planning placeholder, not tax advice."
+    "empty": {
+      "fixed": "No fixed costs added yet.",
+      "income": "No income added yet."
+    },
+    "disclaimer": "Estimates only. This is not tax advice, bank sync, platform scraping, or tax filing.",
+    "signIn": "Sign in",
+    "saveGoogle": "Save with Google",
+    "saveNote": "Unsaved entries stay on this page. Refreshing will clear them.",
+    "saving": "Preparing sign-in…",
+    "saveFailed": "Could not start Google sign-in. Your entries are still here.",
+    "savedRedirect": "Signed in. Saving your entries…",
+    "taxRateLabel": "Tax reserve rate % (optional)",
+    "cashLabel": "Cash on hand (USD, optional)",
+    "taxRatePlaceholder": "Common US range: 25–30",
+    "taxUnset": "Set your own rate",
+    "taxReference": "Common US self-employment reference: 25%–30%.",
+    "export": "Export JSON",
+    "deleteAccount": "Delete account",
+    "deleteConfirm": "This permanently deletes your account and ledger data. Continue?",
+    "deleteFailed": "Account deletion failed. Your data is still available."
+  },
+  "start": {
+    "kicker": "Start in three minutes",
+    "title": "Know your real number before the next invoice.",
+    "body": "Try the calculator without an account. When the result looks useful, sign in with Google to save it to your ledger.",
+    "calculate": "Calculate your Daily Floor",
+    "signIn": "Sign in with Google",
+    "note": "Unsaved calculations stay on the current page only.",
+    "privacy": "Privacy notice"
   }
 }

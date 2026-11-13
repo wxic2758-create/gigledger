@@ -16,7 +16,7 @@
     "why": "為什麼選 GigLedger",
     "how": "運作方式",
     "faq": "常見問題",
-    "cta": "加入等候名單",
+    "cta": "開啟計算器",
     "language": "語言",
     "switchTo": "English",
     "switchShort": "EN",
@@ -28,8 +28,8 @@
     "titleBefore": "看清你",
     "titleAccent": "實際拿到多少。",
     "sub": "在同一個帳本裡記錄收入、平台手續費、支出與固定成本，看清實際利潤，也知道該為稅款預留多少。",
-    "primaryCta": "加入等候名單",
-    "secondaryCta": "試用計算器",
+    "primaryCta": "立即試算",
+    "secondaryCta": "使用 Google 登入",
     "trust": [
       "為自由工作收入而做",
       "手動輸入 + CSV 匯入",
@@ -39,29 +39,71 @@
     "visualAria": "GigLedger 儀表板預覽，包含範例收入、手續費、固定成本、利潤與預留稅款。"
   },
   "dashboard": {
-    "month": "本月",
+    "title": "儀表板",
+    "heading": "你的已儲存帳本。",
+    "subheading": "這些紀錄來自你的 GigLedger 帳號。你可以繼續新增資料，再用 Google 儲存更新。",
+    "refresh": "重新載入帳號",
+    "taxValue": "$735",
+    "dailyValue": "$29.59",
     "rows": [
-      { "label": "總收入", "value": "$4,800", "tone": "default" },
-      { "label": "平台手續費", "value": "−$480", "tone": "muted" },
-      { "label": "其他支出", "value": "−$480", "tone": "muted" },
-      { "label": "固定成本", "value": "−$900", "tone": "muted" },
-      { "label": "實際利潤", "value": "$2,940", "tone": "accent" }
+      {
+        "label": "總收入",
+        "value": "$4,800",
+        "tone": "default"
+      },
+      {
+        "label": "平台手續費",
+        "value": "−$480",
+        "tone": "muted"
+      },
+      {
+        "label": "其他支出",
+        "value": "−$480",
+        "tone": "muted"
+      },
+      {
+        "label": "固定成本",
+        "value": "−$900",
+        "tone": "muted"
+      },
+      {
+        "label": "實際利潤",
+        "value": "$2,940",
+        "tone": "accent"
+      }
     ],
+    "chart": [
+      {
+        "month": "1月",
+        "height": 42
+      },
+      {
+        "month": "2月",
+        "height": 58
+      },
+      {
+        "month": "3月",
+        "height": 48
+      },
+      {
+        "month": "4月",
+        "height": 72
+      },
+      {
+        "month": "5月",
+        "height": 64
+      },
+      {
+        "month": "6月",
+        "height": 88
+      }
+    ],
+    "month": "本月",
     "dailyLabel": "每日底線",
-    "dailyValue": "$30",
     "dailyUnit": "/ 天",
     "taxLabel": "預留稅款",
-    "taxValue": "$620",
     "taxNote": "僅供預估",
     "chartLabel": "收入趨勢",
-    "chart": [
-      { "month": "1月", "height": 42 },
-      { "month": "2月", "height": 58 },
-      { "month": "3月", "height": 48 },
-      { "month": "4月", "height": 72 },
-      { "month": "5月", "height": 64 },
-      { "month": "6月", "height": 88 }
-    ],
     "annotation": "多數工具漏掉的那個數字。"
   },
   "daily": {
@@ -69,13 +111,22 @@
     "kicker": "每日數字",
     "title": "你的每日底線。",
     "body": "租金、軟體、保險。不管你這個月有沒有接到案，這些成本都照樣在跑。GigLedger 把它們換算成一個能採取行動的數字。",
-    "value": "$30",
+    "value": "$29.59",
     "unit": "每天",
     "formula": "每月固定成本 × 12 ÷ 365",
     "items": [
-      { "label": "共享空間", "value": "$18 / 天" },
-      { "label": "軟體", "value": "$7 / 天" },
-      { "label": "保險", "value": "$5 / 天" }
+      {
+        "label": "共享空間",
+        "value": "$18 / 天"
+      },
+      {
+        "label": "軟體",
+        "value": "$7 / 天"
+      },
+      {
+        "label": "保險",
+        "value": "$5 / 天"
+      }
     ],
     "note": "範例：每月營業固定成本 $900，營業使用比例 100%。"
   },
@@ -101,7 +152,7 @@
       {
         "tag": "預留稅款",
         "title": "該留的稅，先留下來。",
-        "body": "依收入與可扣抵成本估算應預留稅款，並清楚標示為預估，不是稅務建議。",
+        "body": "自行設定預留比例，並參考美國自僱常見的 25%–30% 範圍。清楚標示為預估，不是稅務建議。",
         "tone": "light",
         "icon": "tax"
       },
@@ -181,11 +232,11 @@
       },
       {
         "q": "會串接 Upwork 或 Stripe 嗎？",
-        "a": "第一版不會。你可以手動新增收入或匯入 CSV。核心帳本穩定後，才會規劃官方串接。"
+        "a": "目前還不會。你可以手動新增收入或匯入 CSV。核心帳本穩定後，才會規劃官方串接。"
       },
       {
         "q": "什麼算固定成本？",
-        "a": "共享空間、軟體、保險、主機與會計等週期性營業成本。個人成本可以另外記錄，但不會被視為可扣抵。"
+        "a": "共享空間、軟體、保險、主機與會計等週期性營業成本。個人成本可以另外記錄。"
       },
       {
         "q": "美國以外可以使用嗎？",
@@ -197,22 +248,9 @@
       },
       {
         "q": "什麼時候上線？",
-        "a": "第一版正在開發中。加入等候名單，我們會寄送上線消息。"
+        "a": "第一版正在開發中。你現在可以試算，並使用 Google 登入保存你的帳本。"
       }
     ]
-  },
-  "waitlist": {
-    "kicker": "搶先體驗",
-    "title": "下一張發票之前，先知道真正的數字。",
-    "body": "加入等候名單，取得上線消息與搶先體驗。",
-    "label": "電子郵件",
-    "placeholder": "you@example.com",
-    "button": "加入等候名單",
-    "note": "只寄上線消息，隨時可以退訂。",
-    "privacy": "隱私說明",
-    "success": "目前僅為預覽，等候名單尚未接通，因此沒有儲存你的電子郵件。",
-    "preview": "目前為預覽版。上線前請接上等候名單端點。",
-    "error": "請輸入有效的電子郵件。"
   },
   "footer": {
     "tagline": "為獨立工作而做的清楚帳本。",
@@ -230,21 +268,17 @@
     "privacyTitle": "隱私說明",
     "privacyDraft": "上線前草稿。正式上線前仍需完成法律審閱。",
     "privacyBody": [
-      "這個預覽頁面是靜態網站，不會傳送或儲存你在等候名單表單輸入的電子郵件。",
-      "目前沒有帳號系統，產品也尚未上線，因此不會收集收入、支出或稅務資料。",
-      "正式上線前，本說明必須補上法律實體、聯絡方式、保存期限、處理者，以及要求刪除資料的方式。"
+      "使用「使用 Google 登入」時，GigLedger 會儲存你的 Google 帳號電子郵件與姓名，以及你保存的帳本資料。我們不會儲存你的 Google 密碼。",
+      "你可以在儀表板匯出已保存的帳本，再於匯出後刪除工作區以刪除帳號。刪除帳號會移除 Google 電子郵件、姓名、收入紀錄、固定成本與工作區設定。",
+      "未保存的試算只會留在目前頁面，刷新或離開後即會清除。",
+      "本上線前草稿在正式公開前，仍須補上法律實體、聯絡方式、保存期限、處理者與最終刪除流程。"
     ],
     "disclaimerTitle": "稅務免責聲明",
     "disclaimerBody": [
       "GigLedger 僅提供規劃用的預估，不是稅務、法律或會計顧問。",
-      "稅務規則會變動，也依轄區而異。第一版預估是為美國自僱情境設計。",
+      "預留比例由你自行設定。GigLedger 可能顯示美國自僱情境常見的 25%–30% 參考範圍，但不會計算實際聯邦稅、自僱稅或州稅，也不代為申報。",
       "申報或做出稅務決定前，請諮詢合格的專業人士。"
     ],
-    "back": "回到 GigLedger"
-  },
-  "thanks": {
-    "title": "已加入名單。",
-    "body": "我們會寄送上線消息與搶先體驗資訊，不會濫發。",
     "back": "回到 GigLedger"
   },
   "app": {
@@ -254,7 +288,12 @@
     "subheading": "這個原型呈現核心計算。加入固定成本與收入，即可查看每日底線與實際到手金額。",
     "back": "回到網站",
     "navAria": "原型導覽",
-    "nav": { "dashboard": "儀表板", "fixed": "固定成本", "income": "收入", "how": "運作方式" },
+    "nav": {
+      "dashboard": "儀表板",
+      "fixed": "固定成本",
+      "income": "收入",
+      "how": "運作方式"
+    },
     "metrics": {
       "daily": "每日底線",
       "dailyNote": "每個活躍日的營業固定成本",
@@ -267,7 +306,7 @@
       "profitNote": "淨收入減固定成本",
       "tax": "預留稅款"
     },
-    "taxNote": "15% 規劃用預設值 · 僅供預估",
+    "taxNote": "僅供預估 · 非稅務建議",
     "onboarding": {
       "kicker": "這個原型怎麼用",
       "steps": [
@@ -306,17 +345,58 @@
       "platformFee": "平台手續費（USD）"
     },
     "cycles": {
-      "daily": "每天", "weekly": "每週", "biweekly": "每兩週",
-      "monthly": "每月", "quarterly": "每季", "yearly": "每年"
+      "daily": "每天",
+      "weekly": "每週",
+      "biweekly": "每兩週",
+      "monthly": "每月",
+      "quarterly": "每季",
+      "yearly": "每年"
     },
     "sources": {
-      "upwork": "Upwork", "fiverr": "Fiverr", "stripe": "Stripe", "direct": "直接客戶"
+      "upwork": "Upwork",
+      "fiverr": "Fiverr",
+      "stripe": "Stripe",
+      "direct": "直接客戶"
     },
     "table": {
-      "name": "名稱", "cycle": "週期", "amount": "金額", "businessUse": "營業使用比例",
-      "daily": "每日成本", "date": "日期", "source": "來源", "fee": "手續費", "net": "淨額"
+      "name": "名稱",
+      "cycle": "週期",
+      "amount": "金額",
+      "businessUse": "營業使用比例",
+      "daily": "每日成本",
+      "date": "日期",
+      "source": "來源",
+      "fee": "手續費",
+      "net": "淨額"
     },
-    "empty": { "fixed": "尚未加入固定成本。", "income": "尚未加入收入。" },
-    "disclaimer": "僅為原型。預留稅款是規劃用預設值，不是稅務建議。"
+    "empty": {
+      "fixed": "尚未加入固定成本。",
+      "income": "尚未加入收入。"
+    },
+    "disclaimer": "僅供預估。這不是稅務建議，也不包含銀行同步、抓取平台帳號或代為報稅。",
+    "signIn": "登入",
+    "saveGoogle": "用 Google 保存",
+    "saveNote": "未保存的資料只會留在目前頁面，刷新後會消失。",
+    "saving": "正在準備登入…",
+    "saveFailed": "無法開始 Google 登入。你的資料仍在目前頁面。",
+    "savedRedirect": "已登入，正在保存你的資料…",
+    "taxRateLabel": "預留稅款比例 %（可選）",
+    "cashLabel": "現有現金（USD，可選）",
+    "taxRatePlaceholder": "美國常見範圍：25–30",
+    "taxUnset": "設定你的預留比例",
+    "taxReference": "美國自僱常見參考：25%–30%。",
+    "export": "匯出 JSON",
+    "deleteAccount": "刪除帳號",
+    "deleteConfirm": "這會永久刪除你的帳號與帳本資料。確定繼續嗎？",
+    "deleteFailed": "刪除帳號失敗。你的資料仍然可用。"
+  },
+  "start": {
+    "kicker": "三分鐘開始",
+    "title": "下一張發票之前，先知道真正的數字。",
+    "body": "先不登入試算。數字有幫助時，再用 Google 登入並保存到你的帳本。",
+    "calculate": "計算每日底線",
+    "signIn": "使用 Google 登入",
+    "note": "未保存的試算只會留在目前頁面。",
+    "privacy": "隱私說明"
   }
 }

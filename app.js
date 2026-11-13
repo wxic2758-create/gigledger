@@ -46,28 +46,9 @@
     });
   });
 
-  const form = document.querySelector("[data-waitlist]");
-  if (!form) return;
-
-  const input = form.querySelector('input[type="email"]');
-  const message = form.querySelector("[data-message]");
-  const invalidMessage = form.dataset.invalidMessage;
-  const successMessage = form.dataset.successMessage;
-
-  form.addEventListener("submit", (event) => {
-    event.preventDefault();
-    message.className = "form-message";
-
-    if (!input.checkValidity()) {
-      message.textContent = invalidMessage;
-      message.classList.add("error");
-      input.focus();
-      return;
-    }
-
-    // Preview behavior only. Replace this with a real waitlist endpoint before launch.
-    message.textContent = successMessage;
-    message.classList.add("success");
-    form.reset();
-  });
+  const waitlistForm = document.querySelector("[data-waitlist]");
+  if (waitlistForm) {
+    // Retained only as a no-op guard for stale cached pages. New pages do not ship a waitlist form.
+    waitlistForm.addEventListener("submit", (event) => event.preventDefault());
+  }
 })();

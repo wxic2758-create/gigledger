@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="/proto.css">
 </head>
 <body class="app-proto">
-  <script type="application/json" id="proto-messages">{"title":"Prototype","badge":"Interactive prototype · No data is stored","heading":"Your real ledger, in three steps.","subheading":"This prototype shows the core calculation. Add fixed costs and income to see your daily floor and true take-home.","back":"Back to site","navAria":"Prototype navigation","nav":{"dashboard":"Dashboard","fixed":"Fixed costs","income":"Income","how":"How it works"},"metrics":{"daily":"Daily floor","dailyNote":"Business fixed costs per active day","gross":"Gross income","fees":"Platform fees","net":"Net income","costs":"Fixed costs","costsNote":"This month","profit":"True profit","profitNote":"Net income minus fixed costs","tax":"Tax reserve"},"taxNote":"15% planning placeholder · Estimate only","onboarding":{"kicker":"How this prototype works","steps":[{"title":"Start with what you must pay","body":"Add one recurring business cost. GigLedger turns it into a daily floor before any client pays you."},{"title":"Record what you earn","body":"Add income and the platform fee. Net income updates immediately."},{"title":"See what is actually left","body":"True profit subtracts monthly fixed costs from net income. Tax reserve stays separate."}]},"fixed":{"title":"Fixed costs","body":"Rent, software, insurance, and other recurring business costs. Each one is annualized, then divided by 365.","add":"Add fixed cost"},"income":{"title":"Income","body":"Record the payment amount and platform fee. The prototype uses these entries immediately.","add":"Add income"},"fields":{"name":"Name","amount":"Amount (USD)","cycle":"Cycle","businessUse":"Business use %","date":"Date","source":"Source","client":"Client or project","platformFee":"Platform fee (USD)"},"cycles":{"daily":"Daily","weekly":"Weekly","biweekly":"Every 2 weeks","monthly":"Monthly","quarterly":"Quarterly","yearly":"Yearly"},"sources":{"upwork":"Upwork","fiverr":"Fiverr","stripe":"Stripe","direct":"Direct client"},"table":{"name":"Name","cycle":"Cycle","amount":"Amount","businessUse":"Business use","daily":"Daily cost","date":"Date","source":"Source","fee":"Fee","net":"Net"},"empty":{"fixed":"No fixed costs added yet.","income":"No income added yet."},"disclaimer":"Prototype only. Tax reserve is a planning placeholder, not tax advice."}</script>
+  <script type="application/json" id="proto-messages">{"title":"Prototype","badge":"Interactive prototype · No data is stored","heading":"Your real ledger, in three steps.","subheading":"This prototype shows the core calculation. Add fixed costs and income to see your daily floor and true take-home.","back":"Back to site","navAria":"Prototype navigation","nav":{"dashboard":"Dashboard","fixed":"Fixed costs","income":"Income","how":"How it works"},"metrics":{"daily":"Daily floor","dailyNote":"Business fixed costs per active day","gross":"Gross income","fees":"Platform fees","net":"Net income","costs":"Fixed costs","costsNote":"This month","profit":"True profit","profitNote":"Net income minus fixed costs","tax":"Tax reserve"},"taxNote":"Estimate only · Not tax advice","onboarding":{"kicker":"How this prototype works","steps":[{"title":"Start with what you must pay","body":"Add one recurring business cost. GigLedger turns it into a daily floor before any client pays you."},{"title":"Record what you earn","body":"Add income and the platform fee. Net income updates immediately."},{"title":"See what is actually left","body":"True profit subtracts monthly fixed costs from net income. Tax reserve stays separate."}]},"fixed":{"title":"Fixed costs","body":"Rent, software, insurance, and other recurring business costs. Each one is annualized, then divided by 365.","add":"Add fixed cost"},"income":{"title":"Income","body":"Record the payment amount and platform fee. The prototype uses these entries immediately.","add":"Add income"},"fields":{"name":"Name","amount":"Amount (USD)","cycle":"Cycle","businessUse":"Business use %","date":"Date","source":"Source","client":"Client or project","platformFee":"Platform fee (USD)"},"cycles":{"daily":"Daily","weekly":"Weekly","biweekly":"Every 2 weeks","monthly":"Monthly","quarterly":"Quarterly","yearly":"Yearly"},"sources":{"upwork":"Upwork","fiverr":"Fiverr","stripe":"Stripe","direct":"Direct client"},"table":{"name":"Name","cycle":"Cycle","amount":"Amount","businessUse":"Business use","daily":"Daily cost","date":"Date","source":"Source","fee":"Fee","net":"Net"},"empty":{"fixed":"No fixed costs added yet.","income":"No income added yet."},"disclaimer":"Estimates only. This is not tax advice, bank sync, platform scraping, or tax filing.","signIn":"Sign in","saveGoogle":"Save with Google","saveNote":"Unsaved entries stay on this page. Refreshing will clear them.","saving":"Preparing sign-in…","saveFailed":"Could not start Google sign-in. Your entries are still here.","savedRedirect":"Signed in. Saving your entries…","taxRateLabel":"Tax reserve rate % (optional)","cashLabel":"Cash on hand (USD, optional)","taxRatePlaceholder":"Common US range: 25–30","taxUnset":"Set your own rate","taxReference":"Common US self-employment reference: 25%–30%.","export":"Export JSON","deleteAccount":"Delete account","deleteConfirm":"This permanently deletes your account and ledger data. Continue?","deleteFailed":"Account deletion failed. Your data is still available."}</script>
   <header class="site-header">
     <div class="shell header-inner">
       
@@ -30,7 +30,7 @@
       <span class="lang-full">繁體中文</span>
       <span class="lang-short">繁中</span>
     </a>
-        <a class="button button-small button-orange" href="/en/">Back to site</a>
+        <a class="button button-small button-orange" href="/en/app">Sign in</a>
         <button class="menu-button" type="button" aria-expanded="false" aria-controls="mobileNav" aria-label="Open menu">
           <span></span><span></span>
         </button>
@@ -49,10 +49,17 @@
     </nav>
   </header>
   <main id="main">
-    <section class="app-hero shell" id="dashboard">
+    <section class="app-hero shell" id="dashboard" >
       <div class="app-badge">Interactive prototype · No data is stored</div>
       <h1>Your real ledger, in three steps.</h1>
       <p>This prototype shows the core calculation. Add fixed costs and income to see your daily floor and true take-home.</p>
+      <div class="account-actions">
+        <button class="button button-dark" type="button" data-save-google>Save with Google</button>
+        <a class="button button-ghost" href="/api/workspace/export">Export JSON</a>
+        <button class="button button-danger" type="button" data-delete-account>Delete account</button>
+        <span class="account-note">Unsaved entries stay on this page. Refreshing will clear them.</span>
+        <p class="form-message account-message" role="status" aria-live="polite" data-save-message hidden></p>
+      </div>
       <div class="app-metrics">
         <article><span>Daily floor</span><strong data-proto="metric-daily">$0.00</strong><small>Business fixed costs per active day</small></article>
         <article><span>Gross income</span><strong data-proto="metric-gross">$0.00</strong></article>
@@ -60,7 +67,7 @@
         <article><span>Net income</span><strong data-proto="metric-net">$0.00</strong></article>
         <article><span>Fixed costs</span><strong data-proto="metric-costs">$0.00</strong><small>This month</small></article>
         <article class="profit-card"><span>True profit</span><strong data-proto="metric-profit">$0.00</strong><small>Net income minus fixed costs</small></article>
-        <article><span>Tax reserve</span><strong data-proto="metric-tax">$0.00</strong><small>15% planning placeholder · Estimate only</small></article>
+        <article><span>Tax reserve</span><strong data-proto="metric-tax">$0.00</strong><small>Estimate only · Not tax advice</small></article>
       </div>
     </section>
 
@@ -111,6 +118,11 @@
         <p>Record the payment amount and platform fee. The prototype uses these entries immediately.</p>
       </div>
       <div class="app-grid">
+        <form class="app-form app-settings-form" data-proto-form="settings" novalidate>
+          <label><span>Tax reserve rate % (optional)</span><input name="taxReserveRate" type="number" min="0" max="100" step="0.1" placeholder="Common US range: 25–30"></label>
+          <label><span>Cash on hand (USD, optional)</span><input name="cashOnHand" type="number" min="0" step="0.01"></label>
+          <p class="app-note">Common US self-employment reference: 25%–30%.</p>
+        </form>
         <form class="app-form" data-proto-form="income" novalidate>
           <label><span>Date</span><input name="date" type="date" value="2026-11-13" required></label>
           <label><span>Source</span><select name="source"><option value="upwork">Upwork</option><option value="fiverr">Fiverr</option><option value="stripe">Stripe</option><option value="direct">Direct client</option></select></label>
@@ -126,7 +138,7 @@
           </table>
         </div>
       </div>
-      <p class="app-note">Prototype only. Tax reserve is a planning placeholder, not tax advice.</p>
+      <p class="app-note">Estimates only. This is not tax advice, bank sync, platform scraping, or tax filing.</p>
     </section>
   </main>
   <footer class="site-footer">
@@ -135,7 +147,7 @@
       <a href="/zh-TW/app">繁體中文</a>
     </div>
   </footer>
-  <script src="/app-proto.js" defer></script>
+  <script src="/app-ledger.js" defer></script>
   <script src="/app.js" defer></script>
 </body>
 </html>

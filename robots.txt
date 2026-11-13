@@ -1,6 +1,8 @@
 User-agent: *
 Allow: /
-Disallow: /en/thanks.html
-Disallow: /zh-TW/thanks.html
+Disallow: /en/app/
+Disallow: /zh-TW/app/
+Disallow: /en/dashboard/
+Disallow: /zh-TW/dashboard/
 
 Sitemap: https://gigledger.xyz/sitemap.xml
