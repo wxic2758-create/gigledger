@@ -138,20 +138,20 @@
       {
         "tag": "Income",
         "title": "Scattered income, one place.",
-        "body": "Add or import earnings from Upwork, Fiverr, Stripe, and direct clients. Keep platform fees and net payouts attached to every entry.",
+        "body": "Add manually, import CSV, or sync official Stripe and App Store reports in Pro. Keep fees and net payouts attached to every entry.",
         "tone": "dark",
         "icon": "income"
       },
       {
         "tag": "Fixed costs",
         "title": "Fixed costs, finally visible.",
-        "body": "Turn recurring business costs into a daily number, with business-use percentages and no double counting.",
+        "body": "Subscriptions live with other recurring costs. Business-use percentages keep them out of one-time expenses, so nothing is double counted.",
         "tone": "light",
         "icon": "calendar"
       },
       {
         "tag": "Tax reserve",
-        "title": "Set aside the right amount.",
+        "title": "Set your own tax reserve.",
         "body": "Set your own reserve rate, with a 25%-30% US self-employment reference range. Clearly labeled as an estimate, not tax advice.",
         "tone": "light",
         "icon": "tax"
@@ -159,7 +159,7 @@
       {
         "tag": "Reports",
         "title": "Reports you can hand over.",
-        "body": "Monthly, quarterly, and annual views you can export for your accountant, lender, or landlord.",
+        "body": "Export a clean monthly CSV for yourself or your accountant.",
         "tone": "sand",
         "icon": "report"
       }
@@ -206,9 +206,9 @@
     ]
   },
   "honesty": {
-    "kicker": "No magic sync. Not yet.",
-    "title": "Start with what works. Add automation when it's reliable.",
-    "body": "GigLedger starts with manual entries and CSV import. Platform connections come later, after the core numbers are right.",
+    "kicker": "Official APIs where they exist. No bank passwords. No scraping.",
+    "title": "Start with a working calculator. Add official sync in Pro.",
+    "body": "GigLedger starts with a calculator, manual entry, and CSV import. Pro adds official Stripe and App Store Connect sync. We will not ask for bank passwords, scrape your accounts, or file taxes for you.",
     "yesTitle": "In the first version",
     "yes": [
       "Manual income and expense entry",
@@ -231,20 +231,20 @@
         "a": "No. GigLedger gives you an estimate and a reserve target. It does not file returns or provide tax advice."
       },
       {
-        "q": "Does it connect to Upwork or Stripe?",
-        "a": "Not yet. You can add income manually or import a CSV. Official integrations are planned after the core ledger is stable."
+        "q": "Does it connect to Stripe or the App Store?",
+        "a": "Official Stripe and App Store Connect sync is planned for Pro. Upwork, PayPal, and Fiverr can be imported with CSV. No bank passwords and no scraping."
       },
       {
         "q": "What counts as a fixed cost?",
-        "a": "Recurring business costs such as coworking, software, insurance, hosting, and accounting. Personal costs can be tracked separately."
+        "a": "Subscriptions, software, rent, insurance, and hosting that recur. One-time purchases belong in expenses; do not record a subscription again as an expense."
       },
       {
         "q": "Can I use it outside the US?",
-        "a": "The first tax estimates are built for US self-employment. You can still use the ledger elsewhere, but tax rules vary by jurisdiction."
+        "a": "The ledger works worldwide. You choose your reserve rate. The 25%-30% reference comes from common US self-employment practice, not your local tax law."
       },
       {
         "q": "What happens to my data?",
-        "a": "You can export and delete your data. We do not ask for bank passwords or Social Security numbers. See the privacy notice for details."
+        "a": "After Sign in with Google, we store your Google email and name plus saved ledger data in Cloudflare D1. You can export and delete your account from the dashboard."
       },
       {
         "q": "When will it launch?",
@@ -253,7 +253,7 @@
     ]
   },
   "footer": {
-    "tagline": "A clearer ledger for independent work.",
+    "tagline": "Daily cost and real profit for a one-person company.",
     "product": "Product",
     "why": "Why GigLedger",
     "how": "How it works",

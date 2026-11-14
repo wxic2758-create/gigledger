@@ -354,6 +354,10 @@ const legalPage = ({ locale, t, type }) => {
   <title>${esc(title)} — GigLedger</title>
   <meta name="description" content="${esc(isPrivacy ? t.meta.description : t.legal.disclaimerBody[0])}">
   <link rel="icon" href="/assets/favicon-32.png" sizes="32x32">
+  <link rel="canonical" href="${siteUrl}/${locale.folder}/${isPrivacy ? "privacy.html" : "tax-disclaimer.html"}">
+  <link rel="alternate" hreflang="en" href="${siteUrl}/en/${isPrivacy ? "privacy.html" : "tax-disclaimer.html"}">
+  <link rel="alternate" hreflang="zh-Hant-TW" href="${siteUrl}/zh-TW/${isPrivacy ? "privacy.html" : "tax-disclaimer.html"}">
+  <link rel="alternate" hreflang="x-default" href="${siteUrl}/en/${isPrivacy ? "privacy.html" : "tax-disclaimer.html"}">
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
