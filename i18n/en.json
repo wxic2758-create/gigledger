@@ -519,6 +519,22 @@
       "upcoming": "Next charge {date}: {amount}",
       "suggestedCancel": "Suggested cancel",
       "reviewHint": "You tell GigLedger; it never detects usage automatically."
+    },
+    "weeklySummary": {
+      "title": "This week",
+      "body": "Last week net income {income}; that covers {days} days at your Daily Floor.",
+      "bodyNoIncome": "Last week no income was recorded. Your Daily Floor remains {daily}.",
+      "dismiss": "Dismiss this week"
+    },
+    "share": {
+      "title": "Share card",
+      "ai": "AI spending / month",
+      "daily": "Daily floor",
+      "download": "Download image",
+      "shareX": "Share on X",
+      "copyText": "Copy text",
+      "aiText": "My monthly AI spending is {amount}.",
+      "dailyText": "My Daily Floor is {amount} per day."
     }
   },
   "start": {

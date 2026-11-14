@@ -519,6 +519,22 @@
       "upcoming": "{date} 即將扣 {amount}",
       "suggestedCancel": "建議取消",
       "reviewHint": "由你手動回報；GigLedger 不會自動偵測使用情況。"
+    },
+    "weeklySummary": {
+      "title": "本週摘要",
+      "body": "上週淨收入 {income}，可覆蓋每日底線 {days} 天。",
+      "bodyNoIncome": "上週沒有收入紀錄。你的每日底線仍是 {daily}。",
+      "dismiss": "本週不再顯示"
+    },
+    "share": {
+      "title": "分享卡片",
+      "ai": "每月 AI 花費",
+      "daily": "每日底線",
+      "download": "下載圖片",
+      "shareX": "分享到 X",
+      "copyText": "複製文案",
+      "aiText": "我每月的 AI 花費是 {amount}。",
+      "dailyText": "我的每日底線是每天 {amount}。"
     }
   },
   "start": {

@@ -56,6 +56,10 @@
       requiredToDate: dailyFloor * monthDayCount(),
       comparison: netIncome - dailyFloor * monthDayCount(),
       savings: state.cashOnHand === "" ? null : Number(state.cashOnHand),
+      aiMonthlyCosts: state.fixedCosts.filter((item) => item.isSubscription).reduce(
+        (sum, item) => sum + (Number(item.amount) || 0) * (Number(item.multiplier) || 0) / 12
+          * (Number(item.businessUse) || 0) / 100, 0,
+      ),
     };
   };
 
@@ -84,6 +88,50 @@
         ? messages.metrics.runwayUnset
         : messages.metrics.runwayZero.replace("{days}", String(Math.floor(result.savings / result.dailyFloor)));
     }
+    const shareAiNode = document.querySelector("[data-share-ai]");
+    if (shareAiNode) shareAiNode.textContent = money(result.aiMonthlyCosts);
+    const shareDailyNode = document.querySelector("[data-share-daily]");
+    if (shareDailyNode) shareDailyNode.textContent = dayMoney(result.dailyFloor);
+    renderWeeklySummary(result);
+  };
+
+  const weekKey = () => {
+    const now = new Date();
+    const date = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    date.setUTCDate(date.getUTCDate() - ((date.getUTCDay() + 6) % 7) - 7);
+    return date.toISOString().slice(0, 10);
+  };
+
+  const renderWeeklySummary = (result) => {
+    const wrapper = document.querySelector("[data-weekly-summary]");
+    const textNode = document.querySelector("[data-weekly-text]");
+    if (!wrapper || !textNode || !dashboardMode) return;
+    if (localStorage.getItem(`gigledger_week_dismissed_${weekKey()}`) === "1") {
+      wrapper.hidden = true;
+      return;
+    }
+    const weekStart = new Date(`${weekKey()}T00:00:00Z`);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setUTCDate(weekEnd.getUTCDate() + 7);
+    const weekIncome = state.income.filter((item) => {
+      const date = new Date(`${item.date}T00:00:00Z`);
+      return date >= weekStart && date < weekEnd;
+    }).reduce((sum, item) => sum + (Number(item.amount) - Number(item.platformFee)), 0);
+    if (!state.income.length && !state.fixedCosts.length) {
+      wrapper.hidden = true;
+      return;
+    }
+    textNode.textContent = weekIncome > 0
+      ? messages.weeklySummary.body
+        .replace("{income}", money(weekIncome))
+        .replace("{days}", String(Math.floor(weekIncome / result.dailyFloor)))
+      : messages.weeklySummary.bodyNoIncome.replace("{daily}", dayMoney(result.dailyFloor));
+    wrapper.hidden = false;
+  };
+
+  const calculateShareCard = (card) => {
+    const result = calculate();
+    return card === "ai" ? result.aiMonthlyCosts : result.dailyFloor;
   };
 
   const deleteButton = (type, id) => {
@@ -454,6 +502,63 @@
     state.taxReserveRate = String(settingsForm.elements.taxReserveRate.value || "");
     state.cashOnHand = String(settingsForm.elements.cashOnHand.value || "");
     render();
+  });
+
+  document.querySelector("[data-weekly-dismiss]")?.addEventListener("click", () => {
+    localStorage.setItem(`gigledger_week_dismissed_${weekKey()}`, "1");
+    const wrapper = document.querySelector("[data-weekly-summary]");
+    if (wrapper) wrapper.hidden = true;
+  });
+
+  const shareImage = async (card) => {
+    const amount = money(calculateShareCard(card));
+    const canvas = document.createElement("canvas");
+    canvas.width = 900;
+    canvas.height = 500;
+    const context = canvas.getContext("2d");
+    context.fillStyle = "#fff7ef";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.fillStyle = "#ff6b35";
+    context.fillRect(0, 0, canvas.width, 14);
+    context.fillStyle = "#2b1b12";
+    context.font = "700 28px system-ui, sans-serif";
+    context.fillText(locale === "zh-TW" ? messages.share[card === "ai" ? "ai" : "daily"] : messages.share[card], 64, 140);
+    context.font = "800 96px system-ui, sans-serif";
+    context.fillText(amount, 64, 262);
+    context.font = "600 26px system-ui, sans-serif";
+    context.fillStyle = "#654c3f";
+    context.fillText("GigLedger", 64, 354);
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+    return blob;
+  };
+
+  document.querySelector("[data-share-download]")?.addEventListener("click", async (event) => {
+    const button = event.currentTarget;
+    const card = document.querySelector("[data-share-card='ai']")?.offsetParent ? "ai" : "daily";
+    const blob = await shareImage(card);
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `gigledger-${card}-${new Date().toISOString().slice(0, 10)}.png`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  });
+
+  document.querySelector("[data-share-x]")?.addEventListener("click", () => {
+    const card = document.querySelector("[data-share-card='ai']")?.offsetParent ? "ai" : "daily";
+    const amount = money(calculateShareCard(card));
+    const text = messages.share[card === "ai" ? "aiText" : "dailyText"].replace("{amount}", amount);
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, "_blank", "noopener");
+  });
+
+  document.querySelector("[data-share-copy]")?.addEventListener("click", async (event) => {
+    const button = event.currentTarget;
+    const card = document.querySelector("[data-share-card='ai']")?.offsetParent ? "ai" : "daily";
+    const amount = money(calculateShareCard(card));
+    const text = messages.share[card === "ai" ? "aiText" : "dailyText"].replace("{amount}", amount);
+    await navigator.clipboard.writeText(text);
+    const original = button.textContent;
+    button.textContent = locale === "zh-TW" ? "已複製" : "Copied";
+    setTimeout(() => { button.textContent = original; }, 1800);
   });
 
   const loadDashboard = async () => {

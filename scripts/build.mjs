@@ -491,6 +491,10 @@ const appPage = ({ locale, t, mode = "app" }) => {
         <span class="account-note">${esc(t.app.saveNote)}</span>
         <p class="form-message account-message" role="status" aria-live="polite" data-save-message hidden></p>
       </div>
+      <div class="weekly-summary" data-weekly-summary hidden>
+        <div><span>${esc(t.app.weeklySummary.title)}</span><p data-weekly-text></p></div>
+        <button class="text-link" type="button" data-weekly-dismiss>${esc(t.app.weeklySummary.dismiss)}</button>
+      </div>
       <div class="app-metrics">
         <article><span>${esc(t.app.metrics.daily)}</span><strong data-proto="metric-daily">$0.00</strong><small>${esc(t.app.metrics.dailyNote)}</small></article>
         <article><span>${esc(t.app.metrics.required)}</span><strong data-proto="metric-required">$0.00</strong><small>${esc(t.app.metrics.comparisonNote)}</small></article>
@@ -504,6 +508,27 @@ const appPage = ({ locale, t, mode = "app" }) => {
         <article class="profit-card"><span>${esc(t.app.metrics.profit)}</span><strong data-proto="metric-profit">$0.00</strong><small>${esc(t.app.metrics.profitNote)}</small></article>
         <article><span>${esc(t.app.metrics.tax)}</span><strong data-proto="metric-tax">$0.00</strong><small>${esc(t.app.taxNote)}</small></article>
       </div>
+      ${mode === "dashboard" ? `
+      <div class="share-panel">
+        <div class="share-cards">
+          <article class="share-card" data-share-card="ai">
+            <span>${esc(t.app.share.ai)}</span>
+            <strong data-share-ai>$0.00</strong>
+            <small>GigLedger</small>
+          </article>
+          <article class="share-card" data-share-card="daily">
+            <span>${esc(t.app.share.daily)}</span>
+            <strong data-share-daily>$0.00</strong>
+            <small>GigLedger</small>
+          </article>
+        </div>
+        <div class="share-actions">
+          <button class="button button-ghost" type="button" data-share-download>${esc(t.app.share.download)}</button>
+          <button class="button button-dark" type="button" data-share-x>${esc(t.app.share.shareX)}</button>
+          <button class="button button-ghost" type="button" data-share-copy>${esc(t.app.share.copyText)}</button>
+        </div>
+      </div>
+      ` : ""}
     </section>
 
     <section class="app-steps shell" id="how-it-works">
@@ -623,7 +648,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
       <a href="/${t.alternatePath}app">${esc(t.nav.switchTo)}</a>
     </div>
   </footer>
-  <script src="/app-ledger.js?v=20261114-5" defer></script>
+  <script src="/app-ledger.js?v=20261114-9" defer></script>
   <script src="/app.js" defer></script>
 </body>
 </html>`;
