@@ -523,4 +523,5 @@
 
   loadDashboard();
   render();
+window.__gigledgerLoaded = true;
 })();
