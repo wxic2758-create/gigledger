@@ -422,7 +422,8 @@
       "merchant": "商家",
       "businessAmount": "營業金額",
       "notes": "備註",
-      "actions": "操作"
+      "actions": "操作",
+      "review": "體檢"
     },
     "empty": {
       "fixed": "尚未加入固定成本。",
@@ -509,6 +510,15 @@
           "amount": 10
         }
       ]
+    },
+    "subscriptionReview": {
+      "review": "本月使用情況",
+      "often": "常用",
+      "sometimes": "偶爾",
+      "notUsed": "沒用",
+      "upcoming": "{date} 即將扣 {amount}",
+      "suggestedCancel": "建議取消",
+      "reviewHint": "由你手動回報；GigLedger 不會自動偵測使用情況。"
     }
   },
   "start": {

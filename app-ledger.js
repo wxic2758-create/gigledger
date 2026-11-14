@@ -132,15 +132,16 @@
     tbody.innerHTML = "";
     if (!state.fixedCosts.length) {
       const row = document.createElement("tr");
-      row.innerHTML = `<td colspan="8">${messages.empty.fixed}</td>`;
+      row.innerHTML = `<td colspan="9">${messages.empty.fixed}</td>`;
       tbody.appendChild(row);
       return;
     }
     state.fixedCosts.forEach((item) => {
       const row = document.createElement("tr");
+      const isSubscription = Boolean(item.isSubscription);
       const cycleLabel = messages.cycles[item.cycle] || item.cycle;
       const name = document.createElement("td"); name.textContent = item.name;
-      const type = document.createElement("td"); type.textContent = item.isSubscription ? messages.fixed.subscription : messages.fixed.other;
+      const type = document.createElement("td"); type.textContent = isSubscription ? messages.fixed.subscription : messages.fixed.other;
       const cycle = document.createElement("td"); cycle.textContent = cycleLabel;
       const amount = document.createElement("td"); amount.textContent = money(Number(item.amount));
       const use = document.createElement("td"); use.textContent = `${Number(item.businessUse)}%`;
@@ -148,7 +149,53 @@
       effective.textContent = item.startDate ? `${item.startDate}${item.endDate ? ` – ${item.endDate}` : ""}` : "";
       const cost = document.createElement("td");
       cost.textContent = dayMoney(Number(item.amount) * Number(item.multiplier) * Number(item.businessUse) / 100 / 365);
-      row.append(name, type, cycle, amount, use, effective, linkCell(item), cost, deleteButton("fixed-cost", item.id));
+      const actions = document.createElement("td");
+      if (isSubscription) {
+        const review = document.createElement("div");
+        review.className = "subscription-review";
+        const answers = ["often", "sometimes", "not_used"];
+        const currentAnswer = item.reviews?.find((reviewItem) => reviewItem.period === new Date().toISOString().slice(0, 7))?.answer;
+        const suggestedCancel = (item.reviews || []).filter((reviewItem) => reviewItem.answer === "not_used").slice(0, 2).length === 2;
+        if (suggestedCancel) {
+          const badge = document.createElement("span");
+          badge.className = "cancel-badge";
+          badge.textContent = messages.subscriptionReview.suggestedCancel;
+          review.append(badge);
+        } else if (item.nextBillingDate) {
+          const todayDate = new Date();
+          const billingDate = new Date(`${item.nextBillingDate}T00:00:00Z`);
+          const daysUntil = Math.ceil((billingDate - todayDate) / 86400000);
+          if (daysUntil <= 3) {
+            const reminder = document.createElement("span");
+            reminder.className = "review-hint";
+            reminder.textContent = messages.subscriptionReview.upcoming
+              .replace("{date}", item.nextBillingDate)
+              .replace("{amount}", money(Number(item.amount)));
+            review.append(reminder);
+          }
+        }
+        const answerGroup = document.createElement("div");
+        answerGroup.className = "review-actions";
+        answers.forEach((answer) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "review-button" + (currentAnswer === answer ? " active" : "");
+          button.textContent = messages.subscriptionReview[answer];
+          button.setAttribute("data-review-answer", answer);
+          button.setAttribute("data-entry-id", item.id);
+          answerGroup.append(button);
+        });
+        review.append(answerGroup);
+        const hint = document.createElement("small");
+        hint.textContent = messages.subscriptionReview.reviewHint;
+        review.append(hint);
+        actions.append(review);
+      } else {
+        actions.append(deleteButton("fixed-cost", item.id));
+      }
+      const rowActions = document.createElement("td");
+      rowActions.append(actions);
+      row.append(name, type, cycle, amount, use, effective, linkCell(item), cost, rowActions, deleteButton("fixed-cost", item.id));
       tbody.appendChild(row);
     });
   };
@@ -451,6 +498,7 @@
       nextBillingDate: item.nextBillingDate || "",
       startDate: item.startDate || "",
       endDate: item.endDate || "",
+      reviews: item.reviews || [],
       id: item.id,
     }));
     state.income = (ledger.income || []).map((item) => ({
@@ -582,6 +630,32 @@
       if (warning) warning.hidden = Boolean(selectedTemplates().length || otherFixedCost());
     }
     showFlowStep(flowStep + 1);
+  });
+
+  document.addEventListener("click", async (event) => {
+    const button = event.target.closest("[data-review-answer]");
+    if (!button || button.disabled) return;
+    button.disabled = true;
+    try {
+      const response = await fetch("/api/workspace", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ fixedCostId: button.dataset.entryId, answer: button.dataset.reviewAnswer }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.ledger) throw new Error("review_failed");
+      applyLedger(data.ledger);
+      const currentSettings = document.querySelector('[data-proto-form="settings"]');
+      if (currentSettings) {
+        currentSettings.elements.taxReserveRate.value = state.taxReserveRate;
+        currentSettings.elements.cashOnHand.value = state.cashOnHand;
+      }
+      render();
+    } catch {
+      button.disabled = false;
+      window.alert(messages.deleteEntryFailed);
+    }
   });
   flowSave?.addEventListener("click", saveDraft);
   document.querySelector("[data-template-grid]")?.addEventListener("input", (event) => {

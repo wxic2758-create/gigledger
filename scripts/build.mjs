@@ -545,7 +545,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
         </form>
         <div class="app-table-wrap">
           <table>
-            <thead><tr><th>${esc(t.app.table.name)}</th><th>${esc(t.app.table.type)}</th><th>${esc(t.app.table.cycle)}</th><th>${esc(t.app.table.amount)}</th><th>${esc(t.app.table.businessUse)}</th><th>${esc(t.app.table.effective)}</th><th>${esc(t.app.table.links)}</th><th>${esc(t.app.table.actions)}</th></tr></thead>
+            <thead><tr><th>${esc(t.app.table.name)}</th><th>${esc(t.app.table.type)}</th><th>${esc(t.app.table.cycle)}</th><th>${esc(t.app.table.amount)}</th><th>${esc(t.app.table.businessUse)}</th><th>${esc(t.app.table.effective)}</th><th>${esc(t.app.table.links)}</th><th>${esc(t.app.table.review)}</th><th>${esc(t.app.table.actions)}</th></tr></thead>
             <tbody data-proto="fixed-cost-rows"></tbody>
           </table>
         </div>
@@ -623,7 +623,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
       <a href="/${t.alternatePath}app">${esc(t.nav.switchTo)}</a>
     </div>
   </footer>
-  <script src="/app-ledger.js?v=20261114-4" defer></script>
+  <script src="/app-ledger.js?v=20261114-5" defer></script>
   <script src="/app.js" defer></script>
 </body>
 </html>`;

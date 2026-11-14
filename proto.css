@@ -181,3 +181,17 @@
 @media (max-width: 560px) {
   .app-metrics .runway-card { grid-column: 1 / -1; }
 }
+.subscription-review { display: grid; gap: 7px; min-width: 210px; }
+.review-actions { display: flex; flex-wrap: wrap; gap: 5px; }
+.review-button {
+  min-height: 30px; padding: 0 9px; border: 1px solid var(--line);
+  border-radius: 999px; background: var(--white); color: var(--ink);
+  font-size: 11px; font-weight: 800; cursor: pointer;
+}
+.review-button.active { background: var(--ink); border-color: var(--ink); color: var(--white); }
+.review-hint { font-size: 11px; font-weight: 800; color: var(--orange-dark); }
+.cancel-badge {
+  display: inline-flex; justify-self: start; padding: 4px 8px;
+  border-radius: 999px; background: #fdecec; color: #b42318;
+  font-size: 10px; font-weight: 800;
+}

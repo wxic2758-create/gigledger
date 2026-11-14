@@ -244,6 +244,19 @@ export const loadWorkspace = async (db, workspaceId) => {
             created_at, updated_at
      FROM fixed_costs WHERE workspace_id = ? ORDER BY created_at DESC`,
   ).bind(workspaceId).all();
+  const subscriptionReviews = await db.prepare(
+    `SELECT sr.fixed_cost_id, sr.period, sr.answer
+     FROM subscription_reviews sr
+     JOIN fixed_costs fc ON fc.id = sr.fixed_cost_id
+     WHERE fc.workspace_id = ?
+     ORDER BY sr.period DESC, sr.created_at DESC`,
+  ).bind(workspaceId).all();
+  const reviewsByCost = new Map();
+  for (const row of subscriptionReviews.results || []) {
+    const reviews = reviewsByCost.get(row.fixed_cost_id) || [];
+    if (reviews.length < 2) reviews.push({ period: row.period, answer: row.answer });
+    reviewsByCost.set(row.fixed_cost_id, reviews);
+  }
   const income = await db.prepare(
     `SELECT id, external_ref, occurred_on, source, client_name, amount, platform_fee, created_at, updated_at
      FROM income_entries WHERE workspace_id = ? ORDER BY occurred_on DESC, created_at DESC`,
@@ -279,6 +292,7 @@ export const loadWorkspace = async (db, workspaceId) => {
       createdAt: item.created_at,
       updatedAt: item.updated_at,
       versions: [],
+      reviews: reviewsByCost.get(item.id) || [],
     })),
     income: (income.results || []).map((item) => ({
       id: item.id,

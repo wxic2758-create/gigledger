@@ -422,7 +422,8 @@
       "merchant": "Merchant",
       "businessAmount": "Business amount",
       "notes": "Notes",
-      "actions": "Actions"
+      "actions": "Actions",
+      "review": "Review"
     },
     "empty": {
       "fixed": "No fixed costs added yet.",
@@ -509,6 +510,15 @@
           "amount": 10
         }
       ]
+    },
+    "subscriptionReview": {
+      "review": "This month used",
+      "often": "Often",
+      "sometimes": "Sometimes",
+      "notUsed": "Not used",
+      "upcoming": "Next charge {date}: {amount}",
+      "suggestedCancel": "Suggested cancel",
+      "reviewHint": "You tell GigLedger; it never detects usage automatically."
     }
   },
   "start": {
