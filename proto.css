@@ -19,6 +19,7 @@
   border: 1px solid var(--line); border-radius: 16px;
 }
 .app-metrics article:first-child { background: var(--orange); border-color: var(--orange); }
+.app-metrics .runway-card { background: var(--paper); border-color: var(--line); }
 .app-metrics article:first-child strong { color: var(--ink); }
 .app-metrics article:first-child small { color: rgba(43, 27, 18, .72); }
 .app-metrics .profit-card { background: var(--ink); color: var(--white); border-color: var(--ink); }
@@ -176,4 +177,7 @@
   .flow-results { grid-template-columns: 1fr; }
   .flow-nav { justify-content: stretch; }
   .flow-nav .button { flex: 1; }
+}
+@media (max-width: 560px) {
+  .app-metrics .runway-card { grid-column: 1 / -1; }
 }

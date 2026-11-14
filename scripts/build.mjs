@@ -493,6 +493,9 @@ const appPage = ({ locale, t, mode = "app" }) => {
       </div>
       <div class="app-metrics">
         <article><span>${esc(t.app.metrics.daily)}</span><strong data-proto="metric-daily">$0.00</strong><small>${esc(t.app.metrics.dailyNote)}</small></article>
+        <article><span>${esc(t.app.metrics.required)}</span><strong data-proto="metric-required">$0.00</strong><small>${esc(t.app.metrics.comparisonNote)}</small></article>
+        <article><span>${esc(t.app.metrics.comparison)}</span><strong data-proto="metric-comparison">-</strong></article>
+        <article class="runway-card"><span>${esc(t.app.metrics.runway)}</span><strong data-proto="metric-runway">-</strong><small>${esc(t.app.metrics.runwayNote)}</small></article>
         <article><span>${esc(t.app.metrics.gross)}</span><strong data-proto="metric-gross">$0.00</strong></article>
         <article><span>${esc(t.app.metrics.fees)}</span><strong data-proto="metric-fees">$0.00</strong></article>
         <article><span>${esc(t.app.metrics.net)}</span><strong data-proto="metric-net">$0.00</strong></article>
@@ -620,7 +623,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
       <a href="/${t.alternatePath}app">${esc(t.nav.switchTo)}</a>
     </div>
   </footer>
-  <script src="/app-ledger.js?v=20261114-3" defer></script>
+  <script src="/app-ledger.js?v=20261114-4" defer></script>
   <script src="/app.js" defer></script>
 </body>
 </html>`;

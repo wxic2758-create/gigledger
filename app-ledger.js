@@ -26,6 +26,10 @@
     { value: "quarterly", multiplier: 4 },
     { value: "yearly", multiplier: 1 },
   ];
+  const monthDayCount = () => {
+    const now = new Date();
+    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0)).getUTCDate();
+  };
 
   const calculate = () => {
     const dailyFloor = state.fixedCosts.reduce(
@@ -49,6 +53,9 @@
       taxReserve: Number.isFinite(rate) && state.taxReserveRate !== "" && rate >= 0
         ? netIncome * rate
         : null,
+      requiredToDate: dailyFloor * monthDayCount(),
+      comparison: netIncome - dailyFloor * monthDayCount(),
+      savings: state.cashOnHand === "" ? null : Number(state.cashOnHand),
     };
   };
 
@@ -63,6 +70,20 @@
     if (taxNode) taxNode.textContent = result.taxReserve === null ? messages.taxUnset : money(result.taxReserve);
     set("metric-costs", money(result.monthlyFixedCosts));
     set("metric-expenses", money(result.monthlyExpenses));
+    set("metric-required", money(result.requiredToDate));
+    set("metric-comparison", money(Math.abs(result.comparison)));
+    const comparisonNode = document.querySelector("[data-proto='metric-comparison']");
+    if (comparisonNode) {
+      comparisonNode.textContent = result.comparison < 0
+        ? messages.metrics.ahead.replace("{amount}", money(Math.abs(result.comparison)))
+        : messages.metrics.behind.replace("{amount}", money(result.comparison));
+    }
+    const runwayNode = document.querySelector("[data-proto='metric-runway']");
+    if (runwayNode) {
+      runwayNode.textContent = result.savings === null || !Number.isFinite(result.savings) || result.savings <= 0
+        ? messages.metrics.runwayUnset
+        : messages.metrics.runwayZero.replace("{days}", String(Math.floor(result.savings / result.dailyFloor)));
+    }
   };
 
   const deleteButton = (type, id) => {
@@ -413,7 +434,7 @@
     if (!ledger) return;
     state.taxReserveRate = ledger.workspace?.taxReserveRate === null
       || ledger.workspace?.taxReserveRate === undefined
-      ? "" : String(Math.round(ledger.workspace.taxReserveRate * 100));
+      ? "" : String(Math.round(ledger.workspace.taxReserveRate * 10000));
     state.cashOnHand = ledger.workspace?.cashOnHand === null
       || ledger.workspace?.cashOnHand === undefined
       ? "" : String(ledger.workspace.cashOnHand);
