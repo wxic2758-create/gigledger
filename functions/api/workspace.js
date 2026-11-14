@@ -76,6 +76,7 @@ export const onRequestDelete = async ({ env, request }) => {
   const workspace = await env.DB.prepare("SELECT id FROM workspaces WHERE owner_id = ?").bind(userId).first();
   if (!workspace) return json({ error: "workspace_not_found" }, 404);
   if (type === "fixed-cost") {
+    await env.DB.prepare("DELETE FROM fixed_cost_versions WHERE fixed_cost_id = ?").bind(id).run();
     await env.DB.prepare("DELETE FROM fixed_costs WHERE id = ? AND workspace_id = ?").bind(id, workspace.id).run();
   } else if (type === "income") {
     await env.DB.prepare("DELETE FROM income_entries WHERE id = ? AND workspace_id = ?").bind(id, workspace.id).run();

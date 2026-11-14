@@ -63,6 +63,14 @@
   background: var(--paper); border: 1px solid var(--line); border-radius: 10px;
 }
 .app-form .button { margin-top: 6px; }
+.app-checkbox { display: flex !important; align-items: center; gap: 9px; }
+.app-checkbox input { width: 18px; height: 18px; min-height: 0; accent-color: var(--orange-dark); }
+.app-checkbox span { margin-bottom: 0 !important; }
+.subscription-fields { display: grid; gap: 12px; padding-top: 2px; }
+.subscription-fields[hidden] { display: none; }
+.entry-links { display: flex; gap: 8px; align-items: center; }
+.entry-link { font-size: 11px; font-weight: 700; color: var(--orange-dark); text-decoration: none; }
+.entry-link:hover { text-decoration: underline; }
 .app-settings-form { grid-column: 1 / -1; }
 .csv-actions {
   grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
@@ -84,6 +92,7 @@
 }
 .app-table-wrap th { font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); }
 .app-table-wrap td:last-child { font-family: var(--display); font-weight: 800; }
+.app-table-wrap td:has(.entry-delete) { font-family: inherit; font-weight: 600; }
 .app-table-wrap td:last-child:has(.entry-delete) { font-family: inherit; font-weight: 600; }
 .entry-delete {
   min-height: 32px; padding-inline: 10px; border: 1px solid #b42318; border-radius: 8px;

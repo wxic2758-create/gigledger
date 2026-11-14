@@ -526,14 +526,23 @@ const appPage = ({ locale, t, mode = "app" }) => {
       <div class="app-grid">
         <form class="app-form" data-proto-form="fixed" novalidate>
           <label><span>${esc(t.app.fields.name)}</span><input name="name" required></label>
+          <label class="app-checkbox"><input name="isSubscription" type="checkbox"> <span>${esc(t.app.fields.subscription)}</span></label>
           <label><span>${esc(t.app.fields.amount)}</span><input name="amount" type="number" min="0" step="0.01" required></label>
           <label><span>${esc(t.app.fields.cycle)}</span><select name="cycle">${["daily","weekly","biweekly","monthly","quarterly","yearly"].map(option).join("")}</select></label>
           <label><span>${esc(t.app.fields.businessUse)}</span><input name="businessUse" type="number" min="0" max="100" value="100" required></label>
+          <label><span>${esc(t.app.fields.startDate)}</span><input name="startDate" type="date" value="${new Date().toISOString().slice(0, 10)}" required></label>
+          <label><span>${esc(t.app.fields.endDate)}</span><input name="endDate" type="date"></label>
+          <div class="subscription-fields">
+            <label><span>${esc(t.app.fields.nextBillingDate)}</span><input name="nextBillingDate" type="date"></label>
+            <label><span>${esc(t.app.fields.productUrl)}</span><input name="productUrl" type="url" placeholder="https://"></label>
+            <label><span>${esc(t.app.fields.manageUrl)}</span><input name="manageUrl" type="url" placeholder="https://"></label>
+          </div>
+          <p class="app-note">${esc(t.app.fixedVersionNote)}</p>
           <button class="button button-dark" type="submit">${esc(t.app.fixed.add)}</button>
         </form>
         <div class="app-table-wrap">
           <table>
-            <thead><tr><th>${esc(t.app.table.name)}</th><th>${esc(t.app.table.cycle)}</th><th>${esc(t.app.table.amount)}</th><th>${esc(t.app.table.businessUse)}</th><th>${esc(t.app.table.daily)}</th><th>${esc(t.app.table.actions)}</th></tr></thead>
+            <thead><tr><th>${esc(t.app.table.name)}</th><th>${esc(t.app.table.type)}</th><th>${esc(t.app.table.cycle)}</th><th>${esc(t.app.table.amount)}</th><th>${esc(t.app.table.businessUse)}</th><th>${esc(t.app.table.effective)}</th><th>${esc(t.app.table.links)}</th><th>${esc(t.app.table.actions)}</th></tr></thead>
             <tbody data-proto="fixed-cost-rows"></tbody>
           </table>
         </div>
@@ -611,7 +620,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
       <a href="/${t.alternatePath}app">${esc(t.nav.switchTo)}</a>
     </div>
   </footer>
-  <script src="/app-ledger.js?v=20261114-2" defer></script>
+  <script src="/app-ledger.js?v=20261114-3" defer></script>
   <script src="/app.js" defer></script>
 </body>
 </html>`;

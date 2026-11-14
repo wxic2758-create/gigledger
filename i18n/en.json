@@ -329,8 +329,13 @@
     "fixed": {
       "title": "Fixed costs",
       "body": "Rent, software, insurance, and other recurring business costs. Each one is annualized, then divided by 365.",
-      "add": "Add fixed cost"
+      "add": "Add fixed cost",
+      "subscription": "Subscription",
+      "other": "Other fixed cost",
+      "openProduct": "Open",
+      "manageSubscription": "Manage"
     },
+    "fixedVersionNote": "Changes saved today use today as the effective date. Existing history is not recalculated.",
     "income": {
       "title": "Income",
       "body": "Record the payment amount and platform fee. The prototype uses these entries immediately.",
@@ -355,9 +360,15 @@
   },
     "fields": {
       "name": "Name",
+      "subscription": "This is a subscription",
       "amount": "Amount (USD)",
       "cycle": "Cycle",
       "businessUse": "Business use %",
+      "startDate": "Start date",
+      "endDate": "End date (optional)",
+      "nextBillingDate": "Next billing date (optional)",
+      "productUrl": "Open product URL (optional)",
+      "manageUrl": "Manage subscription URL (optional)",
       "date": "Date",
       "source": "Source",
       "client": "Client or project",
@@ -384,9 +395,12 @@
     },
     "table": {
       "name": "Name",
+      "type": "Type",
       "cycle": "Cycle",
       "amount": "Amount",
       "businessUse": "Business use",
+      "effective": "Effective",
+      "links": "Links",
       "daily": "Daily cost",
       "date": "Date",
       "source": "Source",

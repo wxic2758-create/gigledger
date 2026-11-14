@@ -79,13 +79,39 @@
     return cell;
   };
 
+  const linkButton = (label, url) => {
+    if (!url) return document.createTextNode("");
+    const anchor = document.createElement("a");
+    anchor.className = "entry-link";
+    anchor.href = url;
+    anchor.target = "_blank";
+    anchor.rel = "noreferrer";
+    anchor.textContent = label;
+    return anchor;
+  };
+
+  const linkCell = (item) => {
+    const cell = document.createElement("td");
+    const links = [
+      linkButton(messages.fixed.openProduct, item.productUrl),
+      linkButton(messages.fixed.manageSubscription, item.manageUrl),
+    ].filter((node) => node.nodeType === Node.TEXT_NODE || node.tagName === "A");
+    if (!links.length) return cell;
+    cell.className = "entry-links";
+    links.forEach((node, index) => {
+      if (index) cell.append(document.createTextNode(" · "));
+      cell.append(node);
+    });
+    return cell;
+  };
+
   const renderFixedCosts = () => {
     const tbody = document.querySelector("[data-proto='fixed-cost-rows']");
     if (!tbody) return;
     tbody.innerHTML = "";
     if (!state.fixedCosts.length) {
       const row = document.createElement("tr");
-      row.innerHTML = `<td colspan="6">${messages.empty.fixed}</td>`;
+      row.innerHTML = `<td colspan="8">${messages.empty.fixed}</td>`;
       tbody.appendChild(row);
       return;
     }
@@ -93,12 +119,15 @@
       const row = document.createElement("tr");
       const cycleLabel = messages.cycles[item.cycle] || item.cycle;
       const name = document.createElement("td"); name.textContent = item.name;
+      const type = document.createElement("td"); type.textContent = item.isSubscription ? messages.fixed.subscription : messages.fixed.other;
       const cycle = document.createElement("td"); cycle.textContent = cycleLabel;
       const amount = document.createElement("td"); amount.textContent = money(Number(item.amount));
       const use = document.createElement("td"); use.textContent = `${Number(item.businessUse)}%`;
+      const effective = document.createElement("td");
+      effective.textContent = item.startDate ? `${item.startDate}${item.endDate ? ` – ${item.endDate}` : ""}` : "";
       const cost = document.createElement("td");
       cost.textContent = dayMoney(Number(item.amount) * Number(item.multiplier) * Number(item.businessUse) / 100 / 365);
-      row.append(name, cycle, amount, use, cost, deleteButton("fixed-cost", item.id));
+      row.append(name, type, cycle, amount, use, effective, linkCell(item), cost, deleteButton("fixed-cost", item.id));
       tbody.appendChild(row);
     });
   };
@@ -163,16 +192,26 @@
       event.preventDefault();
       const data = new FormData(fixedForm);
       const selected = cycles.find((cycle) => cycle.value === data.get("cycle"));
+      const startDate = String(data.get("startDate") || today());
       state.fixedCosts.push({
         name: String(data.get("name") || ""),
         cycle: selected?.value || "monthly",
         multiplier: selected?.multiplier || 12,
         amount: Number(data.get("amount")) || 0,
         businessUse: Number(data.get("businessUse")) || 0,
+        startDate,
+        endDate: String(data.get("endDate") || "") || null,
+        isSubscription: data.get("isSubscription") === "on",
+        productUrl: String(data.get("productUrl") || "") || null,
+        manageUrl: String(data.get("manageUrl") || "") || null,
+        nextBillingDate: String(data.get("nextBillingDate") || "") || null,
       });
       fixedForm.reset();
+      fixedForm.elements.startDate.value = today();
       fixedForm.elements.businessUse.value = "100";
       fixedForm.elements.cycle.value = "monthly";
+      const subscriptionFields = document.querySelector("[data-subscription-fields]");
+      if (subscriptionFields) subscriptionFields.hidden = true;
       render();
     });
   }
@@ -385,6 +424,12 @@
       cycle: cycleValues.has(item.cycle) ? item.cycle : "monthly",
       multiplier: cycles.find((cycle) => cycle.value === (cycleValues.has(item.cycle) ? item.cycle : "monthly"))?.multiplier || 12,
       businessUse: Number(item.businessUse) || 0,
+      isSubscription: Boolean(item.isSubscription),
+      productUrl: item.productUrl || "",
+      manageUrl: item.manageUrl || "",
+      nextBillingDate: item.nextBillingDate || "",
+      startDate: item.startDate || "",
+      endDate: item.endDate || "",
       id: item.id,
     }));
     state.income = (ledger.income || []).map((item) => ({
@@ -424,6 +469,9 @@
         cycle: "monthly",
         multiplier: 12,
         businessUse: 100,
+        startDate: today(),
+        isSubscription: true,
+        templateKey: key,
       };
     });
 
@@ -432,7 +480,10 @@
     const amountNode = document.querySelector("[data-other-amount]");
     const name = String(nameNode?.value || "").trim();
     const amount = Number(amountNode?.value || 0);
-    return name && amount > 0 ? { name, amount, cycle: "monthly", multiplier: 12, businessUse: 100 } : null;
+    return name && amount > 0 ? {
+      name, amount, cycle: "monthly", multiplier: 12, businessUse: 100,
+      startDate: today(), isSubscription: false,
+    } : null;
   };
 
   const renderFlowResults = () => {
@@ -521,7 +572,8 @@
   flowSection?.classList.add("ready");
   showFlowStep(1);
 
-  loadDashboard();
+  loadDashboard().finally(() => {
+    window.__gigledgerLoaded = true;
+  });
   render();
-window.__gigledgerLoaded = true;
 })();

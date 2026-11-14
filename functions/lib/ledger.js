@@ -38,6 +38,12 @@ export const normalizeDraft = async (input) => {
     const businessUse = Number(item?.businessUse ?? 100);
     const cycle = cycles[item?.cycle] ? item.cycle : null;
     const name = text(item?.name);
+    const startDate = date(item?.startDate || item?.start_date) || new Date().toISOString().slice(0, 10);
+    const endDate = date(item?.endDate || item?.end_date);
+    const nextBillingDate = date(item?.nextBillingDate || item?.next_billing_date);
+    const templateKey = text(item?.templateKey || item?.template_key, 80);
+    const productUrl = text(item?.productUrl || item?.product_url, 500);
+    const manageUrl = text(item?.manageUrl || item?.manage_url, 500);
     if (!name || !cycle || !finite(amount) || !finite(businessUse) || businessUse > 100) continue;
     normalizedFixed.push({
       externalRef: await hash(`${name}|${amount}|${cycle}|${businessUse}`),
@@ -45,6 +51,13 @@ export const normalizeDraft = async (input) => {
       amount,
       cycle,
       businessUse,
+      startDate,
+      endDate,
+      isSubscription: Boolean(item?.isSubscription || item?.is_subscription || templateKey),
+      templateKey,
+      productUrl,
+      manageUrl,
+      nextBillingDate,
     });
   }
 
@@ -130,16 +143,43 @@ export const saveWorkspaceDraft = async (db, workspaceId, draft) => {
   ));
 
   for (const item of draft.fixedCosts) {
+    const fixedCostId = crypto.randomUUID();
+
     statements.push(db.prepare(
       `INSERT INTO fixed_costs
-        (id, workspace_id, external_ref, name, amount, cycle, business_use, source, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'manual', ?, ?)
+        (id, workspace_id, external_ref, name, amount, cycle, business_use, source,
+         is_subscription, template_key, product_url, manage_url, next_billing_date, start_date, end_date,
+         created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'manual', ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(workspace_id, external_ref) DO NOTHING`,
     ).bind(
-      crypto.randomUUID(),
+      fixedCostId,
       workspaceId,
       item.externalRef,
       item.name,
+      item.amount,
+      item.cycle,
+      item.businessUse,
+      item.isSubscription ? 1 : 0,
+      item.templateKey,
+      item.productUrl,
+      item.manageUrl,
+      item.nextBillingDate,
+      item.startDate,
+      item.endDate,
+      timestamp,
+      timestamp,
+    ));
+    statements.push(db.prepare(
+      `INSERT INTO fixed_cost_versions
+        (id, fixed_cost_id, effective_from, effective_to, amount, cycle, business_use, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(fixed_cost_id, effective_from) DO NOTHING`,
+    ).bind(
+      crypto.randomUUID(),
+      fixedCostId,
+      item.startDate,
+      item.endDate,
       item.amount,
       item.cycle,
       item.businessUse,
@@ -199,7 +239,9 @@ export const loadWorkspace = async (db, workspaceId) => {
   if (!workspace) return null;
 
   const fixedCosts = await db.prepare(
-    `SELECT id, name, amount, cycle, business_use, source, created_at, updated_at
+    `SELECT id, name, amount, cycle, business_use, source, is_subscription, template_key,
+            product_url, manage_url, next_billing_date, start_date, end_date,
+            created_at, updated_at
      FROM fixed_costs WHERE workspace_id = ? ORDER BY created_at DESC`,
   ).bind(workspaceId).all();
   const income = await db.prepare(
@@ -227,8 +269,16 @@ export const loadWorkspace = async (db, workspaceId) => {
       cycle: item.cycle,
       businessUse: item.business_use,
       source: item.source,
+      isSubscription: Boolean(item.is_subscription),
+      templateKey: item.template_key,
+      productUrl: item.product_url,
+      manageUrl: item.manage_url,
+      nextBillingDate: item.next_billing_date,
+      startDate: item.start_date,
+      endDate: item.end_date,
       createdAt: item.created_at,
       updatedAt: item.updated_at,
+      versions: [],
     })),
     income: (income.results || []).map((item) => ({
       id: item.id,

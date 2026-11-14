@@ -329,8 +329,13 @@
     "fixed": {
       "title": "固定成本",
       "body": "租金、軟體、保險與其他週期性營業成本。系統會先年化，再除以 365。",
-      "add": "加入固定成本"
+      "add": "加入固定成本",
+      "subscription": "訂閱",
+      "other": "其他固定成本",
+      "openProduct": "開啟",
+      "manageSubscription": "管理"
     },
+    "fixedVersionNote": "今天保存的變更會以今天作為生效日期。既有歷史不會重算。",
     "income": {
       "title": "收入",
       "body": "記錄付款金額與平台手續費。原型會立即使用這些資料。",
@@ -355,9 +360,15 @@
   },
     "fields": {
       "name": "名稱",
+      "subscription": "這是訂閱",
       "amount": "金額（USD）",
       "cycle": "週期",
       "businessUse": "營業使用比例 %",
+      "startDate": "開始日期",
+      "endDate": "結束日期（可選）",
+      "nextBillingDate": "下次扣費日（可選）",
+      "productUrl": "開啟產品連結（可選）",
+      "manageUrl": "管理訂閱連結（可選）",
       "date": "日期",
       "source": "收入來源",
       "client": "客戶或專案",
@@ -384,9 +395,12 @@
     },
     "table": {
       "name": "名稱",
+      "type": "類型",
       "cycle": "週期",
       "amount": "金額",
       "businessUse": "營業使用比例",
+      "effective": "生效日期",
+      "links": "連結",
       "daily": "每日成本",
       "date": "日期",
       "source": "來源",
