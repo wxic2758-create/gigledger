@@ -70,15 +70,17 @@ export const onRequestDelete = async ({ env, request }) => {
       headers: { location: "/", "set-cookie": clearedSessionCookie() },
     });
   }
-  if (!["fixed-cost", "income"].includes(type) || !id) {
+  if (!["fixed-cost", "income", "expense"].includes(type) || !id) {
     return json({ error: "invalid_request" }, 400);
   }
   const workspace = await env.DB.prepare("SELECT id FROM workspaces WHERE owner_id = ?").bind(userId).first();
   if (!workspace) return json({ error: "workspace_not_found" }, 404);
   if (type === "fixed-cost") {
     await env.DB.prepare("DELETE FROM fixed_costs WHERE id = ? AND workspace_id = ?").bind(id, workspace.id).run();
-  } else {
+  } else if (type === "income") {
     await env.DB.prepare("DELETE FROM income_entries WHERE id = ? AND workspace_id = ?").bind(id, workspace.id).run();
+  } else {
+    await env.DB.prepare("DELETE FROM expenses WHERE id = ? AND workspace_id = ?").bind(id, workspace.id).run();
   }
   return json({ authenticated: true, ledger: await loadWorkspace(env.DB, workspace.id) });
 };

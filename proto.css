@@ -84,6 +84,13 @@
 }
 .app-table-wrap th { font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); }
 .app-table-wrap td:last-child { font-family: var(--display); font-weight: 800; }
+.app-table-wrap td:last-child:has(.entry-delete) { font-family: inherit; font-weight: 600; }
+.entry-delete {
+  min-height: 32px; padding-inline: 10px; border: 1px solid #b42318; border-radius: 8px;
+  color: #b42318; background: #fdecec; font-size: 11px; font-weight: 700; cursor: pointer;
+}
+.entry-delete:hover { background: #b42318; color: white; }
+.entry-delete:disabled { opacity: .6; cursor: not-allowed; }
 .app-note { margin-top: 14px; font-size: 11px; color: var(--ink-soft); }
 .app-nav a { opacity: .9; }
 .app-proto .site-header { position: relative; }

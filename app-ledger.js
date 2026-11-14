@@ -65,13 +65,27 @@
     set("metric-expenses", money(result.monthlyExpenses));
   };
 
+  const deleteButton = (type, id) => {
+    const cell = document.createElement("td");
+    if (!id) return cell;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "entry-delete";
+    button.textContent = messages.deleteEntry;
+    button.setAttribute("data-delete-entry", "");
+    button.setAttribute("data-entry-type", type);
+    button.setAttribute("data-entry-id", id);
+    cell.appendChild(button);
+    return cell;
+  };
+
   const renderFixedCosts = () => {
     const tbody = document.querySelector("[data-proto='fixed-cost-rows']");
     if (!tbody) return;
     tbody.innerHTML = "";
     if (!state.fixedCosts.length) {
       const row = document.createElement("tr");
-      row.innerHTML = `<td colspan="5">${messages.empty.fixed}</td>`;
+      row.innerHTML = `<td colspan="6">${messages.empty.fixed}</td>`;
       tbody.appendChild(row);
       return;
     }
@@ -84,7 +98,7 @@
       const use = document.createElement("td"); use.textContent = `${Number(item.businessUse)}%`;
       const cost = document.createElement("td");
       cost.textContent = dayMoney(Number(item.amount) * Number(item.multiplier) * Number(item.businessUse) / 100 / 365);
-      row.append(name, cycle, amount, use, cost);
+      row.append(name, cycle, amount, use, cost, deleteButton("fixed-cost", item.id));
       tbody.appendChild(row);
     });
   };
@@ -95,7 +109,7 @@
     tbody.innerHTML = "";
     if (!state.income.length) {
       const row = document.createElement("tr");
-      row.innerHTML = `<td colspan="5">${messages.empty.income}</td>`;
+      row.innerHTML = `<td colspan="6">${messages.empty.income}</td>`;
       tbody.appendChild(row);
       return;
     }
@@ -107,7 +121,7 @@
       const amount = document.createElement("td"); amount.textContent = money(Number(item.amount));
       const fee = document.createElement("td"); fee.textContent = money(Number(item.platformFee));
       const netCell = document.createElement("td"); netCell.textContent = money(net);
-      row.append(dateCell, source, amount, fee, netCell);
+      row.append(dateCell, source, amount, fee, netCell, deleteButton("income", item.id));
       tbody.appendChild(row);
     });
   };
@@ -118,7 +132,7 @@
     tbody.innerHTML = "";
     if (!state.expenses.length) {
       const row = document.createElement("tr");
-      row.innerHTML = `<td colspan="6">${messages.empty.expenses}</td>`;
+      row.innerHTML = `<td colspan="7">${messages.empty.expenses}</td>`;
       tbody.appendChild(row);
       return;
     }
@@ -131,7 +145,7 @@
       const amount = document.createElement("td"); amount.textContent = money(Number(item.amount));
       const use = document.createElement("td"); use.textContent = `${Number(item.businessUse)}%`;
       const business = document.createElement("td"); business.textContent = money(businessAmount);
-      row.append(dateCell, category, merchant, amount, use, business);
+      row.append(dateCell, category, merchant, amount, use, business, deleteButton("expense", item.id));
       tbody.appendChild(row);
     });
   };
@@ -296,6 +310,38 @@
     window.location.assign("/api/workspace?type=account");
   };
   document.querySelector("[data-delete-account]")?.addEventListener("click", confirmDelete);
+  document.addEventListener("click", async (event) => {
+    const button = event.target.closest("[data-delete-entry]");
+    if (!button || button.disabled) return;
+    if (!window.confirm(messages.deleteEntryConfirm)) return;
+    if (!dashboardMode) {
+      const type = button.dataset.entryType;
+      const key = type === "fixed-cost" ? "fixedCosts" : type === "income" ? "income" : "expenses";
+      state[key] = state[key].filter((item) => String(item.id) !== button.dataset.entryId);
+      render();
+      return;
+    }
+    button.disabled = true;
+    try {
+      const id = button.dataset.entryId;
+      const response = await fetch(`/api/workspace?type=${button.dataset.entryType}&id=${encodeURIComponent(id)}`, {
+        method: "DELETE",
+        credentials: "same-origin",
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.ledger) throw new Error("delete_entry_failed");
+      applyLedger(data.ledger);
+      const settingsForm = document.querySelector('[data-proto-form="settings"]');
+      if (settingsForm) {
+        settingsForm.elements.taxReserveRate.value = state.taxReserveRate;
+        settingsForm.elements.cashOnHand.value = state.cashOnHand;
+      }
+      render();
+    } catch {
+      button.disabled = false;
+      window.alert(messages.deleteEntryFailed);
+    }
+  });
   const settingsForm = document.querySelector('[data-proto-form="settings"]');
   settingsForm?.addEventListener("input", () => {
     state.taxReserveRate = String(settingsForm.elements.taxReserveRate.value || "");
@@ -312,35 +358,7 @@
         window.location.assign(`/${locale}/app`);
         return;
       }
-      state.taxReserveRate = data.ledger.workspace?.taxReserveRate === null
-        || data.ledger.workspace?.taxReserveRate === undefined
-        ? "" : String(Math.round(data.ledger.workspace.taxReserveRate * 100));
-      state.cashOnHand = data.ledger.workspace?.cashOnHand === null
-        || data.ledger.workspace?.cashOnHand === undefined
-        ? "" : String(data.ledger.workspace.cashOnHand);
-      const cycleValues = new Set(cycles.map((cycle) => cycle.value));
-      state.fixedCosts = (data.ledger.fixedCosts || []).map((item) => ({
-        name: item.name,
-        amount: Number(item.amount) || 0,
-        cycle: cycleValues.has(item.cycle) ? item.cycle : "monthly",
-        multiplier: cycles.find((cycle) => cycle.value === (cycleValues.has(item.cycle) ? item.cycle : "monthly"))?.multiplier || 12,
-        businessUse: Number(item.businessUse) || 0,
-      }));
-      state.income = (data.ledger.income || []).map((item) => ({
-        date: item.date,
-        source: item.source,
-        client: item.client || "",
-        amount: Number(item.amount) || 0,
-        platformFee: Number(item.platformFee) || 0,
-      }));
-      state.expenses = (data.ledger.expenses || []).map((item) => ({
-        date: item.date,
-        category: item.category,
-        merchant: item.merchant || "",
-        amount: Number(item.amount) || 0,
-        businessUse: Number(item.businessUse) || 100,
-        notes: item.notes || "",
-      }));
+      applyLedger(data.ledger);
       const settingsForm = document.querySelector('[data-proto-form="settings"]');
       if (settingsForm) {
         settingsForm.elements.taxReserveRate.value = state.taxReserveRate;
@@ -350,6 +368,42 @@
     } catch {
       window.location.assign(`/${locale}/app`);
     }
+  };
+
+  const applyLedger = (ledger) => {
+    if (!ledger) return;
+    state.taxReserveRate = ledger.workspace?.taxReserveRate === null
+      || ledger.workspace?.taxReserveRate === undefined
+      ? "" : String(Math.round(ledger.workspace.taxReserveRate * 100));
+    state.cashOnHand = ledger.workspace?.cashOnHand === null
+      || ledger.workspace?.cashOnHand === undefined
+      ? "" : String(ledger.workspace.cashOnHand);
+    const cycleValues = new Set(cycles.map((cycle) => cycle.value));
+    state.fixedCosts = (ledger.fixedCosts || []).map((item) => ({
+      name: item.name,
+      amount: Number(item.amount) || 0,
+      cycle: cycleValues.has(item.cycle) ? item.cycle : "monthly",
+      multiplier: cycles.find((cycle) => cycle.value === (cycleValues.has(item.cycle) ? item.cycle : "monthly"))?.multiplier || 12,
+      businessUse: Number(item.businessUse) || 0,
+      id: item.id,
+    }));
+    state.income = (ledger.income || []).map((item) => ({
+      date: item.date,
+      source: item.source,
+      client: item.client || "",
+      amount: Number(item.amount) || 0,
+      platformFee: Number(item.platformFee) || 0,
+      id: item.id,
+    }));
+    state.expenses = (ledger.expenses || []).map((item) => ({
+      date: item.date,
+      category: item.category,
+      merchant: item.merchant || "",
+      amount: Number(item.amount) || 0,
+      businessUse: Number(item.businessUse) || 100,
+      notes: item.notes || "",
+      id: item.id,
+    }));
   };
 
   const flowSection = document.querySelector("#onboarding");

@@ -396,7 +396,8 @@
     "merchant": "Merchant",
     "businessUse": "Business use",
     "businessAmount": "Business amount",
-    "notes": "Notes"
+    "notes": "Notes",
+    "actions": "Actions"
     },
     "empty": {
       "fixed": "No fixed costs added yet.",
@@ -418,6 +419,9 @@
     "export": "Export JSON",
     "deleteAccount": "Delete account",
     "deleteConfirm": "This permanently deletes your account and ledger data. Continue?",
+    "deleteEntryConfirm": "Delete this entry?",
+    "deleteEntry": "Delete",
+    "deleteEntryFailed": "Could not delete this entry. Please try again.",
     "deleteFailed": "Account deletion failed. Your data is still available.",
     "flow": {
       "kicker": "3-minute start",

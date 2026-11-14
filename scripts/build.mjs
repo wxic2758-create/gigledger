@@ -533,7 +533,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
         </form>
         <div class="app-table-wrap">
           <table>
-            <thead><tr><th>${esc(t.app.table.name)}</th><th>${esc(t.app.table.cycle)}</th><th>${esc(t.app.table.amount)}</th><th>${esc(t.app.table.businessUse)}</th><th>${esc(t.app.table.daily)}</th></tr></thead>
+            <thead><tr><th>${esc(t.app.table.name)}</th><th>${esc(t.app.table.cycle)}</th><th>${esc(t.app.table.amount)}</th><th>${esc(t.app.table.businessUse)}</th><th>${esc(t.app.table.daily)}</th><th>${esc(t.app.table.actions)}</th></tr></thead>
             <tbody data-proto="fixed-cost-rows"></tbody>
           </table>
         </div>
@@ -572,7 +572,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
         </form>
         <div class="app-table-wrap">
           <table>
-            <thead><tr><th>${esc(t.app.table.date)}</th><th>${esc(t.app.table.source)}</th><th>${esc(t.app.table.amount)}</th><th>${esc(t.app.table.fee)}</th><th>${esc(t.app.table.net)}</th></tr></thead>
+            <thead><tr><th>${esc(t.app.table.date)}</th><th>${esc(t.app.table.source)}</th><th>${esc(t.app.table.amount)}</th><th>${esc(t.app.table.fee)}</th><th>${esc(t.app.table.net)}</th><th>${esc(t.app.table.actions)}</th></tr></thead>
             <tbody data-proto="income-rows"></tbody>
           </table>
         </div>
@@ -597,7 +597,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
         </form>
         <div class="app-table-wrap">
           <table>
-            <thead><tr><th>${esc(t.app.table.date)}</th><th>${esc(t.app.table.category)}</th><th>${esc(t.app.table.merchant)}</th><th>${esc(t.app.table.amount)}</th><th>${esc(t.app.table.businessUse)}</th><th>${esc(t.app.table.businessAmount)}</th></tr></thead>
+            <thead><tr><th>${esc(t.app.table.date)}</th><th>${esc(t.app.table.category)}</th><th>${esc(t.app.table.merchant)}</th><th>${esc(t.app.table.amount)}</th><th>${esc(t.app.table.businessUse)}</th><th>${esc(t.app.table.businessAmount)}</th><th>${esc(t.app.table.actions)}</th></tr></thead>
             <tbody data-proto="expense-rows"></tbody>
           </table>
         </div>

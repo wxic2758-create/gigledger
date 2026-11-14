@@ -396,7 +396,8 @@
     "merchant": "商家",
     "businessUse": "營業使用比例",
     "businessAmount": "營業金額",
-    "notes": "備註"
+    "notes": "備註",
+    "actions": "操作"
     },
     "empty": {
       "fixed": "尚未加入固定成本。",
@@ -418,6 +419,9 @@
     "export": "匯出 JSON",
     "deleteAccount": "刪除帳號",
     "deleteConfirm": "這會永久刪除你的帳號與帳本資料。確定繼續嗎？",
+    "deleteEntryConfirm": "確定刪除這筆紀錄？",
+    "deleteEntry": "刪除",
+    "deleteEntryFailed": "無法刪除這筆紀錄。請再試一次。",
     "deleteFailed": "刪除帳號失敗。你的資料仍然可用。",
     "flow": {
       "kicker": "三分鐘開始",
