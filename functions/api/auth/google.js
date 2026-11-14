@@ -109,11 +109,13 @@ export const onRequestPost = async ({ env, request }) => {
     const workspace = await env.DB.prepare(
       "SELECT id FROM workspaces WHERE owner_id = ?",
     ).bind(authenticatedUserId).first();
-    if (workspace) await saveWorkspaceDraft(env.DB, workspace.id, draft);
-    return json({
-      saved: true,
-      redirectUrl: `${SITE_URL}/${locale(request)}/dashboard`,
-    });
+    if (workspace) {
+      await saveWorkspaceDraft(env.DB, workspace.id, draft);
+      return json({
+        saved: true,
+        redirectUrl: `${SITE_URL}/${locale(request)}/dashboard`,
+      });
+    }
   }
   const state = newId() + newId();
   await env.DB.prepare(

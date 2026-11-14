@@ -58,7 +58,11 @@ export const readAuthenticatedUserId = async (env, cookieHeader) => {
   const token = readSessionCookie(cookieHeader);
   if (!token) return null;
   const session = await verifySessionToken(token, sessionSecret(env));
-  return session?.userId || null;
+  if (!session?.userId || !env?.DB) return null;
+
+  // Tokens are stateless; reject sessions whose user no longer exists.
+  const user = await env.DB.prepare("SELECT id FROM users WHERE id = ?").bind(session.userId).first();
+  return user?.id || null;
 };
 
 export const sessionCookie = (value) => {
