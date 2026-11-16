@@ -50,7 +50,7 @@ const logo = (locale) => `
 const languageSwitch = (t, current, suffix = "") => {
   const next = locales.find((l) => l.code !== current.code);
   return `
-    <a class="lang-switch" href="/${next.folder}${suffix ? `/${suffix}` : ""}" hreflang="${next.htmlLang}" lang="${next.htmlLang}">
+    <a class="lang-switch" href="/${next.folder}/${suffix}" hreflang="${next.htmlLang}" lang="${next.htmlLang}">
       <span class="lang-full">${esc(t.nav.switchTo)}</span>
       <span class="lang-short">${esc(t.nav.switchShort)}</span>
     </a>`;
