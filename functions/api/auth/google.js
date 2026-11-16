@@ -1,5 +1,5 @@
 import { createSessionToken, sessionCookie, sessionSecret, verifySessionToken } from "../../lib/session.js";
-import { normalizeDraft, saveWorkspaceDraft } from "../../lib/ledger.js";
+import { countNewSubscriptions, normalizeDraft, saveWorkspaceDraft } from "../../lib/ledger.js";
 import { planFeatures } from "../../lib/plan.js";
 
 const SITE_URL = "https://gigledger.xyz";
@@ -113,7 +113,7 @@ export const onRequestPost = async ({ env, request }) => {
     if (workspace) {
       const workspaceRecord = await env.DB.prepare("SELECT plan FROM workspaces WHERE id = ?").bind(workspace.id).first();
       const features = planFeatures(workspaceRecord?.plan);
-      const subscriptionCount = draft.fixedCosts.filter((item) => item.isSubscription).length;
+      const subscriptionCount = await countNewSubscriptions(env.DB, workspace.id, draft);
       const existingCount = await env.DB.prepare(
         "SELECT COUNT(*) AS count FROM fixed_costs WHERE workspace_id = ? AND is_subscription = 1",
       ).bind(workspace.id).first();

@@ -533,7 +533,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
         <article><span>${esc(t.app.metrics.daily)}</span><strong data-proto="metric-daily">$0.00</strong><small>${esc(t.app.metrics.dailyNote)}</small></article>
         <article><span>${esc(t.app.metrics.required)}</span><strong data-proto="metric-required">$0.00</strong><small>${esc(t.app.metrics.comparisonNote)}</small></article>
         <article><span>${esc(t.app.metrics.comparison)}</span><strong data-proto="metric-comparison">-</strong></article>
-        <article class="runway-card"><span>${esc(t.app.metrics.runway)}</span><strong data-proto="metric-runway">-</strong><small>${esc(t.app.metrics.runwayNote)}</small></article>
+        <article class="runway-card"><span>${esc(t.app.metrics.runway)}</span><strong data-proto="metric-runway">-</strong><small data-proto="metric-runway-average">${esc(t.app.metrics.runwayNote)}</small></article>
         <article><span>${esc(t.app.metrics.gross)}</span><strong data-proto="metric-gross">$0.00</strong></article>
         <article><span>${esc(t.app.metrics.fees)}</span><strong data-proto="metric-fees">$0.00</strong></article>
         <article><span>${esc(t.app.metrics.net)}</span><strong data-proto="metric-net">$0.00</strong></article>
@@ -542,6 +542,27 @@ const appPage = ({ locale, t, mode = "app" }) => {
         <article class="profit-card"><span>${esc(t.app.metrics.profit)}</span><strong data-proto="metric-profit">$0.00</strong><small>${esc(t.app.metrics.profitNote)}</small></article>
         <article><span>${esc(t.app.metrics.tax)}</span><strong data-proto="metric-tax">$0.00</strong><small>${esc(t.app.taxNote)}</small></article>
       </div>
+      ${mode === "dashboard" ? `
+      <section class="subscription-summary" data-subscription-summary aria-labelledby="subscription-summary-title">
+        <div class="subscription-summary-head">
+          <div>
+            <p class="app-steps-kicker">${esc(t.app.subscriptionReview.summaryKicker)}</p>
+            <h2 id="subscription-summary-title">${esc(t.app.subscriptionReview.summaryTitle)}</h2>
+          </div>
+          <span class="summary-count" data-subscription-count>0</span>
+        </div>
+        <div class="subscription-summary-grid">
+          <div>
+            <span>${esc(t.app.subscriptionReview.summaryUpcoming)}</span>
+            <strong data-subscription-upcoming>${esc(t.app.subscriptionReview.summaryNone)}</strong>
+          </div>
+          <div>
+            <span>${esc(t.app.subscriptionReview.summarySuggested)}</span>
+            <strong data-subscription-suggested>${esc(t.app.subscriptionReview.summaryNone)}</strong>
+          </div>
+        </div>
+      </section>
+      ` : ""}
       ${mode === "dashboard" ? `
       <div class="share-panel">
         <div class="share-cards">
@@ -645,9 +666,9 @@ const appPage = ({ locale, t, mode = "app" }) => {
       <div class="app-grid">
         <div class="csv-actions">
           <h3>${esc(t.app.csv.title)}</h3>
-          <a class="button button-ghost" href="/api/workspace/csv?template=1">${esc(t.app.csv.template)}</a>
-          <a class="button button-ghost" href="/api/workspace/csv?export=income">${esc(t.app.csv.export)}</a>
-          <label class="button button-dark csv-import-button">
+          <a class="button button-ghost" href="/api/workspace/csv?template=1" data-csv-pro>${esc(t.app.csv.template)}</a>
+          <a class="button button-ghost" href="/api/workspace/csv?export=income" data-csv-pro>${esc(t.app.csv.export)}</a>
+          <label class="button button-dark csv-import-button" data-csv-pro>
             <input type="file" accept=".csv,text/csv" data-csv-import hidden>
             <span data-csv-import-label>${esc(t.app.csv.import)}</span>
           </label>
@@ -710,7 +731,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
       <a href="/${t.alternatePath}app">${esc(t.nav.switchTo)}</a>
     </div>
   </footer>
-  <script src="/app-ledger.js?v=20261116-2" defer></script>
+  <script src="/app-ledger.js?v=20261116-5" defer></script>
   <script src="/app.js" defer></script>
 </body>
 </html>`;

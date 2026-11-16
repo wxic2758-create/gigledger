@@ -318,7 +318,9 @@
       "runwayZero": "{days} days if income stops",
       "runwayAverage": "{days} days at average income",
       "runwayNotBurning": "Not burning cash",
-      "runwayWaiting": "Average needs a full month"
+      "runwayWaiting": "Add a full month of income to see the average",
+      "runwayNeedFloor": "Add a fixed cost to calculate runway",
+      "runwayBasedOn": "Based on {months} full month(s)"
     },
     "taxNote": "Estimate only · Not tax advice",
     "onboarding": {
@@ -549,14 +551,22 @@
       "review": "This month used",
       "often": "Often",
       "sometimes": "Sometimes",
-      "notUsed": "Not used",
+      "notUsed": "Unused",
       "upcoming": "Next charge {date}: {amount}",
       "suggestedCancel": "Suggested cancel",
-      "reviewHint": "You tell GigLedger; it never detects usage automatically."
+      "reviewHint": "You tell GigLedger; it never detects usage automatically.",
+      "summaryKicker": "Subscription check",
+      "summaryTitle": "What is about to renew",
+      "summaryUpcoming": "Next charge",
+      "summarySuggested": "Worth reviewing",
+      "summaryNext": "{name} · {date} · {amount}",
+      "summaryCancel": "{count} subscription(s) marked not used for two months",
+      "summaryNone": "Nothing needs attention"
     },
     "weeklySummary": {
       "title": "This week",
       "body": "Last week net income {income}; that covers {days} days at your Daily Floor.",
+      "bodyNoFloor": "Last week net income {income}. Add a fixed cost to compare it with a Daily Floor.",
       "bodyNoIncome": "Last week no income was recorded. Your Daily Floor remains {daily}.",
       "dismiss": "Dismiss this week"
     },

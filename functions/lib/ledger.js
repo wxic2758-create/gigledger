@@ -167,6 +167,21 @@ export const normalizeDraft = async (input) => {
   };
 };
 
+export const countNewSubscriptions = async (db, workspaceId, draft) => {
+  const refs = [...new Set(
+    (draft.fixedCosts || [])
+      .filter((item) => item.isSubscription)
+      .map((item) => item.externalRef)
+      .filter(Boolean),
+  )];
+  if (!refs.length) return 0;
+  const existing = await db.prepare(
+    "SELECT external_ref FROM fixed_costs WHERE workspace_id = ? AND is_subscription = 1",
+  ).bind(workspaceId).all();
+  const existingRefs = new Set((existing.results || []).map((item) => item.external_ref));
+  return refs.filter((ref) => !existingRefs.has(ref)).length;
+};
+
 export const saveWorkspaceDraft = async (env, workspaceId, draft) => {
   const timestamp = new Date().toISOString();
   const statements = [];

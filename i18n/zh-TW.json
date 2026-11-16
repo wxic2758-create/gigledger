@@ -318,7 +318,9 @@
       "runwayZero": "若收入歸零可撐 {days} 天",
       "runwayAverage": "按平均收入可撐 {days} 天",
       "runwayNotBurning": "目前未燒現金",
-      "runwayWaiting": "平均值需完整月份"
+      "runwayWaiting": "有完整月份收入後才會計算平均值",
+      "runwayNeedFloor": "加入固定成本後才能計算跑道",
+      "runwayBasedOn": "依 {months} 個完整月份計算"
     },
     "taxNote": "僅供預估 · 非稅務建議",
     "onboarding": {
@@ -549,14 +551,22 @@
       "review": "本月使用情況",
       "often": "常用",
       "sometimes": "偶爾",
-      "notUsed": "沒用",
+      "notUsed": "未使用",
       "upcoming": "{date} 即將扣 {amount}",
       "suggestedCancel": "建議取消",
-      "reviewHint": "由你手動回報；GigLedger 不會自動偵測使用情況。"
+      "reviewHint": "由你手動回報；GigLedger 不會自動偵測使用情況。",
+      "summaryKicker": "訂閱檢查",
+      "summaryTitle": "即將續扣的項目",
+      "summaryUpcoming": "下一筆扣款",
+      "summarySuggested": "值得檢查",
+      "summaryNext": "{name} · {date} · {amount}",
+      "summaryCancel": "有 {count} 個訂閱連續兩個月標為沒用",
+      "summaryNone": "目前沒有需要注意的項目"
     },
     "weeklySummary": {
       "title": "本週摘要",
       "body": "上週淨收入 {income}，可覆蓋每日底線 {days} 天。",
+      "bodyNoFloor": "上週淨收入 {income}。加入固定成本後，才能對照每日底線。",
       "bodyNoIncome": "上週沒有收入紀錄。你的每日底線仍是 {daily}。",
       "dismiss": "本週不再顯示"
     },

@@ -1,4 +1,4 @@
-import { normalizeDraft, saveWorkspaceDraft, loadWorkspace } from "../lib/ledger.js";
+import { countNewSubscriptions, normalizeDraft, saveWorkspaceDraft, loadWorkspace } from "../lib/ledger.js";
 import { planFeatures } from "../lib/plan.js";
 import { clearedSessionCookie, readAuthenticatedUserId } from "../lib/session.js";
 
@@ -47,7 +47,7 @@ export const onRequestPost = async ({ env, request }) => {
   const draft = await normalizeDraft(payload);
   const workspaceRecord = await env.DB.prepare("SELECT plan FROM workspaces WHERE id = ?").bind(workspace.id).first();
   const features = planFeatures(workspaceRecord?.plan);
-  const subscriptionCount = draft.fixedCosts.filter((item) => item.isSubscription).length;
+  const subscriptionCount = await countNewSubscriptions(env.DB, workspace.id, draft);
   const existingCount = await env.DB.prepare(
     "SELECT COUNT(*) AS count FROM fixed_costs WHERE workspace_id = ? AND is_subscription = 1",
   ).bind(workspace.id).first();
@@ -97,7 +97,7 @@ export const onRequestPut = async ({ env, request }) => {
 
   const multipliers = { daily: 1, weekly: 7, biweekly: 14, monthly: 1, quarterly: 3, yearly: 12 };
   let nextBillingDate = fixedCost.next_billing_date;
-  if (nextBillingDate) {
+  if (nextBillingDate && nextBillingDate <= today) {
     const billingDate = new Date(`${nextBillingDate}T00:00:00Z`);
     if (!Number.isNaN(billingDate.getTime())) {
       if (fixedCost.cycle === "monthly") billingDate.setUTCMonth(billingDate.getUTCMonth() + 1);

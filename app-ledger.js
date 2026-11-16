@@ -13,7 +13,12 @@
     minimumFractionDigits: 2, maximumFractionDigits: 2,
   });
   const dayMoney = (value) => `$${day.format(Number.isFinite(value) ? value : 0)}`;
-  const today = () => new Date().toISOString().slice(0, 10);
+  const localDate = (value = new Date()) => {
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  };
+  const today = () => localDate();
   const set = (key, value) => {
     const node = document.querySelector(`[data-proto="${key}"]`);
     if (node) node.textContent = value;
@@ -26,10 +31,61 @@
     { value: "quarterly", multiplier: 4 },
     { value: "yearly", multiplier: 1 },
   ];
-  const monthDayCount = () => {
-    const now = new Date();
-    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0)).getUTCDate();
+  const monthDayCount = (date = new Date()) =>
+    new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+
+  const monthDaysElapsed = (date = new Date()) => date.getDate();
+
+  const monthKey = (date = new Date()) =>
+    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+
+  const previousMonthKey = (date = new Date()) => {
+    const previous = new Date(date.getFullYear(), date.getMonth() - 1, 1);
+    return monthKey(previous);
   };
+
+  const consecutiveUnused = (reviews = []) => {
+    const sorted = [...reviews]
+      .filter((review) => review?.period && review?.answer)
+      .sort((left, right) => String(right.period).localeCompare(String(left.period)));
+    if (sorted.length < 2) return false;
+    const [latest, previous] = sorted;
+    if (latest.answer !== "not_used" || previous.answer !== "not_used") return false;
+    return previousMonthKey(new Date(`${latest.period}-15T12:00:00`)) === previous.period;
+  };
+
+  const fullMonthDailyIncome = () => {
+    const now = new Date();
+    const currentMonth = monthKey(now);
+    const buckets = new Map();
+    for (const item of state.income) {
+      const key = String(item.date || "").slice(0, 7);
+      if (!/^\d{4}-\d{2}$/.test(key) || key >= currentMonth) continue;
+      buckets.set(key, (buckets.get(key) || 0) + (Number(item.amount) || 0) - (Number(item.platformFee) || 0));
+    }
+    const months = [...buckets.keys()].sort().slice(-3);
+    if (!months.length) return null;
+    let total = 0;
+    let days = 0;
+    for (const key of months) {
+      const [year, month] = key.split("-").map(Number);
+      total += buckets.get(key) || 0;
+      days += monthDayCount(new Date(year, month - 1, 1));
+    }
+    return days ? { average: total / days, monthCount: months.length } : null;
+  };
+
+  const activeDaysInMonth = (item, date = new Date()) => {
+    const daysInMonth = monthDayCount(date);
+    const first = `${monthKey(date)}-01`;
+    const last = `${monthKey(date)}-${String(daysInMonth).padStart(2, "0")}`;
+    const start = item.startDate && item.startDate > first ? item.startDate : first;
+    const end = item.endDate && item.endDate < last ? item.endDate : last;
+    if (start > end) return 0;
+    return Math.floor((new Date(`${end}T00:00:00`) - new Date(`${start}T00:00:00`)) / 86400000) + 1;
+  };
+
+  const isInCurrentMonth = (value) => String(value || "").slice(0, 7) === monthKey();
 
   const calculate = () => {
     const active = (item) => {
@@ -42,16 +98,28 @@
           * (Number(item.businessUse) || 0) / 100 / 365
         : 0
     ), 0);
-    const grossIncome = state.income.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
-    const platformFees = state.income.reduce((sum, item) => sum + (Number(item.platformFee) || 0), 0);
+    const monthIncomeEntries = state.income.filter((item) => isInCurrentMonth(item.date));
+    const grossIncome = monthIncomeEntries.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+    const platformFees = monthIncomeEntries.reduce((sum, item) => sum + (Number(item.platformFee) || 0), 0);
     const netIncome = grossIncome - platformFees;
+    const currentMonthDays = monthDayCount();
     const monthlyFixedCosts = state.fixedCosts.reduce(
-      (sum, item) => sum + (active(item) ? (Number(item.amount) || 0) * (Number(item.multiplier) || 0) / 12 : 0), 0,
+      (sum, item) => sum + (
+        (Number(item.amount) || 0) * (Number(item.multiplier) || 0) / 12
+          * (Number(item.businessUse) || 0) / 100
+          * activeDaysInMonth(item) / currentMonthDays
+      ),
+      0,
     );
-    const monthlyExpenses = state.expenses.reduce(
-      (sum, item) => sum + (Number(item.amount) || 0) * (Number(item.businessUse) || 0) / 100, 0,
-    );
+    const monthlyExpenses = state.expenses
+      .filter((item) => isInCurrentMonth(item.date))
+      .reduce((sum, item) => sum + (Number(item.amount) || 0) * (Number(item.businessUse) || 0) / 100, 0);
+    const monthIncome = netIncome;
     const rate = Number(state.taxReserveRate) / 100;
+    const requiredToDate = dailyFloor * monthDaysElapsed();
+    const savings = state.cashOnHand === "" ? null : Number(state.cashOnHand);
+    const incomeAverage = fullMonthDailyIncome();
+    const netBurn = incomeAverage && dailyFloor > 0 ? dailyFloor - incomeAverage.average : null;
     return {
       dailyFloor, grossIncome, platformFees, netIncome, monthlyFixedCosts,
       monthlyExpenses,
@@ -59,15 +127,49 @@
       taxReserve: Number.isFinite(rate) && state.taxReserveRate !== "" && rate >= 0
         ? netIncome * rate
         : null,
-      requiredToDate: dailyFloor * monthDayCount(),
-      comparison: netIncome - dailyFloor * monthDayCount(),
-      savings: state.cashOnHand === "" ? null : Number(state.cashOnHand),
+      requiredToDate,
+      monthIncome,
+      comparison: monthIncome - requiredToDate,
+      savings,
+      noNewWorkRunway: savings !== null && Number.isFinite(savings) && savings > 0 && dailyFloor > 0
+        ? Math.floor(savings / dailyFloor)
+        : null,
+      incomeAverage,
+      netBurn,
+      averageRunway: netBurn === null || savings === null || !Number.isFinite(savings) || savings <= 0
+        ? null
+        : netBurn <= 0 ? null : Math.floor(savings / netBurn),
+      cashNotBurning: netBurn !== null && netBurn <= 0,
+      subscriptionSummary: subscriptionSummary(),
       aiMonthlyCosts: state.fixedCosts.filter((item) => item.isSubscription && active(item)).reduce(
         (sum, item) => sum + (Number(item.amount) || 0) * (Number(item.multiplier) || 0) / 12
           * (Number(item.businessUse) || 0) / 100, 0,
       ),
     };
   };
+
+  function subscriptionSummary() {
+    const subscriptions = state.fixedCosts.filter((item) => item.isSubscription);
+    const todayValue = today();
+    const upcoming = subscriptions
+      .filter((item) => item.nextBillingDate && item.nextBillingDate >= todayValue)
+      .sort((left, right) => left.nextBillingDate.localeCompare(right.nextBillingDate));
+    const next = upcoming[0] || null;
+    const daysUntil = next
+      ? Math.round((new Date(`${next.nextBillingDate}T00:00:00`) - new Date(`${todayValue}T00:00:00`)) / 86400000)
+      : null;
+    const suggested = subscriptions.filter((item) => consecutiveUnused(item.reviews));
+    return {
+      total: subscriptions.length,
+      dueSoon: upcoming.filter((item) => {
+        const days = Math.round((new Date(`${item.nextBillingDate}T00:00:00`) - new Date(`${todayValue}T00:00:00`)) / 86400000);
+        return days >= 0 && days <= 3;
+      }),
+      next,
+      daysUntil,
+      suggestedCancel: suggested,
+    };
+  }
 
   const renderMetrics = () => {
     const result = calculate();
@@ -90,22 +192,67 @@
     }
     const runwayNode = document.querySelector("[data-proto='metric-runway']");
     if (runwayNode) {
-      runwayNode.textContent = result.savings === null || !Number.isFinite(result.savings) || result.savings <= 0
-        ? messages.metrics.runwayUnset
-        : messages.metrics.runwayZero.replace("{days}", String(Math.floor(result.savings / result.dailyFloor)));
+      if (result.savings === null || !Number.isFinite(result.savings) || result.savings <= 0) {
+        runwayNode.textContent = messages.metrics.runwayUnset;
+      } else if (result.noNewWorkRunway === null) {
+        runwayNode.textContent = messages.metrics.runwayNeedFloor;
+      } else if (result.incomeAverage === null) {
+        runwayNode.textContent = messages.metrics.runwayZero.replace("{days}", String(result.noNewWorkRunway));
+      } else if (result.cashNotBurning) {
+        runwayNode.textContent = messages.metrics.runwayNotBurning;
+      } else {
+        runwayNode.textContent = messages.metrics.runwayAverage.replace("{days}", String(result.averageRunway));
+      }
+    }
+    const averageNode = document.querySelector("[data-proto='metric-runway-average']");
+    if (averageNode) {
+      if (result.savings === null || !Number.isFinite(result.savings) || result.savings <= 0) {
+        averageNode.textContent = "";
+      } else if (result.incomeAverage === null) {
+        averageNode.textContent = messages.metrics.runwayWaiting;
+      } else if (result.cashNotBurning) {
+        averageNode.textContent = messages.metrics.runwayZero.replace("{days}", String(result.noNewWorkRunway));
+      } else {
+        averageNode.textContent = `${messages.metrics.runwayZero.replace("{days}", String(result.noNewWorkRunway))} · ${messages.metrics.runwayBasedOn.replace("{months}", String(result.incomeAverage.monthCount))}`;
+      }
     }
     const shareAiNode = document.querySelector("[data-share-ai]");
     if (shareAiNode) shareAiNode.textContent = money(result.aiMonthlyCosts);
     const shareDailyNode = document.querySelector("[data-share-daily]");
     if (shareDailyNode) shareDailyNode.textContent = dayMoney(result.dailyFloor);
+    renderSubscriptionSummary(result.subscriptionSummary);
     renderWeeklySummary(result);
+  };
+
+  const renderSubscriptionSummary = (summary) => {
+    const panel = document.querySelector("[data-subscription-summary]");
+    if (!panel || !dashboardMode) return;
+    const countNode = panel.querySelector("[data-subscription-count]");
+    if (countNode) countNode.textContent = String(summary.total);
+    const upcomingNode = panel.querySelector("[data-subscription-upcoming]");
+    if (upcomingNode) {
+      upcomingNode.textContent = summary.next
+        ? messages.subscriptionReview.summaryNext
+          .replace("{name}", summary.next.name)
+          .replace("{date}", summary.next.nextBillingDate)
+          .replace("{amount}", money(Number(summary.next.amount)))
+        : messages.subscriptionReview.summaryNone;
+    }
+    const suggestedNode = panel.querySelector("[data-subscription-suggested]");
+    if (suggestedNode) {
+      suggestedNode.textContent = summary.suggestedCancel.length
+        ? messages.subscriptionReview.summaryCancel
+          .replace("{count}", String(summary.suggestedCancel.length))
+        : messages.subscriptionReview.summaryNone;
+      suggestedNode.classList.toggle("is-warning", summary.suggestedCancel.length > 0);
+    }
   };
 
   const weekKey = () => {
     const now = new Date();
-    const date = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-    date.setUTCDate(date.getUTCDate() - ((date.getUTCDay() + 6) % 7) - 7);
-    return date.toISOString().slice(0, 10);
+    const date = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    date.setDate(date.getDate() - ((date.getDay() + 6) % 7) - 7);
+    return localDate(date);
   };
 
   const renderWeeklySummary = (result) => {
@@ -116,22 +263,24 @@
       wrapper.hidden = true;
       return;
     }
-    const weekStart = new Date(`${weekKey()}T00:00:00Z`);
+    const weekStart = new Date(`${weekKey()}T00:00:00`);
     const weekEnd = new Date(weekStart);
-    weekEnd.setUTCDate(weekEnd.getUTCDate() + 7);
+    weekEnd.setDate(weekEnd.getDate() + 7);
     const weekIncome = state.income.filter((item) => {
-      const date = new Date(`${item.date}T00:00:00Z`);
+      const date = new Date(`${item.date}T00:00:00`);
       return date >= weekStart && date < weekEnd;
     }).reduce((sum, item) => sum + (Number(item.amount) - Number(item.platformFee)), 0);
     if (!state.income.length && !state.fixedCosts.length) {
       wrapper.hidden = true;
       return;
     }
-    textNode.textContent = weekIncome > 0
+    textNode.textContent = weekIncome > 0 && result.dailyFloor > 0
       ? messages.weeklySummary.body
         .replace("{income}", money(weekIncome))
         .replace("{days}", String(Math.floor(weekIncome / result.dailyFloor)))
-      : messages.weeklySummary.bodyNoIncome.replace("{daily}", dayMoney(result.dailyFloor));
+      : weekIncome > 0
+        ? messages.weeklySummary.bodyNoFloor.replace("{income}", money(weekIncome))
+        : messages.weeklySummary.bodyNoIncome.replace("{daily}", dayMoney(result.dailyFloor));
     wrapper.hidden = false;
   };
 
@@ -313,18 +462,18 @@
         const review = document.createElement("div");
         review.className = "subscription-review";
         const answers = ["often", "sometimes", "not_used"];
-        const currentAnswer = item.reviews?.find((reviewItem) => reviewItem.period === new Date().toISOString().slice(0, 7))?.answer;
-        const suggestedCancel = (item.reviews || []).filter((reviewItem) => reviewItem.answer === "not_used").slice(0, 2).length === 2;
+        const currentAnswer = item.reviews?.find((reviewItem) => reviewItem.period === monthKey())?.answer;
+        const suggestedCancel = consecutiveUnused(item.reviews);
         if (suggestedCancel) {
           const badge = document.createElement("span");
           badge.className = "cancel-badge";
           badge.textContent = messages.subscriptionReview.suggestedCancel;
           review.append(badge);
         } else if (item.nextBillingDate) {
-          const todayDate = new Date();
-          const billingDate = new Date(`${item.nextBillingDate}T00:00:00Z`);
-          const daysUntil = Math.ceil((billingDate - todayDate) / 86400000);
-          if (daysUntil <= 3) {
+          const todayDate = new Date(`${today()}T00:00:00`);
+          const billingDate = new Date(`${item.nextBillingDate}T00:00:00`);
+          const daysUntil = Math.round((billingDate - todayDate) / 86400000);
+          if (daysUntil >= 0 && daysUntil <= 3) {
             const reminder = document.createElement("span");
             reminder.className = "review-hint";
             reminder.textContent = messages.subscriptionReview.upcoming
@@ -335,13 +484,16 @@
         }
         const answerGroup = document.createElement("div");
         answerGroup.className = "review-actions";
-        answers.forEach((answer) => {
+        answers.forEach((value) => {
           const button = document.createElement("button");
           button.type = "button";
-          button.className = "review-button" + (currentAnswer === answer ? " active" : "");
-          button.textContent = messages.subscriptionReview[answer];
-          button.setAttribute("data-review-answer", answer);
+          button.className = "review-button" + (currentAnswer === value ? " active" : "");
+          const label = value === "not_used" ? messages.subscriptionReview.notUsed : messages.subscriptionReview[value];
+          const labelNode = document.createElement("span");
+          labelNode.textContent = label;
+          button.setAttribute("data-review-answer", value);
           button.setAttribute("data-entry-id", item.id);
+          button.append(labelNode);
           answerGroup.append(button);
         });
         review.append(answerGroup);
@@ -512,6 +664,15 @@
     renderExpenses();
     renderProjectOptions();
     renderIntegration();
+    renderPlanLimits();
+  };
+
+  const refreshTaxInputs = () => {
+    const inputs = [
+      document.querySelector('[data-proto-form="settings"]')?.elements.taxReserveRate,
+      document.querySelector("[data-flow-tax]"),
+    ].filter(Boolean);
+    inputs.forEach((input) => { input.value = state.taxReserveRate; });
   };
 
   const fixedForm = document.querySelector("[data-proto-form='fixed']");
@@ -630,13 +791,19 @@
         }),
       });
       const data = await response.json().catch(() => ({}));
+      if (response.status === 403 && data?.error === "subscription_limit") {
+        throw new Error(`subscription_limit:${data.limit || state.features.subscriptionLimit || 5}`);
+      }
       const destination = data.authUrl || data.redirectUrl;
       if (!response.ok || !destination) throw new Error("save_failed");
       window.location.assign(destination);
-    } catch {
+    } catch (error) {
       button.disabled = false;
       button.textContent = original;
-      showMessage(messages.saveFailed);
+      const [code, limit] = String(error?.message || "").split(":");
+      showMessage(code === "subscription_limit"
+        ? messages.plan.limitReached.replace("{limit}", limit || "5")
+        : messages.saveFailed);
     }
   };
 
@@ -695,6 +862,30 @@
   });
 
   document.querySelector("[data-save-google]")?.addEventListener("click", saveDraft);
+
+  const renderPlanLimits = () => {
+    const csvNodes = [...document.querySelectorAll("[data-csv-pro]")];
+    csvNodes.forEach((node) => {
+      node.classList.toggle("is-pro-locked", !state.features.csv);
+      node.setAttribute("aria-disabled", state.features.csv ? "false" : "true");
+      node.title = state.features.csv ? "" : messages.plan.proRequiredCsv;
+    });
+    const reviewPanel = document.querySelector("[data-subscription-summary]");
+    const reviewLocked = !state.features.subscriptionReview;
+    reviewPanel?.classList.toggle("is-pro-locked", reviewLocked);
+    document.querySelectorAll("[data-review-answer]").forEach((button) => {
+      button.disabled = reviewLocked;
+      if (reviewLocked) button.title = messages.plan.proRequiredReview;
+      else button.removeAttribute("title");
+    });
+    if (reviewPanel && reviewLocked) {
+      const upcoming = reviewPanel.querySelector("[data-subscription-upcoming]");
+      const suggested = reviewPanel.querySelector("[data-subscription-suggested]");
+      if (upcoming) upcoming.textContent = messages.plan.proRequiredReview;
+      if (suggested) suggested.textContent = messages.plan.proRequiredReview;
+    }
+  };
+
   const csvMessage = (node, message) => {
     if (!node) return;
     node.textContent = message;
@@ -714,6 +905,11 @@
   };
   document.querySelector("[data-csv-import]")?.addEventListener("change", async (event) => {
     const input = event.target;
+    if (!state.features.csv) {
+      csvMessage(document.querySelector("[data-csv-message]"), messages.plan.proRequiredCsv);
+      input.value = "";
+      return;
+    }
     const label = document.querySelector("[data-csv-import-label]");
     const status = document.querySelector("[data-csv-message]");
     const failedStatus = document.querySelector("[data-csv-failed-message]");
@@ -742,12 +938,18 @@
       const dashboardMode = Boolean(document.querySelector("[data-dashboard]"));
       if (dashboardMode && data.imported) await loadDashboard();
     } catch (error) {
-      const reason = data?.error === "pro_required" ? messages.plan.proRequiredCsv : error?.message === "empty_file" ? messages.csv.emptyFile : messages.csv.importFailed;
+      const reason = error?.message === "pro_required" ? messages.plan.proRequiredCsv : error?.message === "empty_file" ? messages.csv.emptyFile : messages.csv.importFailed;
       csvMessage(status, reason);
     } finally {
       if (label) label.textContent = original;
       input.value = "";
     }
+  });
+  document.addEventListener("click", (event) => {
+    const link = event.target.closest("a[data-csv-pro]");
+    if (!link || state.features.csv) return;
+    event.preventDefault();
+    csvMessage(document.querySelector("[data-csv-message]"), messages.plan.proRequiredCsv);
   });
   const confirmDelete = () => {
     if (!window.confirm(messages.deleteConfirm)) return;
@@ -776,10 +978,8 @@
       if (!response.ok || !data.ledger) throw new Error("delete_entry_failed");
       applyLedger(data.ledger);
       const settingsForm = document.querySelector('[data-proto-form="settings"]');
-      if (settingsForm) {
-        settingsForm.elements.taxReserveRate.value = state.taxReserveRate;
-        settingsForm.elements.cashOnHand.value = state.cashOnHand;
-      }
+      if (settingsForm) settingsForm.elements.cashOnHand.value = state.cashOnHand;
+      refreshTaxInputs();
       render();
     } catch {
       button.disabled = false;
@@ -790,7 +990,7 @@
   settingsForm?.addEventListener("input", () => {
     state.taxReserveRate = String(settingsForm.elements.taxReserveRate.value || "");
     state.cashOnHand = String(settingsForm.elements.cashOnHand.value || "");
-    render();
+    renderMetrics();
   });
 
   document.querySelector("[data-weekly-dismiss]")?.addEventListener("click", () => {
@@ -827,7 +1027,7 @@
     const blob = await shareImage(card);
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `gigledger-${card}-${new Date().toISOString().slice(0, 10)}.png`;
+    link.download = `gigledger-${card}-${today()}.png`;
     link.click();
     URL.revokeObjectURL(link.href);
   });
@@ -861,10 +1061,8 @@
       }
       applyLedger(data.ledger);
       const settingsForm = document.querySelector('[data-proto-form="settings"]');
-      if (settingsForm) {
-        settingsForm.elements.taxReserveRate.value = state.taxReserveRate;
-        settingsForm.elements.cashOnHand.value = state.cashOnHand;
-      }
+      if (settingsForm) settingsForm.elements.cashOnHand.value = state.cashOnHand;
+      refreshTaxInputs();
       render();
       loadIntegrations();
     } catch {
@@ -1024,7 +1222,7 @@
     state.projects = ledger.projects || [];
     state.taxReserveRate = ledger.workspace?.taxReserveRate === null
       || ledger.workspace?.taxReserveRate === undefined
-      ? "" : String(Math.round(ledger.workspace.taxReserveRate * 10000));
+      ? "" : String(Math.round(ledger.workspace.taxReserveRate * 100));
     state.cashOnHand = ledger.workspace?.cashOnHand === null
       || ledger.workspace?.cashOnHand === undefined
       ? "" : String(ledger.workspace.cashOnHand);
@@ -1147,10 +1345,8 @@
     state.taxReserveRate = String(document.querySelector("[data-flow-tax]")?.value || "");
     state.cashOnHand = String(document.querySelector("[data-flow-cash]")?.value || "");
     const settingsForm = document.querySelector('[data-proto-form="settings"]');
-    if (settingsForm) {
-      settingsForm.elements.taxReserveRate.value = state.taxReserveRate;
-      settingsForm.elements.cashOnHand.value = state.cashOnHand;
-    }
+    if (settingsForm) settingsForm.elements.cashOnHand.value = state.cashOnHand;
+    refreshTaxInputs();
     render();
     renderFlowResults();
   };
@@ -1171,6 +1367,9 @@
   };
 
   flowBack?.addEventListener("click", () => showFlowStep(flowStep - 1));
+  ["[data-flow-income]", "[data-flow-cash]", "[data-flow-tax]"].forEach((selector) => {
+    document.querySelector(selector)?.addEventListener("input", renderFlowResults);
+  });
   flowNext?.addEventListener("click", () => {
     if (flowStep === 1) {
       const warning = document.querySelector("[data-skip-warning]");
@@ -1194,10 +1393,8 @@
       if (!response.ok || !data.ledger) throw new Error("review_failed");
       applyLedger(data.ledger);
       const currentSettings = document.querySelector('[data-proto-form="settings"]');
-      if (currentSettings) {
-        currentSettings.elements.taxReserveRate.value = state.taxReserveRate;
-        currentSettings.elements.cashOnHand.value = state.cashOnHand;
-      }
+      if (currentSettings) currentSettings.elements.cashOnHand.value = state.cashOnHand;
+      refreshTaxInputs();
       render();
     } catch {
       button.disabled = false;
