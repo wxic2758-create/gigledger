@@ -300,7 +300,7 @@
     },
     "metrics": {
       "daily": "每日底線",
-      "dailyNote": "本月生效的固定成本與訂閱",
+      "dailyNote": "本月，已按營業使用比例",
       "gross": "總收入",
       "sold": "已售出、未到帳",
       "soldNote": "到帳前不計入實際利潤",
@@ -313,20 +313,20 @@
       "profit": "實際利潤",
       "profitNote": "淨收入減固定成本與一次性支出",
       "tax": "預留稅款",
-      "required": "本月至今應賺",
-      "comparison": "落後 / 領先",
+      "required": "到今天應賺",
+      "comparison": "本月對照",
       "runway": "現金跑道",
-      "comparisonNote": "本月已過天數 × 每日底線",
-      "runwayNote": "若收入歸零 · 按近 3 個月平均",
+      "comparisonNote": "已到帳淨收入對照今天應賺",
+      "runwayNote": "收入停止時",
       "runwayUnset": "請先填手頭現金",
       "ahead": "領先 {amount}",
       "behind": "落後 {amount}",
       "runwayZero": "若收入歸零可撐 {days} 天",
-      "runwayAverage": "按平均收入可撐 {days} 天",
+      "runwayAverage": "按近 3 個月平均，可撐 {days} 天",
       "runwayNotBurning": "目前未燒現金",
-      "runwayWaiting": "有完整月份收入後才會計算平均值",
-      "runwayNeedFloor": "加入固定成本後才能計算跑道",
-      "runwayBasedOn": "依 {months} 個完整月份計算"
+      "runwayWaiting": "補滿一個完整月份後才能對照平均",
+      "runwayNeedFloor": "先新增固定成本才能計算跑道",
+      "runwayBasedOn": "依 {months} 個完整月份收入估算"
     },
     "taxNote": "僅供預估 · 非稅務建議",
     "onboarding": {
@@ -656,6 +656,11 @@
       "saveFailed": "無法儲存專案，請再試一次。",
       "archiveFailed": "無法封存專案，請再試一次。",
       "exists": "這個專案已經存在。"
+    },
+    "dashboard": {
+      "profitKicker": "本月",
+      "profitTitle": "錢去了哪裡",
+      "profitNote": "總收入 → 手續費 → 淨收入 → 一次性支出 → 固定成本 → 真實利潤"
     }
   },
   "start": {

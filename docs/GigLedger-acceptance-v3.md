@@ -107,8 +107,8 @@ All product calculations use USD and allow a tolerance of `$0.01`.
 | AF-57 | 5.9 share card | PNG download, X intent, and copy text work | Pass | Download, X share intent, and clipboard actions are implemented. |
 | AF-58 | 5.9 share card | No fabricated user counts or ratings | Pass | No social proof data is generated. |
 | AF-59 | 5.9 weekly summary | Monday summary appears only when data exists | Pass | Empty ledgers hide the summary. |
-| AF-60 | 7 hierarchy | Dashboard starts with Daily Floor and this-month comparison | Pass | Daily Floor and required-to-date are the first metrics. |
-| AF-61 | 7 hierarchy | Runway, profit breakdown, tax reserve, subscription summary, projects, details | Pass | Sections follow the intended order and only show when relevant (except explanatory empty states). |
+| AF-60 | 7 hierarchy | Dashboard starts with Daily Floor and this-month comparison | Pass | Ego-browser verified a four-card primary row: Daily Floor, needed by today, this-month comparison, and cash runway. Desktop renders four columns; mobile keeps Daily Floor and runway full-width with no horizontal overflow. |
+| AF-61 | 7 hierarchy | Runway, profit breakdown, tax reserve, subscription summary, projects, details | Pass | Profit is a separate “Where the money went” breakdown with gross → fees → net → expenses → fixed costs → true profit; tax, subscription summary, projects, and details follow below. Verified in `en` and `zh-TW`. |
 | AF-62 | 6 onboarding CTA | Primary CTA opens the calculator; secondary CTA signs in with Google | Pass | Marketing hero links to `/en/app` and Google sign-in. |
 | AF-63 | 6 no waitlist | No waitlist email collection | Pass | No waitlist form or endpoint remains. |
 | AF-64 | 13 legal | Privacy explains Google email/name, D1 storage, export, and deletion | Pass | Privacy notice describes the current storage model. |

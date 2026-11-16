@@ -10,27 +10,79 @@
   letter-spacing: -.05em; line-height: 1.02; max-width: 16ch;
 }
 .app-hero > p { margin-top: 18px; max-width: 58ch; color: var(--ink-soft); }
-.app-metrics {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+.dashboard-primary {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px;
   margin-top: 36px;
 }
-.app-metrics article {
+.dashboard-primary-card {
   min-height: 148px; padding: 18px; background: var(--white);
   border: 1px solid var(--line); border-radius: 16px;
 }
-.app-metrics article:first-child { background: var(--orange); border-color: var(--orange); }
-.app-metrics .runway-card { background: var(--paper); border-color: var(--line); }
-.app-metrics article:first-child strong { color: var(--ink); }
-.app-metrics article:first-child small { color: rgba(43, 27, 18, .72); }
-.app-metrics .profit-card { background: var(--ink); color: var(--white); border-color: var(--ink); }
-.app-metrics .profit-card span, .app-metrics .profit-card small { color: rgba(255,255,255,.65); }
-.app-metrics span { display: block; font-size: 10px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; color: var(--ink-soft); }
-.app-metrics article:first-child span { color: rgba(43, 27, 18, .72); }
-.app-metrics strong {
+.dashboard-primary-card:first-child { background: var(--orange); border-color: var(--orange); }
+.dashboard-primary-card:first-child strong { color: var(--ink); }
+.dashboard-primary-card:first-child small { color: rgba(43, 27, 18, .72); }
+.dashboard-primary-card > span { display: block; font-size: 10px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; color: var(--ink-soft); }
+.dashboard-primary-card:first-child > span { color: rgba(43, 27, 18, .72); }
+.dashboard-primary-card > strong {
   display: block; margin-top: 10px; font-family: var(--display);
   font-size: clamp(20px, 2vw, 27px); letter-spacing: -.045em; overflow-wrap: anywhere;
 }
-.app-metrics small { display: block; margin-top: 10px; font-size: 10px; line-height: 1.4; color: var(--ink-soft); }
+.dashboard-primary-card > small { display: block; margin-top: 10px; font-size: 10px; line-height: 1.4; color: var(--ink-soft); }
+.dashboard-comparison > strong { font-size: clamp(18px, 1.7vw, 23px); }
+.runway-card { background: var(--paper); border-color: var(--line); }
+.dashboard-breakdown {
+  margin-top: 18px; padding: 22px; background: var(--white);
+  border: 1px solid var(--line); border-radius: 18px;
+}
+.dashboard-breakdown-head {
+  display: flex; justify-content: space-between; align-items: flex-end; gap: 18px;
+}
+.dashboard-breakdown-head h2 {
+  margin-top: 6px; font-family: var(--display);
+  font-size: clamp(24px, 3vw, 32px); letter-spacing: -.04em;
+}
+.dashboard-breakdown-note { max-width: 46ch; color: var(--ink-soft); font-size: 11px; line-height: 1.45; }
+.dashboard-flow {
+  display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px;
+  margin-top: 18px;
+}
+.dashboard-flow article {
+  min-height: 108px; padding: 14px; background: var(--paper);
+  border: 1px solid var(--line); border-radius: 13px;
+}
+.dashboard-flow article > span {
+  display: block; font-size: 9px; font-weight: 800; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--ink-soft);
+}
+.dashboard-flow article > strong {
+  display: block; margin-top: 9px; font-family: var(--display);
+  font-size: clamp(16px, 1.7vw, 21px); letter-spacing: -.04em; overflow-wrap: anywhere;
+}
+.dashboard-flow article > small { display: block; margin-top: 7px; font-size: 9px; line-height: 1.35; color: var(--ink-soft); }
+.dashboard-flow .profit-card { background: var(--ink); border-color: var(--ink); color: var(--white); }
+.dashboard-flow .profit-card > span, .dashboard-flow .profit-card > small { color: rgba(255,255,255,.65); }
+.dashboard-breakdown > article[data-sold-card] {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 16px;
+  margin-top: 12px; padding: 13px 14px; background: #fff8df;
+  border: 1px solid var(--line); border-radius: 12px;
+}
+.dashboard-breakdown > article[data-sold-card] > span {
+  font-size: 9px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft);
+}
+.dashboard-breakdown > article[data-sold-card] > strong {
+  font-family: var(--display); font-size: 20px; letter-spacing: -.04em;
+}
+.dashboard-breakdown > article[data-sold-card] > small { color: var(--ink-soft); font-size: 10px; }
+.dashboard-secondary {
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; margin-top: 12px;
+}
+.dashboard-secondary article {
+  min-height: 96px; padding: 18px; background: var(--white);
+  border: 1px solid var(--line); border-radius: 16px;
+}
+.dashboard-secondary span { display: block; font-size: 10px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; color: var(--ink-soft); }
+.dashboard-secondary strong { display: block; margin-top: 8px; font-family: var(--display); font-size: 24px; letter-spacing: -.045em; }
+.dashboard-secondary small { display: block; margin-top: 6px; font-size: 10px; color: var(--ink-soft); }
 .app-section { padding: 28px 0 58px; }
 .app-steps { padding: 10px 0 58px; }
 .app-steps-kicker {
@@ -142,13 +194,14 @@
 .app-table-wrap tbody tr:only-child td[colspan] { color: var(--ink-soft); font-weight: 500; }
 
 @media (max-width: 1180px) {
-  .app-metrics { grid-template-columns: repeat(3, 1fr); }
-  .app-metrics article { min-height: 132px; }
+  .dashboard-primary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dashboard-primary-card { min-height: 132px; }
+  .dashboard-flow { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 @media (max-width: 860px) {
   .app-hero { padding-top: 40px; }
-  .app-metrics { grid-template-columns: repeat(2, 1fr); }
+  .dashboard-primary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .app-grid { grid-template-columns: 1fr; }
   .app-steps ol { grid-template-columns: 1fr; }
   .app-steps li + li { padding-left: 0; border-left: 0; border-top: 1px solid var(--line); }
@@ -156,12 +209,14 @@
 
 @media (max-width: 560px) {
   .app-hero { padding-top: 28px; }
-  .app-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
-  .app-metrics article { min-height: 128px; padding: 14px; }
-  .app-metrics article:first-child { grid-column: 1 / -1; min-height: 116px; }
-  .app-metrics .profit-card,
-  .app-metrics article:last-child { grid-column: 1 / -1; min-height: 112px; }
-  .app-metrics strong { font-size: 20px; }
+  .dashboard-primary { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+  .dashboard-primary-card { min-height: 128px; padding: 14px; }
+  .dashboard-primary-card:first-child { grid-column: 1 / -1; min-height: 116px; }
+  .dashboard-primary-card > strong { font-size: 20px; }
+  .dashboard-flow { grid-template-columns: 1fr; }
+  .dashboard-flow article { min-height: 92px; }
+  .dashboard-breakdown { padding: 17px; }
+  .dashboard-breakdown-head { align-items: flex-start; flex-direction: column; gap: 8px; }
   .app-form { box-shadow: 7px 8px 0 var(--yellow); }
   .app-table-wrap { margin-inline: -18px; border-radius: 0; }
   .app-table-wrap table { min-width: 520px; }
@@ -214,7 +269,7 @@
   .flow-nav .button { flex: 1; }
 }
 @media (max-width: 560px) {
-  .app-metrics .runway-card { grid-column: 1 / -1; }
+  .dashboard-primary .runway-card { grid-column: 1 / -1; }
 }
 .subscription-review { display: grid; gap: 7px; min-width: 210px; }
 .review-actions { display: flex; flex-wrap: wrap; gap: 5px; }

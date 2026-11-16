@@ -300,7 +300,7 @@
     },
     "metrics": {
       "daily": "Daily floor",
-      "dailyNote": "Effective fixed costs and subscriptions",
+      "dailyNote": "This month, after business use",
       "gross": "Gross income",
       "sold": "Sold, not received",
       "soldNote": "Excluded from true profit until received",
@@ -313,20 +313,20 @@
       "profit": "True profit",
       "profitNote": "Net income minus fixed costs and one-time expenses",
       "tax": "Tax reserve",
-      "required": "Required to date",
-      "comparison": "Behind / ahead",
+      "required": "Needed by today",
+      "comparison": "This month",
       "runway": "Cash runway",
-      "comparisonNote": "Required = days this month × daily floor",
-      "runwayNote": "If income stops · by 3-month average",
+      "comparisonNote": "Received net income vs. Daily Floor due",
+      "runwayNote": "If income stops",
       "runwayUnset": "Add cash on hand",
       "ahead": "Ahead by {amount}",
       "behind": "Behind by {amount}",
       "runwayZero": "{days} days if income stops",
-      "runwayAverage": "{days} days at average income",
+      "runwayAverage": "{days} days at your 3-month average",
       "runwayNotBurning": "Not burning cash",
-      "runwayWaiting": "Add a full month of income to see the average",
+      "runwayWaiting": "Add a full month to compare with your average",
       "runwayNeedFloor": "Add a fixed cost to calculate runway",
-      "runwayBasedOn": "Based on {months} full month(s)"
+      "runwayBasedOn": "Based on {months} full month(s) of income"
     },
     "taxNote": "Estimate only · Not tax advice",
     "onboarding": {
@@ -656,6 +656,11 @@
       "saveFailed": "Could not save the project. Please try again.",
       "archiveFailed": "Could not archive the project. Please try again.",
       "exists": "That project already exists."
+    },
+    "dashboard": {
+      "profitKicker": "This month",
+      "profitTitle": "Where the money went",
+      "profitNote": "Gross income → fees → net income → expenses → fixed costs → true profit"
     }
   },
   "start": {

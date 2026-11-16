@@ -359,7 +359,7 @@ const legalPage = ({ locale, t, type }) => {
   <link rel="alternate" hreflang="en" href="${siteUrl}/en/${isPrivacy ? "privacy" : "tax-disclaimer"}">
   <link rel="alternate" hreflang="zh-Hant-TW" href="${siteUrl}/zh-TW/${isPrivacy ? "privacy" : "tax-disclaimer"}">
   <link rel="alternate" hreflang="x-default" href="${siteUrl}/en/${isPrivacy ? "privacy" : "tax-disclaimer"}">
-  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/styles.css?v=20261116-15">
 </head>
 <body>
   <header class="site-header">
@@ -394,8 +394,8 @@ const appPage = ({ locale, t, mode = "app" }) => {
   <title>${esc(title)} — GigLedger</title>
   <meta name="robots" content="noindex">
   <link rel="icon" href="/assets/favicon-32.png" sizes="32x32">
-  <link rel="stylesheet" href="/styles.css">
-  <link rel="stylesheet" href="/proto.css">
+  <link rel="stylesheet" href="/styles.css?v=20261116-15">
+  <link rel="stylesheet" href="/proto.css?v=20261116-15">
 </head>
 <body class="${bodyClass}">
   <script type="application/json" id="proto-messages">${JSON.stringify(mode === "dashboard" ? { ...t.app, dashboard: t.dashboard } : t.app).replaceAll("</", "<\\/")}</script>
@@ -553,18 +553,35 @@ const appPage = ({ locale, t, mode = "app" }) => {
         <div><span>${esc(t.app.weeklySummary.title)}</span><p data-weekly-text></p></div>
         <button class="text-link" type="button" data-weekly-dismiss>${esc(t.app.weeklySummary.dismiss)}</button>
       </div>
-      <div class="app-metrics">
-        <article><span>${esc(t.app.metrics.daily)}</span><strong data-proto="metric-daily">$0.00</strong><small>${esc(t.app.metrics.dailyNote)}</small></article>
-        <article><span>${esc(t.app.metrics.required)}</span><strong data-proto="metric-required">$0.00</strong><small>${esc(t.app.metrics.comparisonNote)}</small></article>
-        <article><span>${esc(t.app.metrics.comparison)}</span><strong data-proto="metric-comparison">-</strong></article>
-        <article class="runway-card"><span>${esc(t.app.metrics.runway)}</span><strong data-proto="metric-runway">-</strong><small data-proto="metric-runway-average">${esc(t.app.metrics.runwayNote)}</small></article>
-        <article><span>${esc(t.app.metrics.gross)}</span><strong data-proto="metric-gross">$0.00</strong></article>
-        <article data-sold-card hidden><span>${esc(t.app.metrics.sold)}</span><strong data-proto="metric-sold">$0.00</strong><small>${esc(t.app.metrics.soldNote)}</small></article>
-        <article><span>${esc(t.app.metrics.fees)}</span><strong data-proto="metric-fees">$0.00</strong></article>
-        <article><span>${esc(t.app.metrics.net)}</span><strong data-proto="metric-net">$0.00</strong></article>
-        <article><span>${esc(t.app.metrics.costs)}</span><strong data-proto="metric-costs">$0.00</strong><small>${esc(t.app.metrics.costsNote)}</small></article>
-        <article><span>${esc(t.app.metrics.expenses)}</span><strong data-proto="metric-expenses">$0.00</strong><small>${esc(t.app.metrics.expensesNote)}</small></article>
-        <article class="profit-card"><span>${esc(t.app.metrics.profit)}</span><strong data-proto="metric-profit">$0.00</strong><small>${esc(t.app.metrics.profitNote)}</small></article>
+      <div class="dashboard-primary">
+        <article class="dashboard-primary-card"><span>${esc(t.app.metrics.daily)}</span><strong data-proto="metric-daily">$0.00</strong><small>${esc(t.app.metrics.dailyNote)}</small></article>
+        <article class="dashboard-primary-card"><span>${esc(t.app.metrics.required)}</span><strong data-proto="metric-required">$0.00</strong><small>${esc(t.app.metrics.comparisonNote)}</small></article>
+        <article class="dashboard-primary-card dashboard-comparison"><span>${esc(t.app.metrics.comparison)}</span><strong data-proto="metric-comparison">-</strong></article>
+        <article class="dashboard-primary-card runway-card"><span>${esc(t.app.metrics.runway)}</span><strong data-proto="metric-runway">-</strong><small data-proto="metric-runway-average">${esc(t.app.metrics.runwayNote)}</small></article>
+      </div>
+      <section class="dashboard-breakdown" aria-labelledby="profit-breakdown-title">
+        <div class="dashboard-breakdown-head">
+          <div>
+            <p class="app-steps-kicker">${esc(t.app.dashboard.profitKicker)}</p>
+            <h2 id="profit-breakdown-title">${esc(t.app.dashboard.profitTitle)}</h2>
+          </div>
+          <span class="dashboard-breakdown-note">${esc(t.app.dashboard.profitNote)}</span>
+        </div>
+        <div class="dashboard-flow" aria-label="${esc(t.app.dashboard.profitTitle)}">
+          <article><span>${esc(t.app.metrics.gross)}</span><strong data-proto="metric-gross">$0.00</strong></article>
+          <article><span>${esc(t.app.metrics.fees)}</span><strong data-proto="metric-fees">$0.00</strong></article>
+          <article><span>${esc(t.app.metrics.net)}</span><strong data-proto="metric-net">$0.00</strong></article>
+          <article><span>${esc(t.app.metrics.expenses)}</span><strong data-proto="metric-expenses">$0.00</strong><small>${esc(t.app.metrics.expensesNote)}</small></article>
+          <article><span>${esc(t.app.metrics.costs)}</span><strong data-proto="metric-costs">$0.00</strong><small>${esc(t.app.metrics.costsNote)}</small></article>
+          <article class="profit-card"><span>${esc(t.app.metrics.profit)}</span><strong data-proto="metric-profit">$0.00</strong><small>${esc(t.app.metrics.profitNote)}</small></article>
+        </div>
+        <article data-sold-card hidden>
+          <span>${esc(t.app.metrics.sold)}</span>
+          <strong data-proto="metric-sold">$0.00</strong>
+          <small>${esc(t.app.metrics.soldNote)}</small>
+        </article>
+      </section>
+      <div class="dashboard-secondary">
         <article><span>${esc(t.app.metrics.tax)}</span><strong data-proto="metric-tax">$0.00</strong><small>${esc(t.app.taxNote)}</small></article>
       </div>
       ${mode === "dashboard" ? `
@@ -764,7 +781,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
       <a href="/${t.alternatePath}app">${esc(t.nav.switchTo)}</a>
     </div>
   </footer>
-  <script src="/app-ledger.js?v=20261116-14" defer></script>
+  <script src="/app-ledger.js?v=20261116-15" defer></script>
   <script src="/app.js" defer></script>
 </body>
 </html>`;
@@ -798,7 +815,7 @@ const page = ({ locale, t }) => `<!doctype html>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="preload" href="/assets/logo-mark-192.png" as="image">
-  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/styles.css?v=20261116-15">
   <script type="application/ld+json">
   ${JSON.stringify({
     "@context": "https://schema.org",
