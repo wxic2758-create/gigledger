@@ -74,6 +74,9 @@ export const onRequestGet = async ({ env, request }) => {
   if (!workspace) return csvResponse([], "gigledger-income.csv");
   const workspaceRecord = await env.DB.prepare("SELECT plan FROM workspaces WHERE id = ?").bind(workspace.id).first();
   if (!planFeatures(workspaceRecord?.plan).csv) return json({ error: "pro_required" }, 403);
+  if (url.searchParams.get("export") !== "income") {
+    return json({ error: "unsupported_export" }, 400);
+  }
   const ledger = await loadWorkspace(env.DB, workspace.id);
   const rows = (ledger.income || []).map(mapIncome);
   return csvResponse(rows, `gigledger-income-${new Date().toISOString().slice(0, 10)}.csv`);

@@ -359,7 +359,7 @@ const legalPage = ({ locale, t, type }) => {
   <link rel="alternate" hreflang="en" href="${siteUrl}/en/${isPrivacy ? "privacy" : "tax-disclaimer"}">
   <link rel="alternate" hreflang="zh-Hant-TW" href="${siteUrl}/zh-TW/${isPrivacy ? "privacy" : "tax-disclaimer"}">
   <link rel="alternate" hreflang="x-default" href="${siteUrl}/en/${isPrivacy ? "privacy" : "tax-disclaimer"}">
-  <link rel="stylesheet" href="/styles.css?v=20261116-15">
+  <link rel="stylesheet" href="/styles.css?v=20261116-18">
 </head>
 <body>
   <header class="site-header">
@@ -394,8 +394,8 @@ const appPage = ({ locale, t, mode = "app" }) => {
   <title>${esc(title)} — GigLedger</title>
   <meta name="robots" content="noindex">
   <link rel="icon" href="/assets/favicon-32.png" sizes="32x32">
-  <link rel="stylesheet" href="/styles.css?v=20261116-15">
-  <link rel="stylesheet" href="/proto.css?v=20261116-15">
+  <link rel="stylesheet" href="/styles.css?v=20261116-18">
+  <link rel="stylesheet" href="/proto.css?v=20261116-18">
 </head>
 <body class="${bodyClass}">
   <script type="application/json" id="proto-messages">${JSON.stringify(mode === "dashboard" ? { ...t.app, dashboard: t.dashboard } : t.app).replaceAll("</", "<\\/")}</script>
@@ -785,7 +785,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
       <a href="/${t.alternatePath}app">${esc(t.nav.switchTo)}</a>
     </div>
   </footer>
-  <script src="/app-ledger.js?v=20261116-17" defer></script>
+  <script src="/app-ledger.js?v=20261116-18" defer></script>
   <script src="/app.js" defer></script>
 </body>
 </html>`;
@@ -819,7 +819,7 @@ const page = ({ locale, t }) => `<!doctype html>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="preload" href="/assets/logo-mark-192.png" as="image">
-  <link rel="stylesheet" href="/styles.css?v=20261116-15">
+  <link rel="stylesheet" href="/styles.css?v=20261116-18">
   <script type="application/ld+json">
   ${JSON.stringify({
     "@context": "https://schema.org",
