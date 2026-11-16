@@ -83,6 +83,14 @@ export const onRequestGet = async ({ env, request }) => {
 };
 
 export const onRequestPost = async ({ env, request }) => {
+  try {
+    return await importCsv({ env, request });
+  } catch (error) {
+    return json({ error: "csv_import_failed", message: String(error?.message || error) }, 500);
+  }
+};
+
+const importCsv = async ({ env, request }) => {
   const userId = await readAuthenticatedUserId(env, request.headers.get("cookie"));
   if (!userId) return json({ authenticated: false }, 401);
   const workspace = await env.DB.prepare("SELECT id FROM workspaces WHERE owner_id = ?").bind(userId).first();

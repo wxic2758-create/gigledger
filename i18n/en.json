@@ -296,6 +296,7 @@
     "navAria": "Ledger navigation",
     "nav": {
       "dashboard": "Dashboard",
+      "sources": "Sources",
       "fixed": "Fixed costs",
       "income": "Income",
       "how": "How it works"
@@ -394,6 +395,30 @@
       "invalidFile": "Choose a CSV file first.",
       "importFailed": "CSV import failed. Please check the file and try again.",
       "emptyFile": "The CSV file is empty."
+    },
+    "attentionQueue": {
+      "title": "What needs attention",
+      "kicker": "Today",
+      "empty": "Nothing needs attention right now.",
+      "noFixedCosts": "Add a fixed cost to calculate your Daily Floor.",
+      "noIncome": "Add this month's income to compare with your Daily Floor.",
+      "noCash": "Add cash on hand to calculate your no-new-work runway.",
+      "subscriptionReview": "{name} renews on {date}. Review it before the charge.",
+      "suggestedCancel": "{name} has been marked unused for two months. Review or cancel.",
+      "stripeNotConnected": "Connect a Stripe restricted key to import official income.",
+      "appStorePending": "Your App Store key is saved, but report sync is still not configured.",
+      "stripeError": "Stripe sync failed. Check the connection status.",
+      "review": "Review"
+    },
+    "dataSources": {
+      "title": "Data sources",
+      "heading": "Where your numbers come from.",
+      "subheading": "Connect official APIs when you want them. Keep manual entry and CSV in the ledger.",
+      "csvTitle": "CSV import / export",
+      "csvBody": "Use the same shared template for import and export. Failed rows are downloaded, and exported rows do not duplicate on re-import.",
+      "manualTitle": "Manual ledger entries",
+      "manualBody": "Income, fixed costs, and one-time expenses are entered in the ledger. Sources only add or move data into it.",
+      "ledgerLink": "Open ledger"
     },
     "fields": {
       "name": "Name",

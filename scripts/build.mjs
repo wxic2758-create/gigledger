@@ -25,6 +25,11 @@ const esc = (value = "") =>
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
 
+const cleanHtml = (value) => String(value)
+  .split("\n")
+  .map((line) => line.replace(/[ \t]+$/g, ""))
+  .join("\n");
+
 const icon = (name) => {
   const paths = {
     income:
@@ -395,7 +400,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
   <meta name="robots" content="noindex">
   <link rel="icon" href="/assets/favicon-32.png" sizes="32x32">
   <link rel="stylesheet" href="/styles.css?v=20261116-18">
-  <link rel="stylesheet" href="/proto.css?v=20261116-20">
+  <link rel="stylesheet" href="/proto.css?v=20261116-27">
 </head>
 <body class="${bodyClass}">
   <script type="application/json" id="proto-messages">${JSON.stringify(mode === "dashboard" ? { ...t.app, dashboard: t.dashboard } : t.app).replaceAll("</", "<\\/")}</script>
@@ -404,6 +409,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
       ${logo(locale.folder)}
       <nav class="desktop-nav app-nav" aria-label="${esc(t.app.navAria)}">
         <a href="#dashboard">${esc(t.app.nav.dashboard)}</a>
+        ${mode === "dashboard" ? `<a href="#sources">${esc(t.app.nav.sources)}</a>` : ""}
         <a href="#fixed-costs">${esc(t.app.nav.fixed)}</a>
         <a href="#income">${esc(t.app.nav.income)}</a>
         <a href="#how-it-works">${esc(t.app.nav.how)}</a>
@@ -418,6 +424,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
     </div>
     <nav class="mobile-nav" id="mobileNav" aria-label="${esc(t.app.navAria)}">
       <a href="#dashboard">${esc(t.app.nav.dashboard)}</a>
+      ${mode === "dashboard" ? `<a href="#sources">${esc(t.app.nav.sources)}</a>` : ""}
       <a href="#fixed-costs">${esc(t.app.nav.fixed)}</a>
       <a href="#income">${esc(t.app.nav.income)}</a>
       <a href="#how-it-works">${esc(t.app.nav.how)}</a>
@@ -496,62 +503,6 @@ const appPage = ({ locale, t, mode = "app" }) => {
         <span class="account-note">${esc(t.app.saveNote)}</span>
         <p class="form-message account-message" role="status" aria-live="polite" data-save-message hidden></p>
       </div>
-      ${mode === "dashboard" ? `
-      <section class="plan-panel" data-integration-panel>
-        <div class="plan-panel-head">
-          <div>
-            <p class="app-steps-kicker">${esc(t.app.integrations.kicker)}</p>
-            <h2>${esc(t.app.integrations.title)}</h2>
-            <p>${esc(t.app.integrations.body)}</p>
-          </div>
-          <div class="plan-panel-head-actions">
-            <span class="plan-badge" data-plan-badge>${esc(t.app.plan.free)}</span>
-            <span class="plan-upgrade-note" data-plan-upgrade>${esc(t.app.plan.upgradeNote)}</span>
-          </div>
-        </div>
-        <div class="integration-grid">
-          <form class="integration-form" data-stripe-form>
-            <h3>${esc(t.app.integrations.stripeTitle)}</h3>
-            <label><span>${esc(t.app.integrations.keyLabel)}</span><input name="secretKey" type="password" autocomplete="off" placeholder="rk_live_… or sk_live_…" required></label>
-            <label><span>${esc(t.app.integrations.accountLabel)}</span><input name="accountLabel" placeholder="${esc(t.app.integrations.accountPlaceholder)}"></label>
-            <p class="app-note">${esc(t.app.integrations.keyNote)}</p>
-            <button class="button button-dark" type="submit">${esc(t.app.integrations.connect)}</button>
-            <p class="form-message" data-stripe-message role="status" aria-live="polite" hidden></p>
-          </form>
-          <div class="integration-status" data-stripe-status>
-            <span>${esc(t.app.integrations.statusLabel)}</span>
-            <strong data-stripe-status-label>${esc(t.app.integrations.notConnected)}</strong>
-            <small data-stripe-sync-label></small>
-            <div class="integration-actions">
-              <button class="button button-ghost" type="button" data-stripe-sync disabled>${esc(t.app.integrations.sync)}</button>
-              <button class="button button-danger" type="button" data-stripe-disconnect disabled>${esc(t.app.integrations.disconnect)}</button>
-            </div>
-          </div>
-        </div>
-        <div class="integration-grid">
-          <form class="integration-form" data-app-store-form>
-            <h3>${esc(t.app.integrations.appStoreTitle)}</h3>
-            <p class="app-note">${esc(t.app.integrations.appStoreBody)}</p>
-            <label><span>${esc(t.app.integrations.issuerLabel)}</span><input name="issuerId" required></label>
-            <label><span>${esc(t.app.integrations.keyIdLabel)}</span><input name="keyId" required></label>
-            <label><span>${esc(t.app.integrations.privateKeyLabel)}</span><textarea name="privateKey" rows="5" required></textarea></label>
-            <p class="app-note">${esc(t.app.integrations.privateKeyNote)}</p>
-            <button class="button button-dark" type="submit">${esc(t.app.integrations.connectAppStore)}</button>
-            <p class="form-message" data-app-store-message role="status" aria-live="polite" hidden></p>
-          </form>
-          <div class="integration-status" data-app-store-status>
-            <span>${esc(t.app.integrations.statusLabel)}</span>
-            <strong data-app-store-status-label>${esc(t.app.integrations.notConnected)}</strong>
-            <small data-app-store-sync-label></small>
-            <small data-app-store-pending hidden>${esc(t.app.integrations.appStorePending)}</small>
-            <div class="integration-actions">
-              <button class="button button-ghost" type="button" data-app-store-sync disabled>${esc(t.app.integrations.syncAppStore)}</button>
-              <button class="button button-danger" type="button" data-app-store-disconnect disabled>${esc(t.app.integrations.disconnect)}</button>
-            </div>
-          </div>
-        </div>
-      </section>
-      ` : ""}
       <div class="weekly-summary" data-weekly-summary hidden>
         <div><span>${esc(t.app.weeklySummary.title)}</span><p data-weekly-text></p></div>
         <button class="text-link" type="button" data-weekly-dismiss>${esc(t.app.weeklySummary.dismiss)}</button>
@@ -609,6 +560,16 @@ const appPage = ({ locale, t, mode = "app" }) => {
       </section>
       ` : ""}
       ${mode === "dashboard" ? `
+      <section class="attention-queue" data-attention-queue aria-labelledby="attention-queue-title">
+        <div class="attention-head">
+          <p class="app-steps-kicker">${esc(t.app.attentionQueue.kicker)}</p>
+          <h2 id="attention-queue-title">${esc(t.app.attentionQueue.title)}</h2>
+        </div>
+        <ul class="attention-list" data-attention-list></ul>
+        <p class="attention-empty" data-attention-empty hidden>${esc(t.app.attentionQueue.empty)}</p>
+      </section>
+      ` : ""}
+      ${mode === "dashboard" ? `
       <div class="share-panel">
         <div class="share-cards">
           <article class="share-card" data-share-card="ai">
@@ -645,6 +606,92 @@ const appPage = ({ locale, t, mode = "app" }) => {
           .join("")}
       </ol>
     </section>
+
+    ${mode === "dashboard" ? `
+    <section class="app-section shell" id="sources">
+      <div class="app-section-head">
+        <p class="app-steps-kicker">${esc(t.app.dataSources.title)}</p>
+        <h2>${esc(t.app.dataSources.heading)}</h2>
+        <p>${esc(t.app.dataSources.subheading)}</p>
+      </div>
+      <div class="sources-grid">
+        <article class="source-card">
+          <h3>${esc(t.app.dataSources.manualTitle)}</h3>
+          <p>${esc(t.app.dataSources.manualBody)}</p>
+          <a class="button button-dark" href="#fixed-costs">${esc(t.app.dataSources.ledgerLink)}</a>
+        </article>
+        <article class="source-card">
+          <h3>${esc(t.app.csv.title)}</h3>
+          <p>${esc(t.app.dataSources.csvBody)}</p>
+          <div class="csv-actions">
+            <a class="button button-ghost" href="/api/workspace/csv?template=1" data-csv-pro>${esc(t.app.csv.template)}</a>
+            <a class="button button-ghost" href="/api/workspace/csv?export=income" data-csv-pro>${esc(t.app.csv.export)}</a>
+            <label class="button button-dark csv-import-button" data-csv-pro>
+              <input type="file" accept=".csv,text/csv" data-csv-import hidden>
+              <span data-csv-import-label>${esc(t.app.csv.import)}</span>
+            </label>
+            <p class="form-message" data-csv-message role="status" aria-live="polite" hidden></p>
+            <p class="form-message" data-csv-failed-message role="status" aria-live="polite" hidden><a href="#" download="gigledger-unimported.csv" data-csv-failed-download>${esc(t.app.csv.failedDownload)}</a></p>
+          </div>
+        </article>
+        <section class="plan-panel source-sync" data-integration-panel aria-labelledby="integration-title">
+          <div class="plan-panel-head">
+            <div>
+              <p class="app-steps-kicker">${esc(t.app.integrations.kicker)}</p>
+              <h2 id="integration-title">${esc(t.app.integrations.title)}</h2>
+              <p>${esc(t.app.integrations.body)}</p>
+            </div>
+            <div class="plan-panel-head-actions">
+              <span class="plan-badge" data-plan-badge>${esc(t.app.plan.free)}</span>
+              <span class="plan-upgrade-note" data-plan-upgrade>${esc(t.app.plan.upgradeNote)}</span>
+            </div>
+          </div>
+          <div class="integration-grid">
+            <form class="integration-form" id="stripe-connect" data-stripe-form>
+              <h3>${esc(t.app.integrations.stripeTitle)}</h3>
+              <label><span>${esc(t.app.integrations.keyLabel)}</span><input name="secretKey" type="password" autocomplete="off" placeholder="rk_live_… or sk_live_…" required></label>
+              <label><span>${esc(t.app.integrations.accountLabel)}</span><input name="accountLabel" placeholder="${esc(t.app.integrations.accountPlaceholder)}"></label>
+              <p class="app-note">${esc(t.app.integrations.keyNote)}</p>
+              <button class="button button-dark" type="submit">${esc(t.app.integrations.connect)}</button>
+              <p class="form-message" data-stripe-message role="status" aria-live="polite" hidden></p>
+            </form>
+            <div class="integration-status" data-stripe-status>
+              <span>${esc(t.app.integrations.statusLabel)}</span>
+              <strong data-stripe-status-label>${esc(t.app.integrations.notConnected)}</strong>
+              <small data-stripe-sync-label></small>
+              <div class="integration-actions">
+                <button class="button button-ghost" type="button" data-stripe-sync disabled>${esc(t.app.integrations.sync)}</button>
+                <button class="button button-danger" type="button" data-stripe-disconnect disabled>${esc(t.app.integrations.disconnect)}</button>
+              </div>
+            </div>
+          </div>
+          <div class="integration-grid">
+            <form class="integration-form" id="app-store-connect" data-app-store-form>
+              <h3>${esc(t.app.integrations.appStoreTitle)}</h3>
+              <p class="app-note">${esc(t.app.integrations.appStoreBody)}</p>
+              <label><span>${esc(t.app.integrations.issuerLabel)}</span><input name="issuerId" required></label>
+              <label><span>${esc(t.app.integrations.keyIdLabel)}</span><input name="keyId" required></label>
+              <label><span>${esc(t.app.integrations.privateKeyLabel)}</span><textarea name="privateKey" rows="5" required></textarea></label>
+              <p class="app-note">${esc(t.app.integrations.privateKeyNote)}</p>
+              <button class="button button-dark" type="submit">${esc(t.app.integrations.connectAppStore)}</button>
+              <p class="form-message" data-app-store-message role="status" aria-live="polite" hidden></p>
+            </form>
+            <div class="integration-status" data-app-store-status>
+              <span>${esc(t.app.integrations.statusLabel)}</span>
+              <strong data-app-store-status-label>${esc(t.app.integrations.notConnected)}</strong>
+              <small data-app-store-sync-label></small>
+              <small data-app-store-pending hidden>${esc(t.app.integrations.appStorePending)}</small>
+              <div class="integration-actions">
+                <button class="button button-ghost" type="button" data-app-store-sync disabled>${esc(t.app.integrations.syncAppStore)}</button>
+                <button class="button button-danger" type="button" data-app-store-disconnect disabled>${esc(t.app.integrations.disconnect)}</button>
+              </div>
+            </div>
+          </div>
+          <p class="integration-note">${esc(t.app.integrations.body)}</p>
+        </section>
+      </div>
+    </section>
+    ` : ""}
 
     <section class="app-section shell" id="projects">
       <div class="app-section-head">
@@ -715,17 +762,6 @@ const appPage = ({ locale, t, mode = "app" }) => {
         <p>${esc(t.app.income.body)}</p>
       </div>
       <div class="app-grid">
-        <div class="csv-actions">
-          <h3>${esc(t.app.csv.title)}</h3>
-          <a class="button button-ghost" href="/api/workspace/csv?template=1" data-csv-pro>${esc(t.app.csv.template)}</a>
-          <a class="button button-ghost" href="/api/workspace/csv?export=income" data-csv-pro>${esc(t.app.csv.export)}</a>
-          <label class="button button-dark csv-import-button" data-csv-pro>
-            <input type="file" accept=".csv,text/csv" data-csv-import hidden>
-            <span data-csv-import-label>${esc(t.app.csv.import)}</span>
-          </label>
-          <p class="form-message" data-csv-message role="status" aria-live="polite" hidden></p>
-          <p class="form-message" data-csv-failed-message role="status" aria-live="polite" hidden><a href="#" download="gigledger-unimported.csv" data-csv-failed-download>${esc(t.app.csv.failedDownload)}</a></p>
-        </div>
         <form class="app-form app-settings-form" data-proto-form="settings" novalidate>
           <label><span>${esc(t.app.taxRateLabel)}</span><input name="taxReserveRate" type="number" min="0" max="100" step="0.1" placeholder="${esc(t.app.taxRatePlaceholder)}"></label>
           <label><span>${esc(t.app.appleFeeLabel)}</span><select name="appleFeeRate"><option value="">${esc(t.app.appleFeeUnset)}</option><option value="15">15%</option><option value="30">30%</option></select></label>
@@ -785,7 +821,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
       <a href="/${t.alternatePath}app">${esc(t.nav.switchTo)}</a>
     </div>
   </footer>
-  <script src="/app-ledger.js?v=20261116-20" defer></script>
+  <script src="/app-ledger.js?v=20261116-27" defer></script>
   <script src="/app.js" defer></script>
 </body>
 </html>`;
@@ -861,9 +897,9 @@ for (const locale of locales) {
     legalPage({ locale, t, type: "disclaimer" }),
   );
   await mkdir(join(folder, "app"), { recursive: true });
-  await writeFile(join(folder, "app", "index.html"), appPage({ locale, t }));
+  await writeFile(join(folder, "app", "index.html"), cleanHtml(appPage({ locale, t })));
   await mkdir(join(folder, "dashboard"), { recursive: true });
-  await writeFile(join(folder, "dashboard", "index.html"), appPage({ locale, t, mode: "dashboard" }));
+  await writeFile(join(folder, "dashboard", "index.html"), cleanHtml(appPage({ locale, t, mode: "dashboard" })));
 }
 
 await writeFile(

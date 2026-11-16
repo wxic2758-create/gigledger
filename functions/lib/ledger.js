@@ -152,7 +152,9 @@ export const normalizeDraft = async (input) => {
     const merchant = text(item?.merchant, 120);
     const notes = text(item?.notes, 300);
     const externalRef = text(item?.externalRef, 160);
-    const expenseProjects = Array.isArray(item?.projects) ? item.projects : [];
+    const expenseProjects = Array.isArray(item?.projects)
+      ? item.projects
+      : (item?.project ? [item.project] : []);
     if (!category || !occurredOn || !finite(amount) || !finite(businessUse) || businessUse > 100) continue;
     normalizedExpenses.push({
       externalRef: externalRef || await hash(`${occurredOn}|${category}|${merchant || ""}|${amount}|${businessUse}`),
@@ -376,6 +378,15 @@ export const saveWorkspaceDraft = async (env, workspaceId, draft) => {
   const timestamp = new Date().toISOString();
   const statements = [];
   const db = env.DB;
+  const data = draft && typeof draft === "object" ? draft : {};
+  const taxReserveRate = data.taxReserveRate ?? null;
+  const appleFeeRate = data.appleFeeRate ?? null;
+  const appleFeeRateProvided = Boolean(data.appleFeeRateProvided);
+  const cashOnHand = data.cashOnHand ?? null;
+  const projects = Array.isArray(data.projects) ? data.projects : [];
+  const fixedCosts = Array.isArray(data.fixedCosts) ? data.fixedCosts : [];
+  const income = Array.isArray(data.income) ? data.income : [];
+  const expenses = Array.isArray(data.expenses) ? data.expenses : [];
 
   statements.push(db.prepare(
     `UPDATE workspaces
@@ -386,22 +397,22 @@ export const saveWorkspaceDraft = async (env, workspaceId, draft) => {
          updated_at = ?
      WHERE id = ?`,
   ).bind(
-    draft.taxReserveRate,
-    draft.appleFeeRateProvided ? 1 : 0,
-    draft.appleFeeRate,
-    draft.cashOnHand,
-    draft.cashOnHand,
-    draft.cashOnHand === null ? null : timestamp,
+    taxReserveRate,
+    appleFeeRateProvided ? 1 : 0,
+    appleFeeRate,
+    cashOnHand,
+    cashOnHand,
+    cashOnHand === null ? null : timestamp,
     timestamp,
     workspaceId,
   ));
 
   const projectNames = new Map();
-  for (const project of draft.projects || []) {
+  for (const project of projects) {
     const key = String(project.name || "").trim().toLowerCase();
     if (key) projectNames.set(key, project.name);
   }
-  for (const item of [...(draft.fixedCosts || []), ...(draft.income || []), ...(draft.expenses || [])]) {
+  for (const item of [...fixedCosts, ...income, ...expenses]) {
     for (const projectName of item.projects || []) {
       const key = String(projectName || "").trim().toLowerCase();
       if (key) projectNames.set(key, projectName);
@@ -448,7 +459,7 @@ export const saveWorkspaceDraft = async (env, workspaceId, draft) => {
   ).bind(workspaceId).all();
   const fixedIdByRef = new Map((existingFixed.results || []).map((row) => [row.external_ref, row.id]));
 
-  for (const item of draft.fixedCosts) {
+  for (const item of fixedCosts) {
     const fixedCostId = fixedIdByRef.get(item.externalRef) || crypto.randomUUID();
     const projectJson = item.allocation?.length
       ? JSON.stringify(item.allocation)
@@ -471,12 +482,12 @@ export const saveWorkspaceDraft = async (env, workspaceId, draft) => {
       projectJson,
       item.isSubscription ? 1 : 0,
       item.isSoftware ? 1 : 0,
-      item.templateKey,
-      item.productUrl,
-      item.manageUrl,
-      item.nextBillingDate,
-      item.startDate,
-      item.endDate,
+      item.templateKey ?? null,
+      item.productUrl ?? null,
+      item.manageUrl ?? null,
+      item.nextBillingDate ?? null,
+      item.startDate ?? null,
+      item.endDate ?? null,
       timestamp,
       timestamp,
     ));
@@ -488,8 +499,8 @@ export const saveWorkspaceDraft = async (env, workspaceId, draft) => {
     ).bind(
       crypto.randomUUID(),
       fixedCostId,
-      item.startDate,
-      item.endDate,
+      item.startDate ?? null,
+      item.endDate ?? null,
       item.amount,
       item.cycle,
       item.businessUse,
@@ -500,7 +511,7 @@ export const saveWorkspaceDraft = async (env, workspaceId, draft) => {
     fixedIdByRef.set(item.externalRef, fixedCostId);
   }
 
-  for (const item of draft.expenses) {
+  for (const item of expenses) {
     statements.push(db.prepare(
       `INSERT INTO expenses
         (id, workspace_id, external_ref, occurred_on, category, merchant, amount, business_use, notes, source, project_id, created_at, updated_at)
@@ -515,13 +526,13 @@ export const saveWorkspaceDraft = async (env, workspaceId, draft) => {
       item.merchant,
       item.amount,
       item.businessUse,
-      item.notes,
+      item.notes ?? null,
       timestamp,
       timestamp,
     ));
   }
 
-  for (const item of draft.income) {
+  for (const item of income) {
     statements.push(db.prepare(
       `INSERT INTO income_entries
         (id, workspace_id, external_ref, occurred_on, source, client_name, amount, platform_fee,
@@ -537,10 +548,10 @@ export const saveWorkspaceDraft = async (env, workspaceId, draft) => {
       item.clientName,
       item.amount,
       item.platformFee,
-      item.saleDate,
-      item.recognition,
-      item.payoutStatus,
-      item.integrationId,
+      item.saleDate ?? null,
+      item.recognition ?? "received",
+      item.payoutStatus ?? null,
+      item.integrationId ?? null,
       timestamp,
       timestamp,
     ));
@@ -558,14 +569,14 @@ export const saveWorkspaceDraft = async (env, workspaceId, draft) => {
     await db.prepare(`UPDATE ${table} SET project_id = ? WHERE workspace_id = ? AND external_ref = ?`)
       .bind(projectId, workspaceId, item.externalRef).run();
   };
-  for (const item of draft.fixedCosts) {
+  for (const item of fixedCosts) {
     const projectJson = item.allocation?.length
       ? JSON.stringify(item.allocation)
       : (item.projects?.length ? JSON.stringify(item.projects) : null);
     await updateProject("fixed_costs", item, projectJson);
   }
-  for (const item of draft.income) await updateProject("income_entries", item);
-  for (const item of draft.expenses) await updateProject("expenses", item);
+  for (const item of income) await updateProject("income_entries", item);
+  for (const item of expenses) await updateProject("expenses", item);
 };
 
 export const loadWorkspace = async (db, workspaceId) => {

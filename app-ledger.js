@@ -5,6 +5,9 @@
   const dashboardMode = Boolean(document.querySelector("[data-dashboard]"));
   const state = { projects: [], fixedCosts: [], income: [], expenses: [], taxReserveRate: "", appleFeeRate: "", cashOnHand: "", features: { plan: "free", subscriptionLimit: 5, csv: false, sync: false, appStoreSync: false, subscriptionReview: false } };
   let editingFixedCostId = null;
+  let stripeIntegration = null;
+  let appStoreIntegration = null;
+  let integrationsLoaded = false;
 
   const currency = new Intl.NumberFormat(locale === "zh-TW" ? "zh-TW" : "en-US", {
     style: "currency", currency: "USD", maximumFractionDigits: 2,
@@ -297,6 +300,7 @@
     const shareDailyNode = document.querySelector("[data-share-daily]");
     if (shareDailyNode) shareDailyNode.textContent = dayMoney(result.dailyFloor);
     renderSubscriptionSummary(result.subscriptionSummary);
+    renderAttentionQueue(result);
     renderWeeklySummary(result);
   };
 
@@ -322,6 +326,72 @@
         : messages.subscriptionReview.summaryNone;
       suggestedNode.classList.toggle("is-warning", summary.suggestedCancel.length > 0);
     }
+  };
+
+  const renderAttentionQueue = (result) => {
+    const list = document.querySelector("[data-attention-list]");
+    const empty = document.querySelector("[data-attention-empty]");
+    if (!list || !empty || !dashboardMode) return;
+    const items = [];
+    const suggestedIds = new Set(result.subscriptionSummary.suggestedCancel.map((item) => item.id));
+    if (state.features.subscriptionReview) {
+      result.subscriptionSummary.dueSoon
+        .filter((item) => !suggestedIds.has(item.id))
+        .forEach((item) => {
+          items.push({
+            text: messages.attentionQueue.subscriptionReview
+              .replace("{name}", item.name)
+              .replace("{date}", item.nextBillingDate),
+            href: "#fixed-costs",
+            warning: true,
+          });
+        });
+      result.subscriptionSummary.suggestedCancel.forEach((item) => {
+        items.push({
+          text: messages.attentionQueue.suggestedCancel.replace("{name}", item.name),
+          href: "#fixed-costs",
+          warning: true,
+        });
+      });
+    }
+    if (!state.fixedCosts.length) {
+      items.push({ text: messages.attentionQueue.noFixedCosts, href: "#fixed-costs" });
+    }
+    if (!state.income.some((item) => isInCurrentMonth(item.date) && item.recognition !== "sold")) {
+      items.push({ text: messages.attentionQueue.noIncome, href: "#income" });
+    }
+    if (state.cashOnHand === "") {
+      items.push({ text: messages.attentionQueue.noCash, href: "#income" });
+    }
+    if (integrationsLoaded && stripeIntegration?.lastError) {
+      items.push({
+        text: messages.attentionQueue.stripeError,
+        href: "#stripe-connect",
+        warning: true,
+      });
+    }
+    if (integrationsLoaded && ["pending", "connected"].includes(appStoreIntegration?.status)) {
+      items.push({
+        text: messages.attentionQueue.appStorePending,
+        href: "#app-store-connect",
+      });
+    }
+    list.replaceChildren();
+    items.slice(0, 4).forEach((item) => {
+      const row = document.createElement("li");
+      if (item.warning) row.classList.add("is-warning");
+      const copy = document.createElement("span");
+      copy.className = "attention-copy";
+      copy.textContent = item.text;
+      const action = document.createElement("a");
+      action.className = "attention-action";
+      action.href = item.href;
+      action.textContent = messages.attentionQueue.review;
+      row.append(copy, action);
+      list.appendChild(row);
+    });
+    list.hidden = items.length === 0;
+    empty.hidden = items.length > 0;
   };
 
   const weekKey = () => {
@@ -367,16 +437,16 @@
     return card === "ai" ? result.aiMonthlyCosts : result.dailyFloor;
   };
 
-  const deleteButton = (type, id) => {
+  const deleteButton = (type, id, index = null) => {
     const cell = document.createElement("td");
-    if (!id) return cell;
     const button = document.createElement("button");
     button.type = "button";
     button.className = "entry-delete";
     button.textContent = messages.deleteEntry;
     button.setAttribute("data-delete-entry", "");
     button.setAttribute("data-entry-type", type);
-    button.setAttribute("data-entry-id", id);
+    if (id) button.setAttribute("data-entry-id", id);
+    if (index !== null) button.setAttribute("data-entry-index", String(index));
     cell.appendChild(button);
     return cell;
   };
@@ -621,7 +691,7 @@
       tbody.appendChild(row);
       return;
     }
-    state.income.forEach((item) => {
+    state.income.forEach((item, index) => {
       const row = document.createElement("tr");
       const net = (Number(item.amount) || 0) - (Number(item.platformFee) || 0);
       const dateCell = document.createElement("td"); dateCell.textContent = item.date;
@@ -634,7 +704,7 @@
       const amount = document.createElement("td"); amount.textContent = money(Number(item.amount));
       const fee = document.createElement("td"); fee.textContent = money(Number(item.platformFee));
       const netCell = document.createElement("td"); netCell.textContent = money(net);
-      row.append(dateCell, source, recognition, project, amount, fee, netCell, deleteButton("income", item.id));
+      row.append(dateCell, source, recognition, project, amount, fee, netCell, deleteButton("income", item.id, index));
       tbody.appendChild(row);
     });
   };
@@ -649,7 +719,7 @@
       tbody.appendChild(row);
       return;
     }
-    state.expenses.forEach((item) => {
+    state.expenses.forEach((item, index) => {
       const row = document.createElement("tr");
       const businessAmount = (Number(item.amount) || 0) * (Number(item.businessUse) || 0) / 100;
       const dateCell = document.createElement("td"); dateCell.textContent = item.date;
@@ -659,7 +729,7 @@
       const use = document.createElement("td"); use.textContent = `${Number(item.businessUse)}%`;
       const business = document.createElement("td"); business.textContent = money(businessAmount);
       const project = projectCell(item);
-      row.append(dateCell, category, merchant, project, amount, use, business, deleteButton("expense", item.id));
+      row.append(dateCell, category, merchant, project, amount, use, business, deleteButton("expense", item.id, index));
       tbody.appendChild(row);
     });
   };
@@ -1193,6 +1263,12 @@
       node.setAttribute("aria-disabled", state.features.csv ? "false" : "true");
       node.title = state.features.csv ? "" : messages.plan.proRequiredCsv;
     });
+    document.querySelectorAll("[data-stripe-form] input, [data-stripe-form] button, [data-app-store-form] input, [data-app-store-form] textarea, [data-app-store-form] button")
+      .forEach((node) => {
+        node.disabled = node.closest("[data-stripe-form]")
+          ? !state.features.sync
+          : !state.features.appStoreSync;
+      });
     const reviewPanel = document.querySelector("[data-subscription-summary]");
     const reviewLocked = !state.features.subscriptionReview;
     reviewPanel?.classList.toggle("is-pro-locked", reviewLocked);
@@ -1286,10 +1362,13 @@
     const button = event.target.closest("[data-delete-entry]");
     if (!button || button.disabled) return;
     if (!window.confirm(messages.deleteEntryConfirm)) return;
-    if (!dashboardMode) {
+    if (!button.dataset.entryId) {
       const type = button.dataset.entryType;
       const key = type === "fixed-cost" ? "fixedCosts" : type === "income" ? "income" : "expenses";
-      state[key] = state[key].filter((item) => String(item.id) !== button.dataset.entryId);
+      const index = Number(button.dataset.entryIndex);
+      state[key] = Number.isInteger(index) && index >= 0
+        ? state[key].filter((_, itemIndex) => itemIndex !== index)
+        : state[key];
       render();
       return;
     }
@@ -1398,7 +1477,7 @@
       refreshAppleFeeInput();
       refreshTaxInputs();
       render();
-      loadIntegrations();
+      await loadIntegrations();
     } catch {
       window.location.assign(`/${locale}/app`);
     }
@@ -1406,6 +1485,7 @@
 
   const integrationNodes = () => ({
     panel: document.querySelector("[data-integration-panel]"),
+    ready: Boolean(document.querySelector("[data-integration-panel]")?.querySelector("[data-app-store-form]")),
     badge: document.querySelector("[data-plan-badge]"),
     stripe: {
       form: document.querySelector("[data-stripe-form]"),
@@ -1425,16 +1505,14 @@
       pending: document.querySelector("[data-app-store-pending]"),
     },
   });
-  let stripeIntegration = null;
-  let appStoreIntegration = null;
-
   const renderIntegration = () => {
     const nodes = integrationNodes();
-    if (!nodes.panel) return;
+    if (!nodes.ready) return;
     if (nodes.badge) nodes.badge.textContent = state.features.plan === "pro" ? messages.plan.pro : messages.plan.free;
     const upgradeNote = document.querySelector("[data-plan-upgrade]");
     if (upgradeNote) upgradeNote.hidden = state.features.plan === "pro";
-    const stripeConnected = stripeIntegration?.status === "connected";
+    const stripeConnected = ["connected", "pending", "error"].includes(stripeIntegration?.status);
+    const stripeReady = stripeIntegration?.status === "connected";
     const stripeNodes = nodes.stripe;
     if (stripeNodes.statusLabel) stripeNodes.statusLabel.textContent = stripeConnected ? messages.integrations.connected : messages.integrations.notConnected;
     if (stripeNodes.syncLabel) {
@@ -1444,7 +1522,7 @@
           ? messages.integrations.lastSync.replace("{date}", stripeIntegration.lastSyncAt.slice(0, 10))
           : messages.integrations.neverSynced;
     }
-    if (stripeNodes.sync) stripeNodes.sync.disabled = !stripeConnected || !state.features.sync;
+    if (stripeNodes.sync) stripeNodes.sync.disabled = !stripeReady || !state.features.sync;
     if (stripeNodes.disconnect) stripeNodes.disconnect.disabled = !stripeConnected;
     const formInputs = stripeNodes.form ? [...stripeNodes.form.elements] : [];
     formInputs.forEach((node) => { node.disabled = !state.features.sync; });
@@ -1464,6 +1542,7 @@
     if (appStoreNodes.disconnect) appStoreNodes.disconnect.disabled = !appStoreConnected;
     const appStoreFormInputs = appStoreNodes.form ? [...appStoreNodes.form.elements] : [];
     appStoreFormInputs.forEach((node) => { node.disabled = !state.features.appStoreSync; });
+    renderAttentionQueue(calculate());
   };
 
   const showIntegrationMessage = (message, isError = false, provider = "stripe") => {
@@ -1483,10 +1562,14 @@
       if (data.features) state.features = data.features;
       stripeIntegration = (data.integrations || []).find((item) => item.type === "stripe") || null;
       appStoreIntegration = (data.integrations || []).find((item) => item.type === "app_store") || null;
-      renderIntegration();
+      integrationsLoaded = true;
+      renderPlanLimits();
+      if (integrationNodes().ready) renderIntegration();
+      else renderAttentionQueue(calculate());
       if (stripeIntegration?.lastError) showIntegrationMessage(messages.integrations.syncFailed.replace("{error}", stripeIntegration.lastError), true);
       if (appStoreIntegration?.lastError) showIntegrationMessage(messages.integrations.appStoreSyncUnavailable, true, "appStore");
     } catch {
+      integrationsLoaded = true;
       renderIntegration();
       showIntegrationMessage(messages.integrations.loadFailed, true);
     }

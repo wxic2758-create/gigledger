@@ -296,6 +296,7 @@
     "navAria": "帳本導覽",
     "nav": {
       "dashboard": "儀表板",
+      "sources": "資料來源",
       "fixed": "固定成本",
       "income": "收入",
       "how": "運作方式"
@@ -394,6 +395,30 @@
       "invalidFile": "請先選擇一個 CSV 檔案。",
       "importFailed": "CSV 匯入失敗。請檢查檔案後再試一次。",
       "emptyFile": "CSV 檔案是空的。"
+    },
+    "attentionQueue": {
+      "title": "需要處理的事項",
+      "kicker": "今天",
+      "empty": "目前沒有需要處理的事項。",
+      "noFixedCosts": "新增固定成本，才能計算每日底線。",
+      "noIncome": "新增本月收入，才能和每日底線比較。",
+      "noCash": "新增手頭現金，才能計算不接新單的跑道。",
+      "subscriptionReview": "{name} 將於 {date} 扣款，請先確認是否續用。",
+      "suggestedCancel": "{name} 已連續兩個月標為沒用，請檢查或取消。",
+      "stripeNotConnected": "連結 Stripe 受限金鑰，即可匯入官方收入。",
+      "appStorePending": "你的 App Store 金鑰已保存，但報告同步尚未設定。",
+      "stripeError": "Stripe 同步失敗，請檢查連接狀態。",
+      "review": "檢查"
+    },
+    "dataSources": {
+      "title": "資料來源",
+      "heading": "你的數字從哪裡來。",
+      "subheading": "需要時再連接官方 API。手動輸入和 CSV 仍在帳本中。",
+      "csvTitle": "CSV 匯入 / 匯出",
+      "csvBody": "匯入與匯出使用同一份模板。失敗列可以下載，匯出後重新匯入不會重複。",
+      "manualTitle": "手動帳本輸入",
+      "manualBody": "收入、固定成本與一次性支出在帳本中輸入。資料來源只負責把資料帶進來。",
+      "ledgerLink": "開啟帳本"
     },
     "fields": {
       "name": "名稱",
