@@ -28,6 +28,12 @@ const locale = (request) => {
 
 const now = () => new Date().toISOString();
 const newId = () => crypto.randomUUID();
+const AUTH_STATE_TTL_MS = 10 * 60 * 1000;
+
+const pruneExpiredAuthStates = async (db) => {
+  const cutoff = new Date(Date.now() - AUTH_STATE_TTL_MS).toISOString();
+  await db.prepare("DELETE FROM auth_states WHERE created_at < ?").bind(cutoff).run();
+};
 
 const ensureWorkspace = async (db, ownerId) => {
   const existing = await db.prepare("SELECT id FROM workspaces WHERE owner_id = ?").bind(ownerId).first();
@@ -84,6 +90,7 @@ export const onRequestGet = async ({ env, request }) => {
   if (await readAuthenticatedUserId(env, request.headers.get("cookie"))) {
     return Response.redirect(`${SITE_URL}/${authLocale}/dashboard`, 302);
   }
+  await pruneExpiredAuthStates(env.DB);
   const state = newId() + newId();
   await env.DB.prepare(
     "INSERT INTO auth_states (state, intent, locale, draft_json, created_at) VALUES (?, 'signin', ?, NULL, ?)",
@@ -131,6 +138,7 @@ export const onRequestPost = async ({ env, request }) => {
       });
     }
   }
+  await pruneExpiredAuthStates(env.DB);
   const state = newId() + newId();
   await env.DB.prepare(
     "INSERT INTO auth_states (state, intent, locale, draft_json, created_at) VALUES (?, 'save', ?, ?, ?)",
