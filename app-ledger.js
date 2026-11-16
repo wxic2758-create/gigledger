@@ -1428,6 +1428,8 @@
     const nodes = integrationNodes();
     if (!nodes.panel) return;
     if (nodes.badge) nodes.badge.textContent = state.features.plan === "pro" ? messages.plan.pro : messages.plan.free;
+    const upgradeNote = document.querySelector("[data-plan-upgrade]");
+    if (upgradeNote) upgradeNote.hidden = state.features.plan === "pro";
     const stripeConnected = stripeIntegration?.status === "connected";
     const stripeNodes = nodes.stripe;
     if (stripeNodes.statusLabel) stripeNodes.statusLabel.textContent = stripeConnected ? messages.integrations.connected : messages.integrations.notConnected;

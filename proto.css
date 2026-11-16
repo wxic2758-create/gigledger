@@ -356,6 +356,8 @@
 .plan-panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
 .plan-panel-head h2 { margin-top: 7px; font-family: var(--display); font-size: clamp(24px, 3vw, 32px); letter-spacing: -.04em; }
 .plan-panel-head p:not(.app-steps-kicker) { max-width: 66ch; margin-top: 8px; color: var(--ink-soft); }
+.plan-panel-head-actions { display: grid; justify-items: end; gap: 7px; flex: 0 0 auto; }
+.plan-upgrade-note { max-width: 24ch; color: var(--ink-soft); font-size: 10px; line-height: 1.4; text-align: right; }
 .plan-badge {
   flex: 0 0 auto; padding: 7px 11px; border: 1px solid var(--ink); border-radius: 999px;
   font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
@@ -383,6 +385,8 @@
 .integration-form .form-message { margin: 0; }
 @media (max-width: 760px) {
   .plan-panel-head { flex-direction: column; }
+  .plan-panel-head-actions { justify-items: start; }
+  .plan-upgrade-note { max-width: 36ch; text-align: left; }
   .integration-grid { grid-template-columns: 1fr; }
   .subscription-summary-grid { grid-template-columns: 1fr; }
 }

@@ -639,7 +639,8 @@
       "pro": "Pro 版",
       "limitReached": "免費版最多 {limit} 個訂閱。升級功能稍後開放；已輸入的資料仍會保留。",
       "proRequiredCsv": "CSV 匯入與匯出是 Pro 功能，價格將在封閉測試後公佈。",
-      "proRequiredReview": "訂閱提醒是 Pro 功能，價格將在封閉測試後公佈。"
+      "proRequiredReview": "訂閱提醒是 Pro 功能，價格將在封閉測試後公佈。",
+      "upgradeNote": "封測期間價格未定。免費版包含 5 個訂閱；Pro 解鎖 CSV、Stripe 同步、訂閱體檢與 App Store 金鑰儲存。"
     },
     "projects": {
       "title": "專案一覽",

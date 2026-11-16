@@ -504,7 +504,10 @@ const appPage = ({ locale, t, mode = "app" }) => {
             <h2>${esc(t.app.integrations.title)}</h2>
             <p>${esc(t.app.integrations.body)}</p>
           </div>
-          <span class="plan-badge" data-plan-badge>${esc(t.app.plan.free)}</span>
+          <div class="plan-panel-head-actions">
+            <span class="plan-badge" data-plan-badge>${esc(t.app.plan.free)}</span>
+            <span class="plan-upgrade-note" data-plan-upgrade>${esc(t.app.plan.upgradeNote)}</span>
+          </div>
         </div>
         <div class="integration-grid">
           <form class="integration-form" data-stripe-form>
@@ -782,7 +785,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
       <a href="/${t.alternatePath}app">${esc(t.nav.switchTo)}</a>
     </div>
   </footer>
-  <script src="/app-ledger.js?v=20261116-16" defer></script>
+  <script src="/app-ledger.js?v=20261116-17" defer></script>
   <script src="/app.js" defer></script>
 </body>
 </html>`;

@@ -639,7 +639,8 @@
       "pro": "Pro plan",
       "limitReached": "Free plans include up to {limit} subscriptions. Upgrade is coming later; existing entries stay available.",
       "proRequiredCsv": "CSV import and export are a Pro feature. Pricing is available after private beta.",
-      "proRequiredReview": "Subscription reminders are a Pro feature. Pricing is available after private beta."
+      "proRequiredReview": "Subscription reminders are a Pro feature. Pricing is available after private beta.",
+      "upgradeNote": "Pricing is TBD during private beta. Free includes 5 subscriptions; Pro unlocks CSV, Stripe sync, subscription reviews, and App Store key storage."
     },
     "projects": {
       "title": "Projects",
