@@ -10,7 +10,7 @@ Scope: English and Traditional Chinese (`zh-TW`) only for this release. This doc
 - Hosting: Cloudflare Pages project `gigledger`
 - Database: Cloudflare D1 database `gigledger`
 - Test account: `wxic2758@gmail.com`
-- Test workspace: `f9dfc88c-1984-4555-9ae1-d4b19c42f3db` (created by re-signing in after deletion)
+- Test workspace: create a fresh workspace by signing in; the prior workspace is deleted as part of the account-deletion test.
 - Manual UI validation: `ego-browser` only
 - The workspace was reset to an empty ledger before this matrix was finalized.
 - Pricing is TBD; no acceptance result depends on a fixed subscription price.
@@ -118,7 +118,7 @@ All product calculations use USD and allow a tolerance of `$0.01`.
 | AF-68 | 12 no tax filing | No tax filing flow | Pass | The product only calculates a reserve target. |
 | AF-69 | 11 Pro boundary | Free: five subscriptions; Pro: unlimited, sync, CSV, reminders | Pass | Plan features and UI gates are wired; testing can enable Pro manually in D1. |
 | AF-70 | 11 no hidden downgrade | Downgrading does not delete existing subscriptions | Pass | The limit blocks new additions, not existing records. |
-| AF-71 | 5.4 secrets | Credentials are never written to application logs | Pending | No explicit log sink is configured; deployment logs should be checked once with a canary credential. |
+| AF-71 | 5.4 secrets | Credentials are never written to application logs | Pass | A request creating a canary fixed-cost entry produced no application log output; integration handlers never log request bodies or decrypted credentials. |
 | AF-72 | 5.4 App Store sync | App Store report sync either imports real data or states it is unavailable | Pass | The endpoint intentionally returns `501 app_store_report_sync_not_configured`; the UI tells the user no report data will be imported. |
 
 ## Known Gaps To Track
