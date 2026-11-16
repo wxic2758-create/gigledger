@@ -111,7 +111,7 @@ All product calculations use USD and allow a tolerance of `$0.01`.
 | AF-61 | 7 hierarchy | Runway, profit breakdown, tax reserve, subscription summary, projects, details | Pass | Profit is a separate “Where the money went” breakdown with gross → fees → net → expenses → fixed costs → true profit; tax, subscription summary, projects, and details follow below. Verified in `en` and `zh-TW`. |
 | AF-62 | 6 onboarding CTA | Primary CTA opens the calculator; secondary CTA signs in with Google | Pass | Marketing hero links to `/en/app` and Google sign-in. |
 | AF-63 | 6 no waitlist | No waitlist email collection | Pass | No waitlist form or endpoint remains. |
-| AF-64 | 13 legal | Privacy explains Google email/name, D1 storage, export, and deletion | Pass | Privacy notice describes the current storage model. |
+| AF-64 | 13 legal | Privacy explains Google account data, D1 storage, integration credentials, export, and deletion | Pass | Privacy notice lists Google email/name, account identifier, optional avatar URL, short-lived OAuth draft, encrypted Stripe/App Store credentials, and the account-deletion scope. |
 | AF-65 | 13 legal | Tax disclaimer says user-set rate, estimate only, no filing | Pass | Disclaimer page and in-product copy match. |
 | AF-66 | 12 free tier | No paid Cloudflare plan or paid third-party inference is required | Pass | The deployment uses Cloudflare Pages, Functions, and D1 free-tier-compatible features. |
 | AF-67 | 12 no bank sync | No bank password collection or account scraping | Pass | No such fields or endpoints exist. |
@@ -128,7 +128,7 @@ These are real PRD gaps, not accepted excuses. They are listed here so the next 
 1. The App Store Connect key is encrypted and validated, but the report parser/sync remains intentionally unavailable. The UI must continue to say so.
 2. The weekly summary uses browser-local dismissal state. This is a UI preference, not ledger persistence; anonymous ledger data still stays in memory only.
 3. Marketing copy and SEO metadata should be rechecked against `docs/GigLedger-website-optimization.md` after every deployment.
-4. The legal pages still need the operating entity, contact details, retention period, processors, and final deletion workflow before general launch.
+4. The legal pages still need the operating entity, contact details, retention period, processors, and final deletion workflow before general launch. Product data categories and deletion behavior are already disclosed from the implemented schema.
 
 ## Manual Regression Checklist
 
