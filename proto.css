@@ -109,6 +109,7 @@
   font-size: 13px; white-space: nowrap;
 }
 .app-table-wrap th { font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); }
+.app-table-wrap tbody tr.is-editing { background: #fff8df; }
 .app-table-wrap td:last-child { font-family: var(--display); font-weight: 800; }
 .app-table-wrap td:has(.entry-delete) { font-family: inherit; font-weight: 600; }
 .app-table-wrap td:last-child:has(.entry-delete) { font-family: inherit; font-weight: 600; }
@@ -118,6 +119,23 @@
 }
 .entry-delete:hover { background: #b42318; color: white; }
 .entry-delete:disabled { opacity: .6; cursor: not-allowed; }
+.entry-controls { display: flex; flex-wrap: wrap; gap: 6px; }
+.entry-edit,
+.fixed-form-actions .button {
+  min-height: 32px;
+}
+.entry-edit {
+  padding-inline: 10px; border: 1px solid var(--ink); border-radius: 8px;
+  color: var(--ink); background: var(--paper); font-size: 11px; font-weight: 700; cursor: pointer;
+}
+.entry-edit:hover { background: var(--yellow); }
+.entry-edit:disabled { opacity: .6; cursor: not-allowed; }
+.fixed-form-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.fixed-form-actions .button { margin-top: 0; }
+.fixed-form-actions .button-ghost {
+  border-color: var(--line); color: var(--ink); background: var(--white);
+}
+.form-message.is-error { color: #b42318; }
 .app-note { margin-top: 14px; font-size: 11px; color: var(--ink-soft); }
 .app-nav a { opacity: .9; }
 .app-proto .site-header { position: relative; }

@@ -4,6 +4,7 @@
   const messages = JSON.parse(document.getElementById("proto-messages").textContent);
   const dashboardMode = Boolean(document.querySelector("[data-dashboard]"));
   const state = { projects: [], fixedCosts: [], income: [], expenses: [], taxReserveRate: "", cashOnHand: "", features: { plan: "free", subscriptionLimit: 5, csv: false, sync: false, subscriptionReview: false } };
+  let editingFixedCostId = null;
 
   const currency = new Intl.NumberFormat(locale === "zh-TW" ? "zh-TW" : "en-US", {
     style: "currency", currency: "USD", maximumFractionDigits: 2,
@@ -19,6 +20,18 @@
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
   };
   const today = () => localDate();
+  const previousDate = (value) => {
+    const parsed = new Date(`${value}T00:00:00Z`);
+    if (Number.isNaN(parsed.getTime())) return "";
+    parsed.setUTCDate(parsed.getUTCDate() - 1);
+    return parsed.toISOString().slice(0, 10);
+  };
+  const nextDate = (value) => {
+    const parsed = new Date(`${value}T00:00:00Z`);
+    if (Number.isNaN(parsed.getTime())) return "";
+    parsed.setUTCDate(parsed.getUTCDate() + 1);
+    return parsed.toISOString().slice(0, 10);
+  };
   const set = (key, value) => {
     const node = document.querySelector(`[data-proto="${key}"]`);
     if (node) node.textContent = value;
@@ -75,6 +88,37 @@
     return days ? { average: total / days, monthCount: months.length } : null;
   };
 
+  const effectiveVersionAt = (versions, value) => [...(versions || [])]
+    .filter((version) => version.effectiveFrom <= value)
+    .sort((left, right) => right.effectiveFrom.localeCompare(left.effectiveFrom))[0] || null;
+
+  const effectiveVersionForItem = (item, value = today()) => effectiveVersionAt(item.versions, value) || {
+    effectiveFrom: item.startDate || value,
+    effectiveTo: item.endDate || null,
+    amount: item.amount,
+    cycle: item.cycle,
+    businessUse: item.businessUse,
+    allocation: item.allocation || [],
+  };
+
+  const currentVersion = (item) => effectiveVersionAt(item.versions, today());
+
+  const versionValue = (item, key, fallback) => {
+    const version = currentVersion(item);
+    return version && version[key] !== undefined && version[key] !== null ? version[key] : fallback;
+  };
+
+  const versionAllocation = (item) => {
+    const version = currentVersion(item);
+    return version?.allocation?.length ? version.allocation : (item.allocation || []);
+  };
+
+  const monthlyAmountForVersion = (version) => {
+    const multiplier = cycles.find((cycle) => cycle.value === version?.cycle)?.multiplier || 0;
+    return (Number(version?.amount) || 0) * multiplier / 12
+      * (Number(version?.businessUse) || 0) / 100;
+  };
+
   const activeDaysInMonth = (item, date = new Date()) => {
     const daysInMonth = monthDayCount(date);
     const first = `${monthKey(date)}-01`;
@@ -94,8 +138,7 @@
     };
     const dailyFloor = state.fixedCosts.reduce((sum, item) => sum + (
       active(item)
-        ? (Number(item.amount) || 0) * (Number(item.multiplier) || 0)
-          * (Number(item.businessUse) || 0) / 100 / 365
+        ? monthlyAmountForVersion(effectiveVersionForItem(item)) * 12 / 365
         : 0
     ), 0);
     const monthIncomeEntries = state.income.filter((item) => isInCurrentMonth(item.date));
@@ -103,14 +146,23 @@
     const platformFees = monthIncomeEntries.reduce((sum, item) => sum + (Number(item.platformFee) || 0), 0);
     const netIncome = grossIncome - platformFees;
     const currentMonthDays = monthDayCount();
-    const monthlyFixedCosts = state.fixedCosts.reduce(
-      (sum, item) => sum + (
-        (Number(item.amount) || 0) * (Number(item.multiplier) || 0) / 12
-          * (Number(item.businessUse) || 0) / 100
-          * activeDaysInMonth(item) / currentMonthDays
-      ),
-      0,
-    );
+    const monthlyFixedCosts = state.fixedCosts.reduce((sum, item) => {
+      const monthStart = `${monthKey()}-01`;
+      const monthEnd = `${monthKey()}-${String(currentMonthDays).padStart(2, "0")}`;
+      const overlap = (item.versions || []).filter((version) => version.effectiveFrom <= monthEnd
+        && (!version.effectiveTo || version.effectiveTo >= monthStart));
+      if (!overlap.length) {
+        return sum + monthlyAmountForVersion(effectiveVersionForItem(item))
+          * activeDaysInMonth(item) / currentMonthDays;
+      }
+      return sum + overlap.reduce((versionSum, version) => {
+        const versionStart = version.effectiveFrom > monthStart ? version.effectiveFrom : monthStart;
+        const versionEnd = version.effectiveTo && version.effectiveTo < monthEnd ? version.effectiveTo : monthEnd;
+        if (versionStart > versionEnd) return versionSum;
+        const days = Math.floor((new Date(`${versionEnd}T00:00:00`) - new Date(`${versionStart}T00:00:00`)) / 86400000) + 1;
+        return versionSum + monthlyAmountForVersion(version) * days / currentMonthDays;
+      }, 0);
+    }, 0);
     const monthlyExpenses = state.expenses
       .filter((item) => isInCurrentMonth(item.date))
       .reduce((sum, item) => sum + (Number(item.amount) || 0) * (Number(item.businessUse) || 0) / 100, 0);
@@ -142,8 +194,9 @@
       cashNotBurning: netBurn !== null && netBurn <= 0,
       subscriptionSummary: subscriptionSummary(),
       aiMonthlyCosts: state.fixedCosts.filter((item) => item.isSubscription && active(item)).reduce(
-        (sum, item) => sum + (Number(item.amount) || 0) * (Number(item.multiplier) || 0) / 12
-          * (Number(item.businessUse) || 0) / 100, 0,
+        (sum, item) => sum + (Number(versionValue(item, "amount", item.amount)) || 0)
+          * (Number(cycles.find((cycle) => cycle.value === versionValue(item, "cycle", item.cycle))?.multiplier) || 0) / 12
+          * (Number(versionValue(item, "businessUse", item.businessUse)) || 0) / 100, 0,
       ),
     };
   };
@@ -303,6 +356,19 @@
     return cell;
   };
 
+  const editButton = (id) => {
+    const cell = document.createElement("td");
+    if (!id) return cell;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "entry-edit";
+    button.textContent = messages.fixedRevision.edit;
+    button.setAttribute("data-edit-fixed", "");
+    button.setAttribute("data-entry-id", id);
+    cell.appendChild(button);
+    return cell;
+  };
+
   const linkButton = (label, url) => {
     if (!url) return document.createTextNode("");
     const anchor = document.createElement("a");
@@ -337,8 +403,8 @@
 
   const projectCell = (item) => {
     const cell = document.createElement("td");
-    const allocation = item.allocation?.length
-      ? item.allocation
+    const allocation = versionAllocation(item).length
+      ? versionAllocation(item)
       : (item.projects?.length ? item.projects.map((name) => ({ name, percent: 100 })) : (item.project ? [{ name: item.project, percent: 100 }] : []));
     if (allocation.length) {
       cell.textContent = allocation.map((entry) => entry.percent === 100 ? entry.name : `${entry.name} ${entry.percent}%`).join(" · ");
@@ -370,10 +436,11 @@
       totals.costs[key] = (totals.costs[key] || 0) + businessAmount;
     }
     for (const item of state.fixedCosts) {
-      const monthlyBusiness = (Number(item.amount) || 0) * (Number(item.multiplier) || 0) / 12
-        * (Number(item.businessUse) || 0) / 100;
-      const allocation = item.allocation?.length
-        ? item.allocation
+      const monthlyBusiness = (Number(versionValue(item, "amount", item.amount)) || 0)
+        * (Number(cycles.find((cycle) => cycle.value === versionValue(item, "cycle", item.cycle))?.multiplier) || 0) / 12
+        * (Number(versionValue(item, "businessUse", item.businessUse)) || 0) / 100;
+      const allocation = versionAllocation(item).length
+        ? versionAllocation(item)
         : (item.projects?.length ? [{ name: item.projects[0], percent: 100 }] : []);
       if (!allocation.length) {
         totals.unassigned.costs += monthlyBusiness;
@@ -445,17 +512,23 @@
     }
     state.fixedCosts.forEach((item) => {
       const row = document.createElement("tr");
+      if (editingFixedCostId === item.id) row.classList.add("is-editing");
       const isSubscription = Boolean(item.isSubscription);
-      const cycleLabel = messages.cycles[item.cycle] || item.cycle;
+      const currentCycle = versionValue(item, "cycle", item.cycle);
+      const cycleLabel = messages.cycles[currentCycle] || currentCycle;
       const name = document.createElement("td"); name.textContent = item.name;
       const type = document.createElement("td"); type.textContent = isSubscription ? messages.fixed.subscription : messages.fixed.other;
       const cycle = document.createElement("td"); cycle.textContent = cycleLabel;
-      const amount = document.createElement("td"); amount.textContent = money(Number(item.amount));
-      const use = document.createElement("td"); use.textContent = `${Number(item.businessUse)}%`;
+      const currentAmount = Number(versionValue(item, "amount", item.amount));
+      const currentBusinessUse = Number(versionValue(item, "businessUse", item.businessUse));
+      const amount = document.createElement("td"); amount.textContent = money(currentAmount);
+      const use = document.createElement("td"); use.textContent = `${currentBusinessUse}%`;
       const effective = document.createElement("td");
-      effective.textContent = item.startDate ? `${item.startDate}${item.endDate ? ` – ${item.endDate}` : ""}` : "";
+      const currentVersionDate = currentVersion(item)?.effectiveFrom || item.startDate;
+      effective.textContent = currentVersionDate ? `${currentVersionDate}${item.endDate ? ` – ${item.endDate}` : ""}` : "";
       const cost = document.createElement("td");
-      cost.textContent = dayMoney(Number(item.amount) * Number(item.multiplier) * Number(item.businessUse) / 100 / 365);
+      const currentMultiplier = cycles.find((entry) => entry.value === currentCycle)?.multiplier || 0;
+      cost.textContent = dayMoney(currentAmount * currentMultiplier * currentBusinessUse / 100 / 365);
       const project = projectCell(item);
       const actions = document.createElement("td");
       if (isSubscription) {
@@ -478,7 +551,7 @@
             reminder.className = "review-hint";
             reminder.textContent = messages.subscriptionReview.upcoming
               .replace("{date}", item.nextBillingDate)
-              .replace("{amount}", money(Number(item.amount)));
+              .replace("{amount}", money(currentAmount));
             review.append(reminder);
           }
         }
@@ -502,7 +575,12 @@
         review.append(hint);
         actions.append(review);
       }
-      row.append(name, type, cycle, amount, use, project, effective, linkCell(item), cost, actions, deleteButton("fixed-cost", item.id));
+      const controls = document.createElement("td");
+      controls.className = "entry-controls";
+      const editCell = editButton(item.id);
+      const deleteCell = deleteButton("fixed-cost", item.id);
+      controls.append(...editCell.childNodes, ...deleteCell.childNodes);
+      row.append(name, type, cycle, amount, use, project, effective, linkCell(item), cost, actions, controls);
       tbody.appendChild(row);
     });
   };
@@ -677,6 +755,46 @@
 
   const fixedForm = document.querySelector("[data-proto-form='fixed']");
   if (fixedForm) {
+    const revisionDate = fixedForm.querySelector("[data-revision-date]");
+    const revisionMessage = fixedForm.querySelector("[data-fixed-edit-message]");
+    const submitButton = fixedForm.querySelector("[data-fixed-submit]");
+    const cancelButton = fixedForm.querySelector("[data-fixed-cancel]");
+    const setRevisionMode = (item = null) => {
+      editingFixedCostId = item?.id || null;
+      revisionDate.hidden = !item;
+      cancelButton.hidden = !item;
+      submitButton.textContent = item ? messages.fixedRevision.save : messages.fixed.add;
+      revisionMessage.hidden = true;
+      if (item) {
+        fixedForm.elements.name.value = item.name;
+        fixedForm.elements.amount.value = String(versionValue(item, "amount", item.amount));
+        fixedForm.elements.cycle.value = versionValue(item, "cycle", item.cycle);
+        fixedForm.elements.businessUse.value = String(versionValue(item, "businessUse", item.businessUse));
+        fixedForm.elements.startDate.value = item.startDate || today();
+        fixedForm.elements.endDate.value = item.endDate || "";
+        fixedForm.elements.nextBillingDate.value = item.nextBillingDate || "";
+        fixedForm.elements.productUrl.value = item.productUrl || "";
+        fixedForm.elements.manageUrl.value = item.manageUrl || "";
+        fixedForm.elements.isSubscription.checked = Boolean(item.isSubscription);
+        fixedForm.elements.effectiveFrom.value = item.startDate || today();
+        fixedForm.elements.effectiveFrom.min = item.startDate || today();
+        resetAllocation();
+        versionAllocation(item).forEach((entry) => addAllocationRow(entry));
+      } else {
+        fixedForm.reset();
+        fixedForm.elements.startDate.value = today();
+        fixedForm.elements.businessUse.value = "100";
+        fixedForm.elements.cycle.value = "monthly";
+        resetAllocation();
+      }
+      const subscriptionFields = fixedForm.querySelector("[data-subscription-fields]");
+      if (subscriptionFields) subscriptionFields.hidden = !fixedForm.elements.isSubscription.checked;
+      fixedForm.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+    fixedForm.elements.isSubscription?.addEventListener("change", () => {
+      const subscriptionFields = fixedForm.querySelector("[data-subscription-fields]");
+      if (subscriptionFields) subscriptionFields.hidden = !fixedForm.elements.isSubscription.checked;
+    });
     document.querySelector("[data-allocation-add]")?.addEventListener("click", () => addAllocationRow());
     document.querySelector("[data-allocation-list]")?.addEventListener("input", updateAllocationTotal);
     document.addEventListener("click", (event) => {
@@ -685,7 +803,8 @@
       remove.closest(".allocation-row")?.remove();
       updateAllocationTotal();
     });
-    fixedForm.addEventListener("submit", (event) => {
+    cancelButton?.addEventListener("click", () => setRevisionMode());
+    fixedForm.addEventListener("submit", async (event) => {
       event.preventDefault();
       const data = new FormData(fixedForm);
       const selected = cycles.find((cycle) => cycle.value === data.get("cycle"));
@@ -694,6 +813,90 @@
       if (allocation.length && Math.abs(allocationTotal(allocation) - 100) > 0.01) {
         window.alert(messages.fields.allocationInvalid);
         updateAllocationTotal();
+        return;
+      }
+      if (editingFixedCostId) {
+        const effectiveFrom = String(data.get("effectiveFrom") || "");
+        const item = state.fixedCosts.find((cost) => cost.id === editingFixedCostId);
+        if (!effectiveFrom || (item?.startDate && effectiveFrom < item.startDate)) {
+          revisionMessage.textContent = messages.fixedRevision.invalidDate;
+          revisionMessage.classList.add("is-error");
+          revisionMessage.hidden = false;
+          return;
+        }
+        if (!dashboardMode) {
+          if (item) {
+            Object.assign(item, {
+              name: String(data.get("name") || ""),
+              amount: Number(data.get("amount")) || 0,
+              cycle: selected?.value || "monthly",
+              multiplier: selected?.multiplier || 12,
+              businessUse: Number(data.get("businessUse")) || 0,
+              isSubscription: data.get("isSubscription") === "on",
+              productUrl: String(data.get("productUrl") || "") || null,
+              manageUrl: String(data.get("manageUrl") || "") || null,
+              nextBillingDate: String(data.get("nextBillingDate") || "") || null,
+              projects: allocation.map((entry) => entry.name),
+              allocation,
+            });
+          }
+          setRevisionMode();
+          render();
+          return;
+        }
+        submitButton.disabled = true;
+        const original = submitButton.textContent;
+        submitButton.textContent = messages.saving;
+        try {
+          const response = await fetch("/api/workspace", {
+            method: "PUT",
+            headers: { "content-type": "application/json" },
+            credentials: "same-origin",
+            body: JSON.stringify({
+              fixedCostId: editingFixedCostId,
+              revision: {
+                fixedCostId: editingFixedCostId,
+                name: String(data.get("name") || ""),
+                amount: Number(data.get("amount")) || 0,
+                cycle: selected?.value || "monthly",
+                businessUse: Number(data.get("businessUse")) || 0,
+                effectiveFrom,
+                endDate: String(data.get("endDate") || "") || null,
+                isSubscription: data.get("isSubscription") === "on",
+                productUrl: String(data.get("productUrl") || "") || null,
+                manageUrl: String(data.get("manageUrl") || "") || null,
+                nextBillingDate: String(data.get("nextBillingDate") || "") || null,
+                allocation,
+              },
+            }),
+          });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok || !result.ledger) {
+            if (result.error === "subscription_limit") {
+              throw new Error(`subscription_limit:${result.limit || state.features.subscriptionLimit || 5}`);
+            }
+            throw new Error(result.error || "fixed_cost_update_failed");
+          }
+          applyLedger(result.ledger);
+          const settingsForm = document.querySelector('[data-proto-form="settings"]');
+          if (settingsForm) settingsForm.elements.cashOnHand.value = state.cashOnHand;
+          refreshTaxInputs();
+          setRevisionMode();
+          render();
+          revisionMessage.textContent = messages.fixedRevision.saved;
+          revisionMessage.classList.remove("is-error");
+          revisionMessage.hidden = false;
+        } catch (error) {
+          const [code, limit] = String(error?.message || "").split(":");
+          revisionMessage.textContent = code === "subscription_limit"
+            ? messages.fixedRevision.limitReached.replace("{limit}", limit || "5")
+            : messages.fixedRevision.failed;
+          revisionMessage.classList.add("is-error");
+          revisionMessage.hidden = false;
+        } finally {
+          submitButton.disabled = false;
+          submitButton.textContent = original;
+        }
         return;
       }
       state.fixedCosts.push({
@@ -719,6 +922,12 @@
       const subscriptionFields = document.querySelector("[data-subscription-fields]");
       if (subscriptionFields) subscriptionFields.hidden = true;
       render();
+    });
+    document.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-edit-fixed]");
+      if (!button) return;
+      const item = state.fixedCosts.find((cost) => cost.id === button.dataset.entryId);
+      if (item) setRevisionMode(item);
     });
   }
 
@@ -782,7 +991,7 @@
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           projects: state.projects.filter((project) => !project.archived),
-          fixedCosts: state.fixedCosts,
+          fixedCosts: state.fixedCosts.map(({ versions, reviews, id, ...item }) => item),
           income: state.income,
           expenses: state.expenses,
           taxReserveRate: state.taxReserveRate,
@@ -1242,6 +1451,7 @@
       startDate: item.startDate || "",
       endDate: item.endDate || "",
       reviews: item.reviews || [],
+      versions: item.versions || [],
       id: item.id,
     }));
     state.income = (ledger.income || []).map((item) => ({

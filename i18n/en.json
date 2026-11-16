@@ -350,6 +350,17 @@
       "manageSubscription": "Manage"
     },
     "fixedVersionNote": "Changes saved today use today as the effective date. Existing history is not recalculated.",
+    "fixedRevision": {
+      "edit": "Edit",
+      "title": "Record a new version",
+      "effectiveFrom": "Effective date",
+      "save": "Save new version",
+      "cancel": "Cancel edit",
+      "saved": "A new version was saved. Entries before the effective date keep their old values.",
+      "invalidDate": "The effective date cannot be earlier than this cost's start date.",
+      "failed": "Could not save this version. Please try again.",
+      "limitReached": "Free plans include up to {limit} subscriptions."
+    },
     "income": {
       "title": "Income",
       "body": "Record the payment amount and platform fee. The prototype uses these entries immediately.",

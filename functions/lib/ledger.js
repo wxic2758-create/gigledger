@@ -182,6 +182,158 @@ export const countNewSubscriptions = async (db, workspaceId, draft) => {
   return refs.filter((ref) => !existingRefs.has(ref)).length;
 };
 
+const previousDate = (value) => {
+  const parsed = new Date(`${value}T00:00:00Z`);
+  if (Number.isNaN(parsed.getTime())) return null;
+  parsed.setUTCDate(parsed.getUTCDate() - 1);
+  return parsed.toISOString().slice(0, 10);
+};
+
+export const saveFixedCostRevision = async (env, workspaceId, payload) => {
+  const db = env.DB;
+  const fixedCostId = text(payload?.fixedCostId, 80);
+  const effectiveFrom = date(payload?.effectiveFrom);
+  const amount = Number(payload?.amount);
+  const businessUse = Number(payload?.businessUse);
+  const cycle = cycles[payload?.cycle] ? payload.cycle : null;
+  const name = text(payload?.name);
+  if (!fixedCostId || !effectiveFrom || !name || !cycle || !finite(amount) || !finite(businessUse) || businessUse > 100) {
+    const error = new Error("invalid_request");
+    error.status = 400;
+    throw error;
+  }
+
+  const fixedCost = await db.prepare(
+    "SELECT id, start_date, is_subscription, template_key FROM fixed_costs WHERE id = ? AND workspace_id = ?",
+  ).bind(fixedCostId, workspaceId).first();
+  if (!fixedCost) {
+    const error = new Error("fixed_cost_not_found");
+    error.status = 404;
+    throw error;
+  }
+  if (fixedCost.start_date && effectiveFrom < fixedCost.start_date) {
+    const error = new Error("effective_date_before_start");
+    error.status = 400;
+    throw error;
+  }
+
+  const rawAllocation = Array.isArray(payload?.allocation) ? payload.allocation : [];
+  const allocation = rawAllocation
+    .map((entry) => ({ name: text(entry?.name, 80), percent: Number(entry?.percent) }))
+    .filter((entry) => entry.name && Number.isFinite(entry.percent) && entry.percent > 0 && entry.percent <= 100);
+  if (allocation.length && Math.abs(allocation.reduce((sum, entry) => sum + entry.percent, 0) - 100) > 0.01) {
+    const error = new Error("invalid_allocation");
+    error.status = 400;
+    throw error;
+  }
+
+  const isSubscription = Boolean(payload?.isSubscription);
+  if (isSubscription && !fixedCost.is_subscription) {
+    const workspace = await db.prepare("SELECT plan FROM workspaces WHERE id = ?").bind(workspaceId).first();
+    const features = planFeatures(workspace?.plan);
+    if (features.subscriptionLimit !== null) {
+      const count = await db.prepare(
+        "SELECT COUNT(*) AS count FROM fixed_costs WHERE workspace_id = ? AND is_subscription = 1",
+      ).bind(workspaceId).first();
+      if ((count?.count || 0) >= features.subscriptionLimit) {
+        const error = new Error("subscription_limit");
+        error.status = 403;
+        error.limit = features.subscriptionLimit;
+        throw error;
+      }
+    }
+  }
+
+  const timestamp = new Date().toISOString();
+  const today = timestamp.slice(0, 10);
+  const allocationJson = allocation.length ? JSON.stringify(allocation) : null;
+  const endDate = date(payload?.endDate);
+  const nextBillingDate = date(payload?.nextBillingDate);
+  const productUrl = text(payload?.productUrl, 500);
+  const manageUrl = text(payload?.manageUrl, 500);
+  const templateKey = text(payload?.templateKey, 80) || fixedCost.template_key || null;
+  const existingVersion = await db.prepare(
+    "SELECT id FROM fixed_cost_versions WHERE fixed_cost_id = ? AND effective_from = ?",
+  ).bind(fixedCostId, effectiveFrom).first();
+  const previousVersion = await db.prepare(
+    `SELECT id, effective_from FROM fixed_cost_versions
+     WHERE fixed_cost_id = ? AND effective_from < ?
+     ORDER BY effective_from DESC LIMIT 1`,
+  ).bind(fixedCostId, effectiveFrom).first();
+  const nextVersion = await db.prepare(
+    `SELECT effective_from FROM fixed_cost_versions
+     WHERE fixed_cost_id = ? AND effective_from > ?
+     ORDER BY effective_from ASC LIMIT 1`,
+  ).bind(fixedCostId, effectiveFrom).first();
+  const nextVersionStart = nextVersion?.effective_from || null;
+  const versionEnd = nextVersionStart ? previousDate(nextVersionStart) : null;
+
+  const statements = [];
+  if (previousVersion) {
+    statements.push(db.prepare(
+      "UPDATE fixed_cost_versions SET effective_to = ?, updated_at = ? WHERE id = ?",
+    ).bind(previousDate(effectiveFrom), timestamp, previousVersion.id));
+  }
+  if (existingVersion) {
+    statements.push(db.prepare(
+      `UPDATE fixed_cost_versions
+       SET effective_to = ?, amount = ?, cycle = ?, business_use = ?, allocation_json = ?, updated_at = ?
+       WHERE id = ?`,
+    ).bind(versionEnd, amount, cycle, businessUse, allocationJson, timestamp, existingVersion.id));
+  } else {
+    statements.push(db.prepare(
+      `INSERT INTO fixed_cost_versions
+        (id, fixed_cost_id, effective_from, effective_to, amount, cycle, business_use, allocation_json, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ).bind(
+      crypto.randomUUID(),
+      fixedCostId,
+      effectiveFrom,
+      versionEnd,
+      amount,
+      cycle,
+      businessUse,
+      allocationJson,
+      timestamp,
+      timestamp,
+    ));
+  }
+
+  const appliesNow = effectiveFrom <= today;
+  statements.push(db.prepare(
+    `UPDATE fixed_costs
+     SET name = ?,
+         amount = CASE WHEN ? THEN ? ELSE amount END,
+         cycle = CASE WHEN ? THEN ? ELSE cycle END,
+         business_use = CASE WHEN ? THEN ? ELSE business_use END,
+         allocation_json = CASE WHEN ? THEN ? ELSE allocation_json END,
+         is_subscription = ?, template_key = ?, product_url = ?, manage_url = ?,
+         next_billing_date = ?, end_date = ?, updated_at = ?
+     WHERE id = ? AND workspace_id = ?`,
+  ).bind(
+    name,
+    appliesNow ? 1 : 0,
+    amount,
+    appliesNow ? 1 : 0,
+    cycle,
+    appliesNow ? 1 : 0,
+    businessUse,
+    appliesNow ? 1 : 0,
+    allocationJson,
+    isSubscription ? 1 : 0,
+    templateKey,
+    productUrl,
+    manageUrl,
+    nextBillingDate,
+    endDate,
+    timestamp,
+    fixedCostId,
+    workspaceId,
+  ));
+  await db.batch(statements);
+  return loadWorkspace(db, workspaceId);
+};
+
 export const saveWorkspaceDraft = async (env, workspaceId, draft) => {
   const timestamp = new Date().toISOString();
   const statements = [];

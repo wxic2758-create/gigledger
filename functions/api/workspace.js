@@ -1,4 +1,4 @@
-import { countNewSubscriptions, normalizeDraft, saveWorkspaceDraft, loadWorkspace } from "../lib/ledger.js";
+import { countNewSubscriptions, normalizeDraft, saveFixedCostRevision, saveWorkspaceDraft, loadWorkspace } from "../lib/ledger.js";
 import { planFeatures } from "../lib/plan.js";
 import { clearedSessionCookie, readAuthenticatedUserId } from "../lib/session.js";
 
@@ -72,6 +72,20 @@ export const onRequestPut = async ({ env, request }) => {
     payload = await request.json();
   } catch {
     return json({ error: "invalid_json" }, 400);
+  }
+  if (payload?.revision) {
+    try {
+      const ledger = await saveFixedCostRevision(env, workspace.id, {
+        ...payload.revision,
+        fixedCostId: payload.revision.fixedCostId || payload.fixedCostId,
+      });
+      return json({ authenticated: true, ledger });
+    } catch (error) {
+      return json(
+        { error: error?.message || "fixed_cost_update_failed", limit: error?.limit },
+        Number(error?.status) || 400,
+      );
+    }
   }
   const fixedCostId = String(payload?.fixedCostId || "");
   const answer = String(payload?.answer || "");

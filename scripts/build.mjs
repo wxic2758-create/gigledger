@@ -641,13 +641,18 @@ const appPage = ({ locale, t, mode = "app" }) => {
           <label><span>${esc(t.app.fields.businessUse)}</span><input name="businessUse" type="number" min="0" max="100" value="100" required></label>
           <label><span>${esc(t.app.fields.startDate)}</span><input name="startDate" type="date" value="${new Date().toISOString().slice(0, 10)}" required></label>
           <label><span>${esc(t.app.fields.endDate)}</span><input name="endDate" type="date"></label>
-          <div class="subscription-fields">
+          <label data-revision-date hidden><span>${esc(t.app.fixedRevision.effectiveFrom)}</span><input name="effectiveFrom" type="date"></label>
+          <div class="subscription-fields" data-subscription-fields>
             <label><span>${esc(t.app.fields.nextBillingDate)}</span><input name="nextBillingDate" type="date"></label>
             <label><span>${esc(t.app.fields.productUrl)}</span><input name="productUrl" type="url" placeholder="https://"></label>
             <label><span>${esc(t.app.fields.manageUrl)}</span><input name="manageUrl" type="url" placeholder="https://"></label>
           </div>
           <p class="app-note">${esc(t.app.fixedVersionNote)}</p>
-          <button class="button button-dark" type="submit">${esc(t.app.fixed.add)}</button>
+          <p class="form-message" data-fixed-edit-message role="status" aria-live="polite" hidden></p>
+          <div class="fixed-form-actions">
+            <button class="button button-dark" type="submit" data-fixed-submit>${esc(t.app.fixed.add)}</button>
+            <button class="button button-ghost" type="button" data-fixed-cancel hidden>${esc(t.app.fixedRevision.cancel)}</button>
+          </div>
         </form>
         <div class="app-table-wrap">
           <table>
@@ -731,7 +736,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
       <a href="/${t.alternatePath}app">${esc(t.nav.switchTo)}</a>
     </div>
   </footer>
-  <script src="/app-ledger.js?v=20261116-5" defer></script>
+  <script src="/app-ledger.js?v=20261116-6" defer></script>
   <script src="/app.js" defer></script>
 </body>
 </html>`;

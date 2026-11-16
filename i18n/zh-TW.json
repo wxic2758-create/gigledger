@@ -350,6 +350,17 @@
       "manageSubscription": "管理"
     },
     "fixedVersionNote": "今天保存的變更會以今天作為生效日期。既有歷史不會重算。",
+    "fixedRevision": {
+      "edit": "編輯",
+      "title": "建立新版本",
+      "effectiveFrom": "生效日期",
+      "save": "儲存新版本",
+      "cancel": "取消編輯",
+      "saved": "已儲存新版本。生效日前的紀錄會保留舊金額。",
+      "invalidDate": "生效日期不能早於這筆成本的開始日期。",
+      "failed": "無法儲存這個版本，請再試一次。",
+      "limitReached": "免費版最多 {limit} 個訂閱。"
+    },
     "income": {
       "title": "收入",
       "body": "記錄付款金額與平台手續費。原型會立即使用這些資料。",
