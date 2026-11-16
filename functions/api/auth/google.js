@@ -1,4 +1,4 @@
-import { createSessionToken, sessionCookie, sessionSecret, verifySessionToken } from "../../lib/session.js";
+import { readAuthenticatedUserId } from "../../lib/session.js";
 import { countNewSubscriptions, normalizeDraft, saveWorkspaceDraft } from "../../lib/ledger.js";
 import { planFeatures } from "../../lib/plan.js";
 
@@ -9,14 +9,6 @@ const json = (data, status = 200, headers = {}) => new Response(JSON.stringify(d
   status,
   headers: { "content-type": "application/json; charset=utf-8", ...headers },
 });
-
-const cookieValue = (cookieHeader, name) => {
-  if (!cookieHeader) return null;
-  const match = cookieHeader.split(";").map((item) => item.trim()).find((item) => {
-    return item.startsWith(`${name}=`);
-  });
-  return match ? decodeURIComponent(match.slice(`${name}=`.length)) : null;
-};
 
 const authCookie = (value) =>
   `${AUTH_STATE_COOKIE}=${encodeURIComponent(value)}; Max-Age=600; HttpOnly; Secure; SameSite=Lax; Path=/`;
@@ -62,13 +54,6 @@ const saveGoogleUser = async (db, profile) => {
      VALUES (?, ?, ?, ?, ?, ?, ?)`,
   ).bind(userId, profile.sub, profile.email, profile.name, profile.picture || null, timestamp, timestamp).run();
   return { userId, workspaceId: await ensureWorkspace(db, userId) };
-};
-
-const readAuthenticatedUserId = async (env, cookieHeader) => {
-  const token = cookieValue(cookieHeader, "gigledger_session");
-  if (!token) return null;
-  const session = await verifySessionToken(token, sessionSecret(env));
-  return session?.userId || null;
 };
 
 const authUrl = (env, state) => {
