@@ -373,7 +373,8 @@
     "expenses": {
       "title": "一次性支出",
       "body": "用於外包、廣告、設備等單次花費。這些項目不會進入每日底線，也不要重複記錄已存在固定成本中的訂閱。",
-      "add": "加入支出"
+      "add": "加入支出",
+      "duplicateWarning": "「{name}」已列為固定成本中的訂閱。仍要儲存這筆一次性支出嗎？選「取消」可避免重複計入。"
     },
     "csv": {
       "title": "CSV 匯入 / 匯出",
@@ -402,6 +403,7 @@
       "source": "收入來源",
       "client": "客戶或專案",
       "platformFee": "平台手續費（USD）",
+      "platformFeePercent": "平台手續費 %",
       "category": "類別",
       "merchant": "商家或說明",
       "notes": "備註（可選）",

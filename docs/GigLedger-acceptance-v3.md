@@ -56,9 +56,9 @@ All product calculations use USD and allow a tolerance of `$0.01`.
 | AF-06 | 5.1 versions | Edit effective date; history is not rewritten | Pass | Editing creates a new `fixed_cost_versions` row; earlier versions remain unchanged. |
 | AF-07 | 5.1 business use | Business-use change is effective-dated | Pass | New versions preserve earlier values. |
 | AF-08 | 5.1 end date | Monthly cost ending April 15 accrues only 15 / month-days in April | Pending | Versioned proration is implemented; a dedicated April fixture has not yet been run. |
-| AF-09 | 5.1 duplicate warning | Same subscription recorded in fixed costs and again as an expense warns the user | Pending | The product distinguishes the sections and tells users not to duplicate, but no save-time warning dialog is implemented. |
+| AF-09 | 5.1 duplicate warning | Same subscription recorded in fixed costs and again as an expense warns the user | Pass | Ego-browser verified the same-name, same-amount, same-month expense triggers a bilingual warning; Cancel leaves the ledger unchanged and Confirm saves the expense. |
 | AF-10 | 5.2 income | Gross `$120`, fee `$12` -> net `$108` | Pass | Dashboard value verified. |
-| AF-11 | 5.2 fee percentage | Editing amount or fee percentage keeps the other side in sync | Pending | Manual fee amount works; percentage-driven automatic fee calculation is not implemented. |
+| AF-11 | 5.2 fee percentage | Editing amount or fee percentage keeps the other side in sync | Pass | Ego-browser verified `$120 × 10% = $12.00` and edited the fee back to `$15.00`, which recalculated to `12.50%`; the most recently edited side wins. |
 | AF-12 | 5.2 profit | Net income minus monthly fixed costs | Pass | Verified using the `$900` fixed-cost case. |
 | AF-13 | 5.2 profit | Net income minus fixed costs and one-time expenses | Pass | `$120 - $12 - $900 - $80 = -$872` checked. |
 | AF-14 | 5.2 tax separation | Tax reserve is displayed separately and is not deducted from profit | Pass | Reserve and true profit are separate metrics. |
@@ -125,14 +125,12 @@ All product calculations use USD and allow a tolerance of `$0.01`.
 
 These are real PRD gaps, not accepted excuses. They are listed here so the next implementation pass does not mistake a passing adjacent test for full coverage.
 
-1. Manual income currently accepts an absolute platform-fee amount, not a percentage-driven fee field. The API validates `platform_fee <= amount`.
-2. `apple_fee_rate` is present in the workspace schema, but App Store report parsing and automatic 15% / 30% fee application are not implemented.
-3. Saving a fixed cost that looks like an existing one-time expense does not yet raise a duplicate-entry warning. The UI explains the distinction, but does not block or warn at save time.
-4. `next_billing_date`, review prompts, and the two-month unused state are implemented; an App Store subscription template with Apple's subscription-management URL is not seeded.
-5. The App Store Connect key is encrypted and validated, but the report parser/sync remains intentionally unavailable. The UI must continue to say so.
-6. The weekly summary uses browser-local dismissal state. This is a UI preference, not ledger persistence; anonymous ledger data still stays in memory only.
-7. Marketing copy and SEO metadata should be rechecked against `docs/GigLedger-website-optimization.md` after every deployment.
-8. The legal pages still need the operating entity, contact details, retention period, processors, and final deletion workflow before general launch.
+1. `apple_fee_rate` is present in the workspace schema, but App Store report parsing and automatic 15% / 30% fee application are not implemented.
+2. `next_billing_date`, review prompts, and the two-month unused state are implemented; an App Store subscription template with Apple's subscription-management URL is not seeded.
+3. The App Store Connect key is encrypted and validated, but the report parser/sync remains intentionally unavailable. The UI must continue to say so.
+4. The weekly summary uses browser-local dismissal state. This is a UI preference, not ledger persistence; anonymous ledger data still stays in memory only.
+5. Marketing copy and SEO metadata should be rechecked against `docs/GigLedger-website-optimization.md` after every deployment.
+6. The legal pages still need the operating entity, contact details, retention period, processors, and final deletion workflow before general launch.
 
 ## Manual Regression Checklist
 
@@ -142,14 +140,16 @@ These are real PRD gaps, not accepted excuses. They are listed here so the next 
 4. Add income `$400` for the current month; confirm required-to-date and ahead/behind values.
 5. Add cash `$8,000`; confirm the no-new-work runway.
 6. Add a `$20/month` subscription; confirm Daily Floor rises to `$30.25`.
-7. Add a one-time `$80` expense at 100% business use; confirm true profit subtracts both fixed costs and the expense once.
-8. Add an App Store sold-only entry; confirm it appears in “Sold, not received” and not in true profit.
-9. Set a Pro plan, import a valid CSV, export it, and re-import it; confirm no duplicates.
-10. Reconnect an App Store key, confirm the status says the key is saved, and confirm sync says reports are not configured.
-11. Disconnect App Store and Stripe; confirm imported history remains.
-12. Delete the test account; confirm the user, workspace, ledger, projects, reviews, and integrations are gone.
-13. Sign in again with the same Google account; confirm a new empty workspace is created.
-14. Repeat the visible checks in `zh-TW`; confirm no “Prototype” copy remains in the ledger UI.
+7. Enter income `$120` and fee `10%`; confirm the fee becomes `$12.00` and net becomes `$108.00`; edit the fee to `$15.00` and confirm the percent updates to `12.50%`.
+8. Add a one-time `$80` expense at 100% business use; confirm true profit subtracts both fixed costs and the expense once.
+9. Enter an expense matching an active subscription's name, amount, and month; confirm Cancel leaves it out and Confirm allows the save.
+10. Add an App Store sold-only entry; confirm it appears in “Sold, not received” and not in true profit.
+11. Set a Pro plan, import a valid CSV, export it, and re-import it; confirm no duplicates.
+12. Reconnect an App Store key, confirm the status says the key is saved, and confirm sync says reports are not configured.
+13. Disconnect App Store and Stripe; confirm imported history remains.
+14. Delete the test account; confirm the user, workspace, ledger, projects, reviews, and integrations are gone.
+15. Sign in again with the same Google account; confirm a new empty workspace is created.
+16. Repeat the visible checks in `zh-TW`; confirm no “Prototype” copy remains in the ledger UI.
 
 ## Deployment Gate
 

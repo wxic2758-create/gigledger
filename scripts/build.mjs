@@ -716,6 +716,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
           <label><span>${esc(t.app.fields.project)}</span><select name="project" data-project-options></select></label>
           <label><span>${esc(t.app.fields.amount)}</span><input name="amount" type="number" min="0" step="0.01" required></label>
           <label><span>${esc(t.app.fields.platformFee)}</span><input name="platformFee" type="number" min="0" step="0.01" value="0"></label>
+          <label><span>${esc(t.app.fields.platformFeePercent)}</span><input name="platformFeePercent" type="number" min="0" max="100" step="0.01" value="0"></label>
           <button class="button button-dark" type="submit">${esc(t.app.income.add)}</button>
         </form>
         <div class="app-table-wrap">
@@ -760,7 +761,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
       <a href="/${t.alternatePath}app">${esc(t.nav.switchTo)}</a>
     </div>
   </footer>
-  <script src="/app-ledger.js?v=20261116-8" defer></script>
+  <script src="/app-ledger.js?v=20261116-9" defer></script>
   <script src="/app.js" defer></script>
 </body>
 </html>`;

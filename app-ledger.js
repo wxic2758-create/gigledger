@@ -947,6 +947,30 @@
 
   const incomeForm = document.querySelector("[data-proto-form='income']");
   if (incomeForm) {
+    const amountInput = incomeForm.elements.amount;
+    const feeInput = incomeForm.elements.platformFee;
+    const percentInput = incomeForm.elements.platformFeePercent;
+    let syncingFee = false;
+    const feeFromPercent = () => {
+      if (syncingFee) return;
+      syncingFee = true;
+      const amount = Math.max(0, Number(amountInput.value) || 0);
+      const percent = Math.min(100, Math.max(0, Number(percentInput.value) || 0));
+      feeInput.value = (Math.round(amount * percent) / 100).toFixed(2);
+      syncingFee = false;
+    };
+    const percentFromFee = () => {
+      if (syncingFee) return;
+      syncingFee = true;
+      const amount = Math.max(0, Number(amountInput.value) || 0);
+      const fee = Math.min(amount, Math.max(0, Number(feeInput.value) || 0));
+      feeInput.value = fee.toFixed(2);
+      percentInput.value = amount > 0 ? (Math.round(fee / amount * 10000) / 100).toFixed(2) : "0.00";
+      syncingFee = false;
+    };
+    amountInput.addEventListener("input", feeFromPercent);
+    percentInput.addEventListener("input", feeFromPercent);
+    feeInput.addEventListener("input", percentFromFee);
     incomeForm.addEventListener("submit", (event) => {
       event.preventDefault();
       const data = new FormData(incomeForm);
@@ -960,6 +984,8 @@
       });
       incomeForm.reset();
       incomeForm.elements.date.value = today();
+      incomeForm.elements.platformFee.value = "0.00";
+      incomeForm.elements.platformFeePercent.value = "0.00";
       render();
     });
   }
@@ -969,11 +995,29 @@
     expenseForm.addEventListener("submit", (event) => {
       event.preventDefault();
       const data = new FormData(expenseForm);
+      const expenseDate = String(data.get("date") || today());
+      const expenseMonth = expenseDate.slice(0, 7);
+      const labels = [String(data.get("category") || ""), String(data.get("merchant") || "")]
+        .map((value) => value.trim().toLowerCase())
+        .filter(Boolean);
+      const amount = Number(data.get("amount")) || 0;
+      const duplicate = state.fixedCosts.find((item) => {
+        if (!item.isSubscription) return false;
+        const name = String(item.name || "").trim().toLowerCase();
+        if (!name || !labels.includes(name)) return false;
+        if (Math.abs((Number(versionValue(item, "amount", item.amount)) || 0) - amount) > 0.01) return false;
+        const startMonth = String(item.startDate || "").slice(0, 7);
+        const endMonth = String(item.endDate || "").slice(0, 7);
+        return (!startMonth || startMonth <= expenseMonth) && (!endMonth || endMonth >= expenseMonth);
+      });
+      if (duplicate && !window.confirm(messages.expenses.duplicateWarning.replace("{name}", duplicate.name))) {
+        return;
+      }
       state.expenses.push({
-        date: String(data.get("date") || today()),
+        date: expenseDate,
         category: String(data.get("category") || ""),
         merchant: String(data.get("merchant") || ""),
-        amount: Number(data.get("amount")) || 0,
+        amount,
         businessUse: Number(data.get("businessUse")) || 100,
         notes: String(data.get("notes") || ""),
         projects: [String(data.get("project") || "").trim()].filter(Boolean),

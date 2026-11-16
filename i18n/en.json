@@ -373,7 +373,8 @@
     "expenses": {
       "title": "One-time expenses",
       "body": "Use this for individual purchases such as outsourcing, ads, or equipment. These do not enter Daily Floor and should not duplicate a subscription already in fixed costs.",
-      "add": "Add expense"
+      "add": "Add expense",
+      "duplicateWarning": "\"{name}\" is already in fixed costs as a subscription. Save this one-time expense too? Choose Cancel to avoid double-counting."
     },
     "csv": {
       "title": "CSV import / export",
@@ -402,6 +403,7 @@
       "source": "Source",
       "client": "Client or project",
       "platformFee": "Platform fee (USD)",
+      "platformFeePercent": "Platform fee %",
       "category": "Category",
       "merchant": "Merchant or description",
       "notes": "Notes (optional)",
