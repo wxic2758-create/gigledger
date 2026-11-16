@@ -56,7 +56,7 @@ All product calculations use USD and allow a tolerance of `$0.01`.
 | AF-06 | 5.1 versions | Edit effective date; history is not rewritten | Pass | Editing creates a new `fixed_cost_versions` row; earlier versions remain unchanged. |
 | AF-07 | 5.1 business use | Business-use change is effective-dated | Pass | New versions preserve earlier values. |
 | AF-08 | 5.1 end date | Monthly cost ending April 15 accrues only 15 / month-days in April | Pending | Versioned proration is implemented; a dedicated April fixture has not yet been run. |
-| AF-09 | 5.1 duplicate warning | Same subscription recorded in fixed costs and again as an expense warns the user | Pending | The product distinguishes the sections and tells users not to duplicate, but no blocking/warning dialog is implemented. |
+| AF-09 | 5.1 duplicate warning | Same subscription recorded in fixed costs and again as an expense warns the user | Pending | The product distinguishes the sections and tells users not to duplicate, but no save-time warning dialog is implemented. |
 | AF-10 | 5.2 income | Gross `$120`, fee `$12` -> net `$108` | Pass | Dashboard value verified. |
 | AF-11 | 5.2 fee percentage | Editing amount or fee percentage keeps the other side in sync | Pending | Manual fee amount works; percentage-driven automatic fee calculation is not implemented. |
 | AF-12 | 5.2 profit | Net income minus monthly fixed costs | Pass | Verified using the `$900` fixed-cost case. |
