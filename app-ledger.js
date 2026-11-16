@@ -255,12 +255,16 @@
     set("metric-costs", money(result.monthlyFixedCosts));
     set("metric-expenses", money(result.monthlyExpenses));
     set("metric-required", money(result.requiredToDate));
-    set("metric-comparison", money(Math.abs(result.comparison)));
     const comparisonNode = document.querySelector("[data-proto='metric-comparison']");
     if (comparisonNode) {
-      comparisonNode.textContent = result.comparison < 0
-        ? messages.metrics.ahead.replace("{amount}", money(Math.abs(result.comparison)))
-        : messages.metrics.behind.replace("{amount}", money(result.comparison));
+      const hasFloor = result.dailyFloor > 0;
+      comparisonNode.textContent = !hasFloor
+        ? messages.metrics.comparisonUnavailable
+        : result.comparison < 0
+          ? messages.metrics.ahead.replace("{amount}", money(Math.abs(result.comparison)))
+          : messages.metrics.behind.replace("{amount}", money(result.comparison));
+      comparisonNode.closest(".dashboard-comparison")?.classList.toggle("is-behind", hasFloor && result.comparison > 0);
+      comparisonNode.closest(".dashboard-comparison")?.classList.toggle("is-ahead", hasFloor && result.comparison < 0);
     }
     const runwayNode = document.querySelector("[data-proto='metric-runway']");
     if (runwayNode) {

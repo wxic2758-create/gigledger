@@ -315,6 +315,7 @@
       "tax": "Tax reserve",
       "required": "Needed by today",
       "comparison": "This month",
+      "comparisonUnavailable": "Add a fixed cost to compare",
       "runway": "Cash runway",
       "comparisonNote": "Received net income vs. Daily Floor due",
       "runwayNote": "If income stops",

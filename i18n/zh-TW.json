@@ -315,6 +315,7 @@
       "tax": "預留稅款",
       "required": "到今天應賺",
       "comparison": "本月對照",
+      "comparisonUnavailable": "先新增固定成本才能對照",
       "runway": "現金跑道",
       "comparisonNote": "已到帳淨收入對照今天應賺",
       "runwayNote": "收入停止時",

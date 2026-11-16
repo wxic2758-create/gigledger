@@ -395,7 +395,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
   <meta name="robots" content="noindex">
   <link rel="icon" href="/assets/favicon-32.png" sizes="32x32">
   <link rel="stylesheet" href="/styles.css?v=20261116-18">
-  <link rel="stylesheet" href="/proto.css?v=20261116-18">
+  <link rel="stylesheet" href="/proto.css?v=20261116-20">
 </head>
 <body class="${bodyClass}">
   <script type="application/json" id="proto-messages">${JSON.stringify(mode === "dashboard" ? { ...t.app, dashboard: t.dashboard } : t.app).replaceAll("</", "<\\/")}</script>
@@ -785,7 +785,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
       <a href="/${t.alternatePath}app">${esc(t.nav.switchTo)}</a>
     </div>
   </footer>
-  <script src="/app-ledger.js?v=20261116-18" defer></script>
+  <script src="/app-ledger.js?v=20261116-20" defer></script>
   <script src="/app.js" defer></script>
 </body>
 </html>`;
