@@ -118,7 +118,7 @@ All product calculations use USD and allow a tolerance of `$0.01`.
 | AF-68 | 12 no tax filing | No tax filing flow | Pass | The product only calculates a reserve target. |
 | AF-69 | 11 Pro boundary | Free: five subscriptions; Pro: unlimited, sync, CSV, reminders | Pass | On free, the dashboard showed the pricing-TBD boundary; five subscriptions saved, the sixth returned `403 subscription_limit`, and CSV/review/Stripe controls stayed locked. Switching to Pro hid the upgrade note, unlocked CSV/review/Stripe, and kept the five subscriptions. |
 | AF-70 | 11 no hidden downgrade | Downgrading does not delete existing subscriptions | Pass | Downgrading from Pro to free preserved all five existing subscriptions; the limit only blocked new additions. |
-| AF-71 | 5.4 secrets | Credentials are never written to application logs | Partial | A canary fixed-cost request produced no application log output, and integration handlers do not log request bodies or decrypted credentials. A canary `.p8`/Stripe key request still needs to be checked against the deployment log before release. |
+| AF-71 | 5.4 secrets | Credentials are never written to application logs | Partial | Production canary requests used a randomly generated string as both a fake Stripe key and the body of a fake `.p8`; both returned `400`, no canary plaintext appeared in the `integrations` table, and no application source logs request bodies or decrypted credentials. Deployment log capture could not be completed: Wrangler `pages deployment tail` failed with `ECONNRESET` / direct `ECONNREFUSED`, while the Cloudflare REST tail session opened but its WebSocket never established. This remains Partial until the deployment log is checked from a network or Cloudflare dashboard that can hold the tail connection. |
 | AF-72 | 5.4 App Store sync | App Store report sync either imports real data or states it is unavailable | Pass | The endpoint intentionally returns `501 app_store_report_sync_not_configured`; the UI tells the user no report data will be imported. |
 
 ## Known Gaps To Track
@@ -129,6 +129,7 @@ These are real PRD gaps, not accepted excuses. They are listed here so the next 
 2. The weekly summary uses browser-local dismissal state. This is a UI preference, not ledger persistence; anonymous ledger data still stays in memory only.
 3. Marketing copy and SEO metadata should be rechecked against `docs/GigLedger-website-optimization.md` after every deployment.
 4. The legal pages still need the operating entity, contact details, retention period, processors, and final deletion workflow before general launch. Product data categories and deletion behavior are already disclosed from the implemented schema.
+5. AF-71 deployment-log capture is blocked by the local network path to Cloudflare tailing. The code-level audit and production canary behavior are recorded above, but release sign-off still requires a tail session from a working network or the Cloudflare dashboard.
 
 ## Manual Regression Checklist
 
