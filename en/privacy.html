@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Privacy notice — GigLedger</title>
-  <meta name="description" content="How GigLedger stores Google account details and ledger data in Cloudflare D1, how to export it, and how account deletion works.">
+  <meta name="description" content="How GigLedger stores Google account details, ledger data, and encrypted integration credentials in Cloudflare D1, how to export it, and how account deletion works.">
   <link rel="icon" href="/assets/favicon-32.png" sizes="32x32">
   <link rel="canonical" href="https://gigledger.xyz/en/privacy">
   <link rel="alternate" hreflang="en" href="https://gigledger.xyz/en/privacy">
@@ -27,7 +27,7 @@
     <p class="kicker">GigLedger</p>
     <h1>Privacy notice</h1>
     <p class="legal-draft">Pre-launch draft. This notice must be reviewed before launch.</p>
-    <p>When you use “Sign in with Google”, GigLedger stores your Google account email and name, plus the ledger entries you save. Your Google password is never stored.</p><p>You can export your saved ledger from the dashboard, then request account deletion by deleting your workspace after export. Account deletion removes your Google email, name, income entries, fixed costs, and workspace settings.</p><p>Unsaved calculations remain on the current page only and are cleared when you refresh or leave the page.</p><p>This pre-launch draft still requires the legal entity, contact details, retention period, processors, and final deletion workflow before general launch.</p>
+    <p>When you use “Sign in with Google”, GigLedger stores your Google account email and name, plus the ledger entries you save. Your Google password is never stored.</p><p>Your Google account identifier and optional profile image URL are also stored so returning users can sign in and see their own workspace. A short-lived server-side draft is stored while Google sign-in is in progress so the calculation you chose to save can be attached to your account.</p><p>If you connect Stripe or App Store Connect, the credentials you provide are encrypted before storage and are never returned to the browser. Imported income and sync status remain part of your workspace until you disconnect the integration or delete your account.</p><p>You can export your saved ledger from the dashboard, then request account deletion by deleting your workspace after export. Account deletion removes your Google account record, workspace, income entries, fixed costs, one-time expenses, projects, subscription reviews, and encrypted integration credentials.</p><p>Unsaved calculations remain on the current page only and are cleared when you refresh or leave the page.</p><p>This pre-launch draft still requires the legal entity, contact details, retention period, processors, and final deletion workflow before general launch.</p>
     <a class="button button-orange" href="/en/">Back to GigLedger</a>
   </main>
 </body>
