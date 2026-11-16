@@ -449,6 +449,32 @@
     "deleteEntry": "Delete",
     "deleteEntryFailed": "Could not delete this entry. Please try again.",
     "deleteFailed": "Account deletion failed. Your data is still available.",
+    "integrations": {
+      "kicker": "Pro sync",
+      "title": "Official Stripe sync",
+      "body": "Connect a read-only Stripe restricted key to import charges, fees, and net income into your ledger. Manual sync only, so it stays within the free Cloudflare plan.",
+      "keyLabel": "Stripe restricted key",
+      "accountLabel": "Account label (optional)",
+      "accountPlaceholder": "e.g. GigLedger live",
+      "keyNote": "Use a restricted key with read access to Charges and Balance transactions. Do not use a publishable key. The key is encrypted before storage and is never shown again.",
+      "connect": "Connect Stripe",
+      "statusLabel": "Connection",
+      "notConnected": "Not connected",
+      "connected": "Connected",
+      "lastSync": "Last sync: {date}",
+      "neverSynced": "No sync yet",
+      "sync": "Sync now",
+      "disconnect": "Disconnect",
+      "syncing": "Syncing…",
+      "synced": "Imported {count} Stripe charges.",
+      "connectFailed": "Could not connect Stripe. Check the key and try again.",
+      "syncFailed": "Stripe sync failed: {error}",
+      "disconnectFailed": "Could not disconnect Stripe. Please try again.",
+      "disconnectConfirm": "Disconnect Stripe? Your imported income stays in the ledger.",
+      "proRequired": "Stripe sync is a Pro feature. Pricing is available after private beta.",
+      "invalidKey": "Use a Stripe restricted or secret key that starts with rk_ or sk_.",
+      "loadFailed": "Could not load integration status."
+    },
     "flow": {
       "kicker": "3-minute start",
       "title": "See your Daily Floor",
@@ -535,6 +561,13 @@
       "copyText": "Copy text",
       "aiText": "My monthly AI spending is {amount}.",
       "dailyText": "My Daily Floor is {amount} per day."
+    },
+    "plan": {
+      "free": "Free plan",
+      "pro": "Pro plan",
+      "limitReached": "Free plans include up to {limit} subscriptions. Upgrade is coming later; existing entries stay available.",
+      "proRequiredCsv": "CSV import and export are a Pro feature. Pricing is available after private beta.",
+      "proRequiredReview": "Subscription reminders are a Pro feature. Pricing is available after private beta."
     }
   },
   "start": {

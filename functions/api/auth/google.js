@@ -1,5 +1,6 @@
 import { createSessionToken, sessionCookie, sessionSecret, verifySessionToken } from "../../lib/session.js";
 import { normalizeDraft, saveWorkspaceDraft } from "../../lib/ledger.js";
+import { planFeatures } from "../../lib/plan.js";
 
 const SITE_URL = "https://gigledger.xyz";
 const AUTH_STATE_COOKIE = "gigledger_oauth_state";
@@ -110,6 +111,15 @@ export const onRequestPost = async ({ env, request }) => {
       "SELECT id FROM workspaces WHERE owner_id = ?",
     ).bind(authenticatedUserId).first();
     if (workspace) {
+      const workspaceRecord = await env.DB.prepare("SELECT plan FROM workspaces WHERE id = ?").bind(workspace.id).first();
+      const features = planFeatures(workspaceRecord?.plan);
+      const subscriptionCount = draft.fixedCosts.filter((item) => item.isSubscription).length;
+      const existingCount = await env.DB.prepare(
+        "SELECT COUNT(*) AS count FROM fixed_costs WHERE workspace_id = ? AND is_subscription = 1",
+      ).bind(workspace.id).first();
+      if (features.subscriptionLimit !== null && existingCount.count + subscriptionCount > features.subscriptionLimit) {
+        return json({ error: "subscription_limit", limit: features.subscriptionLimit }, 403);
+      }
       await saveWorkspaceDraft(env.DB, workspace.id, draft);
       return json({
         saved: true,

@@ -449,6 +449,32 @@
     "deleteEntry": "刪除",
     "deleteEntryFailed": "無法刪除這筆紀錄。請再試一次。",
     "deleteFailed": "刪除帳號失敗。你的資料仍然可用。",
+    "integrations": {
+      "kicker": "Pro 同步",
+      "title": "Stripe 官方同步",
+      "body": "連接只讀的 Stripe 受限金鑰，把收款、手續費與淨收入匯入帳本。只提供手動同步，維持在 Cloudflare 免費方案額度內。",
+      "keyLabel": "Stripe 受限金鑰",
+      "accountLabel": "帳戶標籤（選填）",
+      "accountPlaceholder": "例如 GigLedger live",
+      "keyNote": "請使用具備 Charges 與 Balance transactions 讀取權限的受限金鑰，不要使用可發布金鑰。金鑰會先加密再儲存，之後不會再次顯示。",
+      "connect": "連接 Stripe",
+      "statusLabel": "連接狀態",
+      "notConnected": "尚未連接",
+      "connected": "已連接",
+      "lastSync": "上次同步：{date}",
+      "neverSynced": "尚未同步",
+      "sync": "立即同步",
+      "disconnect": "中斷連接",
+      "syncing": "同步中…",
+      "synced": "已匯入 {count} 筆 Stripe 收款。",
+      "connectFailed": "無法連接 Stripe，請檢查金鑰後再試。",
+      "syncFailed": "Stripe 同步失敗：{error}",
+      "disconnectFailed": "無法中斷 Stripe 連接，請再試一次。",
+      "disconnectConfirm": "要中斷 Stripe 連接嗎？已匯入的收入會保留在帳本中。",
+      "proRequired": "Stripe 同步是 Pro 功能，封測後才會公布價格。",
+      "invalidKey": "請使用以 rk_ 或 sk_ 開頭的 Stripe 受限或秘密金鑰。",
+      "loadFailed": "無法載入整合狀態。"
+    },
     "flow": {
       "kicker": "三分鐘開始",
       "title": "看清你的每日底線",
@@ -535,6 +561,13 @@
       "copyText": "複製文案",
       "aiText": "我每月的 AI 花費是 {amount}。",
       "dailyText": "我的每日底線是每天 {amount}。"
+    },
+    "plan": {
+      "free": "免費版",
+      "pro": "Pro 版",
+      "limitReached": "免費版最多 {limit} 個訂閱。升級功能稍後開放；已輸入的資料仍會保留。",
+      "proRequiredCsv": "CSV 匯入與匯出是 Pro 功能，價格將在封閉測試後公佈。",
+      "proRequiredReview": "訂閱提醒是 Pro 功能，價格將在封閉測試後公佈。"
     }
   },
   "start": {

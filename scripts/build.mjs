@@ -495,6 +495,36 @@ const appPage = ({ locale, t, mode = "app" }) => {
         <span class="account-note">${esc(t.app.saveNote)}</span>
         <p class="form-message account-message" role="status" aria-live="polite" data-save-message hidden></p>
       </div>
+      ${mode === "dashboard" ? `
+      <section class="plan-panel" data-integration-panel>
+        <div class="plan-panel-head">
+          <div>
+            <p class="app-steps-kicker">${esc(t.app.integrations.kicker)}</p>
+            <h2>${esc(t.app.integrations.title)}</h2>
+            <p>${esc(t.app.integrations.body)}</p>
+          </div>
+          <span class="plan-badge" data-plan-badge>${esc(t.app.plan.free)}</span>
+        </div>
+        <div class="integration-grid">
+          <form class="integration-form" data-stripe-form>
+            <label><span>${esc(t.app.integrations.keyLabel)}</span><input name="secretKey" type="password" autocomplete="off" placeholder="rk_live_… or sk_live_…" required></label>
+            <label><span>${esc(t.app.integrations.accountLabel)}</span><input name="accountLabel" placeholder="${esc(t.app.integrations.accountPlaceholder)}"></label>
+            <p class="app-note">${esc(t.app.integrations.keyNote)}</p>
+            <button class="button button-dark" type="submit">${esc(t.app.integrations.connect)}</button>
+            <p class="form-message" data-stripe-message role="status" aria-live="polite" hidden></p>
+          </form>
+          <div class="integration-status" data-stripe-status>
+            <span>${esc(t.app.integrations.statusLabel)}</span>
+            <strong data-stripe-status-label>${esc(t.app.integrations.notConnected)}</strong>
+            <small data-stripe-sync-label></small>
+            <div class="integration-actions">
+              <button class="button button-ghost" type="button" data-stripe-sync disabled>${esc(t.app.integrations.sync)}</button>
+              <button class="button button-danger" type="button" data-stripe-disconnect disabled>${esc(t.app.integrations.disconnect)}</button>
+            </div>
+          </div>
+        </div>
+      </section>
+      ` : ""}
       <div class="weekly-summary" data-weekly-summary hidden>
         <div><span>${esc(t.app.weeklySummary.title)}</span><p data-weekly-text></p></div>
         <button class="text-link" type="button" data-weekly-dismiss>${esc(t.app.weeklySummary.dismiss)}</button>
@@ -652,7 +682,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
       <a href="/${t.alternatePath}app">${esc(t.nav.switchTo)}</a>
     </div>
   </footer>
-  <script src="/app-ledger.js?v=20261114-9" defer></script>
+  <script src="/app-ledger.js?v=20261115-1" defer></script>
   <script src="/app.js" defer></script>
 </body>
 </html>`;

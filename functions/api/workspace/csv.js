@@ -1,5 +1,6 @@
 import { normalizeDraft, loadWorkspace, saveWorkspaceDraft } from "../../lib/ledger.js";
 import { readAuthenticatedUserId } from "../../lib/session.js";
+import { planFeatures } from "../../lib/plan.js";
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), {
   status,
@@ -66,6 +67,8 @@ export const onRequestGet = async ({ env, request }) => {
   if (!userId) return json({ authenticated: false }, 401);
   const workspace = await env.DB.prepare("SELECT id FROM workspaces WHERE owner_id = ?").bind(userId).first();
   if (!workspace) return csvResponse([], "gigledger-income.csv");
+  const workspaceRecord = await env.DB.prepare("SELECT plan FROM workspaces WHERE id = ?").bind(workspace.id).first();
+  if (!planFeatures(workspaceRecord?.plan).csv) return json({ error: "pro_required" }, 403);
   const ledger = await loadWorkspace(env.DB, workspace.id);
   const rows = (ledger.income || []).map(mapIncome);
   return csvResponse(rows, `gigledger-income-${new Date().toISOString().slice(0, 10)}.csv`);
@@ -76,6 +79,8 @@ export const onRequestPost = async ({ env, request }) => {
   if (!userId) return json({ authenticated: false }, 401);
   const workspace = await env.DB.prepare("SELECT id FROM workspaces WHERE owner_id = ?").bind(userId).first();
   if (!workspace) return json({ error: "workspace_not_found" }, 404);
+  const workspaceRecord = await env.DB.prepare("SELECT plan FROM workspaces WHERE id = ?").bind(workspace.id).first();
+  if (!planFeatures(workspaceRecord?.plan).csv) return json({ error: "pro_required" }, 403);
 
   let form;
   try {

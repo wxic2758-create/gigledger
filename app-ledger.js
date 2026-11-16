@@ -3,7 +3,7 @@
   const locale = root.dataset.locale === "zh-TW" ? "zh-TW" : "en";
   const messages = JSON.parse(document.getElementById("proto-messages").textContent);
   const dashboardMode = Boolean(document.querySelector("[data-dashboard]"));
-  const state = { fixedCosts: [], income: [], expenses: [], taxReserveRate: "", cashOnHand: "" };
+  const state = { fixedCosts: [], income: [], expenses: [], taxReserveRate: "", cashOnHand: "", features: { plan: "free", subscriptionLimit: 5, csv: false, sync: false, subscriptionReview: false } };
 
   const currency = new Intl.NumberFormat(locale === "zh-TW" ? "zh-TW" : "en-US", {
     style: "currency", currency: "USD", maximumFractionDigits: 2,
@@ -300,6 +300,7 @@
     renderFixedCosts();
     renderIncome();
     renderExpenses();
+    renderIntegration();
   };
 
   const fixedForm = document.querySelector("[data-proto-form='fixed']");
@@ -453,7 +454,7 @@
       const dashboardMode = Boolean(document.querySelector("[data-dashboard]"));
       if (dashboardMode && data.imported) await loadDashboard();
     } catch (error) {
-      const reason = error?.message === "empty_file" ? messages.csv.emptyFile : messages.csv.importFailed;
+      const reason = data?.error === "pro_required" ? messages.plan.proRequiredCsv : error?.message === "empty_file" ? messages.csv.emptyFile : messages.csv.importFailed;
       csvMessage(status, reason);
     } finally {
       if (label) label.textContent = original;
@@ -494,7 +495,7 @@
       render();
     } catch {
       button.disabled = false;
-      window.alert(messages.deleteEntryFailed);
+      window.alert(data?.error === "pro_required" ? messages.plan.proRequiredReview : messages.deleteEntryFailed);
     }
   });
   const settingsForm = document.querySelector('[data-proto-form="settings"]');
@@ -577,13 +578,161 @@
         settingsForm.elements.cashOnHand.value = state.cashOnHand;
       }
       render();
+      loadIntegrations();
     } catch {
       window.location.assign(`/${locale}/app`);
     }
   };
 
+  const integrationNodes = () => ({
+    panel: document.querySelector("[data-integration-panel]"),
+    form: document.querySelector("[data-stripe-form]"),
+    message: document.querySelector("[data-stripe-message]"),
+    badge: document.querySelector("[data-plan-badge]"),
+    statusLabel: document.querySelector("[data-stripe-status-label]"),
+    syncLabel: document.querySelector("[data-stripe-sync-label]"),
+    sync: document.querySelector("[data-stripe-sync]"),
+    disconnect: document.querySelector("[data-stripe-disconnect]"),
+  });
+  let stripeIntegration = null;
+
+  const renderIntegration = () => {
+    const nodes = integrationNodes();
+    if (!nodes.panel) return;
+    if (nodes.badge) nodes.badge.textContent = state.features.plan === "pro" ? messages.plan.pro : messages.plan.free;
+    const connected = stripeIntegration?.status === "connected";
+    if (nodes.statusLabel) nodes.statusLabel.textContent = connected ? messages.integrations.connected : messages.integrations.notConnected;
+    if (nodes.syncLabel) {
+      nodes.syncLabel.textContent = !connected
+        ? messages.integrations.neverSynced
+        : stripeIntegration.lastSyncAt
+          ? messages.integrations.lastSync.replace("{date}", stripeIntegration.lastSyncAt.slice(0, 10))
+          : messages.integrations.neverSynced;
+    }
+    if (nodes.sync) nodes.sync.disabled = !connected || !state.features.sync;
+    if (nodes.disconnect) nodes.disconnect.disabled = !connected;
+    const formInputs = nodes.form ? [...nodes.form.elements] : [];
+    formInputs.forEach((node) => { node.disabled = !state.features.sync; });
+  };
+
+  const showIntegrationMessage = (message, isError = false) => {
+    const node = integrationNodes().message;
+    if (!node) return;
+    node.textContent = message;
+    node.hidden = false;
+    node.dataset.error = isError ? "true" : "false";
+  };
+
+  const loadIntegrations = async () => {
+    if (!dashboardMode || !integrationNodes().panel) return;
+    try {
+      const response = await fetch("/api/workspace/integrations", { credentials: "same-origin" });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data?.error || "load_failed");
+      if (data.features) state.features = data.features;
+      stripeIntegration = (data.integrations || []).find((item) => item.type === "stripe") || null;
+      renderIntegration();
+      if (stripeIntegration?.lastError) showIntegrationMessage(messages.integrations.syncFailed.replace("{error}", stripeIntegration.lastError), true);
+    } catch {
+      renderIntegration();
+      showIntegrationMessage(messages.integrations.loadFailed, true);
+    }
+  };
+
+  document.querySelector("[data-stripe-form]")?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    const secretKey = String(data.get("secretKey") || "").trim();
+    if (!secretKey.startsWith("rk_") && !secretKey.startsWith("sk_")) {
+      showIntegrationMessage(messages.integrations.invalidKey, true);
+      return;
+    }
+    const button = form.querySelector("button[type=submit]");
+    const original = button.textContent;
+    button.disabled = true;
+    button.textContent = messages.integrations.syncing;
+    try {
+      const response = await fetch("/api/workspace/integrations", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ type: "stripe", secretKey, accountLabel: String(data.get("accountLabel") || "").trim() }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (response.status === 403 && result.error === "pro_required") {
+        showIntegrationMessage(messages.integrations.proRequired, true);
+        return;
+      }
+      if (!response.ok) {
+        showIntegrationMessage(result.error ? messages.integrations.syncFailed.replace("{error}", result.error) : messages.integrations.connectFailed, true);
+        return;
+      }
+      if (result.ledger) {
+        applyLedger(result.ledger);
+        render();
+      }
+      form.reset();
+      stripeIntegration = { type: "stripe", status: "connected", lastSyncAt: new Date().toISOString(), lastError: null };
+      renderIntegration();
+      showIntegrationMessage(messages.integrations.synced.replace("{count}", String(result.imported || 0)));
+    } catch {
+      showIntegrationMessage(messages.integrations.connectFailed, true);
+    } finally {
+      button.disabled = false;
+      button.textContent = original;
+      renderIntegration();
+    }
+  });
+
+  document.querySelector("[data-stripe-sync]")?.addEventListener("click", async (event) => {
+    const button = event.currentTarget;
+    const original = button.textContent;
+    button.disabled = true;
+    button.textContent = messages.integrations.syncing;
+    try {
+      const response = await fetch("/api/workspace/integrations/sync", { method: "POST", credentials: "same-origin" });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        showIntegrationMessage(data.error ? messages.integrations.syncFailed.replace("{error}", data.error) : messages.integrations.connectFailed, true);
+        return;
+      }
+      if (data.ledger) {
+        applyLedger(data.ledger);
+        render();
+      }
+      stripeIntegration = { ...(stripeIntegration || { type: "stripe", status: "connected" }), lastSyncAt: new Date().toISOString(), lastError: null };
+      renderIntegration();
+      showIntegrationMessage(messages.integrations.synced.replace("{count}", String(data.imported || 0)));
+    } catch {
+      showIntegrationMessage(messages.integrations.connectFailed, true);
+    } finally {
+      button.textContent = original;
+      renderIntegration();
+    }
+  });
+
+  document.querySelector("[data-stripe-disconnect]")?.addEventListener("click", async (event) => {
+    if (!window.confirm(messages.integrations.disconnectConfirm)) return;
+    const button = event.currentTarget;
+    button.disabled = true;
+    try {
+      const response = await fetch("/api/workspace/integrations?type=stripe", { method: "DELETE", credentials: "same-origin" });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data?.error || "disconnect_failed");
+      stripeIntegration = null;
+      const message = integrationNodes().message;
+      if (message) message.hidden = true;
+      renderIntegration();
+    } catch {
+      button.disabled = false;
+      showIntegrationMessage(messages.integrations.disconnectFailed, true);
+    }
+  });
+
   const applyLedger = (ledger) => {
     if (!ledger) return;
+    if (ledger.workspace?.features) state.features = ledger.workspace.features;
     state.taxReserveRate = ledger.workspace?.taxReserveRate === null
       || ledger.workspace?.taxReserveRate === undefined
       ? "" : String(Math.round(ledger.workspace.taxReserveRate * 10000));

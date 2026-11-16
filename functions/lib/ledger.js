@@ -1,3 +1,5 @@
+import { planFeatures } from "./plan.js";
+
 export const cycles = {
   daily: 365,
   weekly: 52,
@@ -234,7 +236,7 @@ export const saveWorkspaceDraft = async (db, workspaceId, draft) => {
 
 export const loadWorkspace = async (db, workspaceId) => {
   const workspace = await db.prepare(
-    "SELECT id, name, base_currency, tax_reserve_rate, cash_on_hand, cash_on_hand_as_of FROM workspaces WHERE id = ?",
+    "SELECT id, name, base_currency, tax_reserve_rate, cash_on_hand, cash_on_hand_as_of, plan FROM workspaces WHERE id = ?",
   ).bind(workspaceId).first();
   if (!workspace) return null;
 
@@ -274,6 +276,8 @@ export const loadWorkspace = async (db, workspaceId) => {
       taxReserveRate: workspace.tax_reserve_rate,
       cashOnHand: workspace.cash_on_hand,
       cashOnHandAsOf: workspace.cash_on_hand_as_of,
+      plan: planFeatures(workspace.plan).plan,
+      features: planFeatures(workspace.plan),
     },
     fixedCosts: (fixedCosts.results || []).map((item) => ({
       id: item.id,

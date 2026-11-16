@@ -1,4 +1,5 @@
 import { normalizeDraft, saveWorkspaceDraft, loadWorkspace } from "../lib/ledger.js";
+import { planFeatures } from "../lib/plan.js";
 import { clearedSessionCookie, readAuthenticatedUserId } from "../lib/session.js";
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), {
@@ -44,6 +45,15 @@ export const onRequestPost = async ({ env, request }) => {
     return json({ error: "invalid_json" }, 400);
   }
   const draft = await normalizeDraft(payload);
+  const workspaceRecord = await env.DB.prepare("SELECT plan FROM workspaces WHERE id = ?").bind(workspace.id).first();
+  const features = planFeatures(workspaceRecord?.plan);
+  const subscriptionCount = draft.fixedCosts.filter((item) => item.isSubscription).length;
+  const existingCount = await env.DB.prepare(
+    "SELECT COUNT(*) AS count FROM fixed_costs WHERE workspace_id = ? AND is_subscription = 1",
+  ).bind(workspace.id).first();
+  if (features.subscriptionLimit !== null && existingCount.count + subscriptionCount > features.subscriptionLimit) {
+    return json({ error: "subscription_limit", limit: features.subscriptionLimit }, 403);
+  }
   if (!draft.fixedCosts.length && !draft.income.length && !draft.expenses.length) {
     return json({ error: "empty_draft" }, 400);
   }
@@ -68,6 +78,8 @@ export const onRequestPut = async ({ env, request }) => {
   if (!fixedCostId || !["often", "sometimes", "not_used"].includes(answer)) {
     return json({ error: "invalid_request" }, 400);
   }
+  const workspaceRecord = await env.DB.prepare("SELECT plan FROM workspaces WHERE id = ?").bind(workspace.id).first();
+  if (!planFeatures(workspaceRecord?.plan).subscriptionReview) return json({ error: "pro_required" }, 403);
   const fixedCost = await env.DB.prepare(
     "SELECT id, next_billing_date, cycle FROM fixed_costs WHERE id = ? AND workspace_id = ?",
   ).bind(fixedCostId, workspace.id).first();
