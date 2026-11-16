@@ -64,7 +64,7 @@ All product calculations use USD and allow a tolerance of `$0.01`.
 | AF-14 | 5.2 tax separation | Tax reserve is displayed separately and is not deducted from profit | Pass | Reserve and true profit are separate metrics. |
 | AF-15 | 5.2 income date | Income defaults to the received date | Pass | The income form defaults to today. |
 | AF-16 | 5.2 App Store | Sold, not received is visible but excluded from profit | Pass | `{$99 sold, $50 received, $5 fee}` produced gross `$50`, net `$45`, sold `$99`, profit `$45`. |
-| AF-17 | 5.2 App Store fee | Apple fee 15% or 30% changes new or recalculated sold records only | Partial | `apple_fee_rate` exists in the workspace schema, but the App Store report parser and fee application are not configured. |
+| AF-17 | 5.2 App Store fee | Apple fee 15% or 30% changes new or recalculated sold records only | Pending | `apple_fee_rate` exists in the workspace schema, but the App Store report parser and fee application are not configured. |
 | AF-18 | 5.3 CSV | Import 10 valid rows; dashboard total matches the file | Pass | CSV import was built and exercised with valid and invalid rows. |
 | AF-19 | 5.3 CSV | Re-import by `external_ref` or equivalent key does not duplicate | Pass | Export then re-import is deduplicated by `external_ref` or the equivalent key. |
 | AF-20 | 5.3 CSV | Invalid rows do not abort the batch; failed rows can be downloaded | Pass | Failed rows return line number, reason, and source values. |
@@ -74,7 +74,7 @@ All product calculations use USD and allow a tolerance of `$0.01`.
 | AF-24 | 5.4 Stripe | Invalid key or sync failure returns a readable error without partial success | Pass | Errors are stored as `last_error`; imported entries are only written after a successful request. |
 | AF-25 | 5.4 Stripe | Disconnect keeps historical imported records | Pass | Only the integration row is removed. |
 | AF-26 | 5.4 App Store | Encrypted `.p8` storage and validation | Pass | A valid P-256 key was stored encrypted; an invalid key returned `invalid_app_store_private_key`. |
-| AF-27 | 5.4 App Store | Sales and finance reports are separate; sold is excluded from profit | Partial | Sold vs. received is implemented and verified. Report parsing/sync intentionally returns `501 app_store_report_sync_not_configured` and does not pretend to succeed. |
+| AF-27 | 5.4 App Store | Sales and finance reports are separate; sold is excluded from profit | Partial | Sold vs. received is implemented and verified. Report parsing/sync intentionally returns `501 app_store_report_sync_not_configured`; this is an explicit release gap, not completed sync. |
 | AF-28 | 5.4 credentials | No secret appears in client source, front-end logs, or responses | Pass | `.p8` and Stripe keys are submitted once, encrypted with AES-GCM, and never returned by the integrations API. |
 | AF-29 | 5.5 templates | Template selection pre-fills name, cycle, amount and updates Daily Floor | Pass | ChatGPT, Claude, Cursor, Notion, Figma, and Copilot templates are present. |
 | AF-30 | 5.5 links | Open product and Manage subscription links use configured URLs | Pass | Configured fixed-cost links render as external links; empty values are hidden. |
