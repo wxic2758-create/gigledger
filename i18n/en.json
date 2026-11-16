@@ -387,7 +387,14 @@
       "platformFee": "Platform fee (USD)",
       "category": "Category",
       "merchant": "Merchant or description",
-      "notes": "Notes (optional)"
+      "notes": "Notes (optional)",
+      "project": "Project (optional)",
+      "projectAllocation": "Project allocation (optional)",
+      "projectAllocationNote": "Split a shared cost across projects. Percentages must total 100%.",
+      "addProjectShare": "Add project share",
+      "allocationTotal": "Allocated {total}%",
+      "allocationInvalid": "Project shares must total exactly 100%.",
+      "removeProjectShare": "Remove"
     },
     "cycles": {
       "daily": "Daily",
@@ -423,7 +430,8 @@
       "businessAmount": "Business amount",
       "notes": "Notes",
       "actions": "Actions",
-      "review": "Review"
+      "review": "Review",
+      "project": "Project"
     },
     "empty": {
       "fixed": "No fixed costs added yet.",
@@ -568,6 +576,23 @@
       "limitReached": "Free plans include up to {limit} subscriptions. Upgrade is coming later; existing entries stay available.",
       "proRequiredCsv": "CSV import and export are a Pro feature. Pricing is available after private beta.",
       "proRequiredReview": "Subscription reminders are a Pro feature. Pricing is available after private beta."
+    },
+    "projects": {
+      "title": "Projects",
+      "body": "Create project tags and assign income or business costs. Unassigned entries stay unassigned; no ROI is shown.",
+      "name": "Project name",
+      "add": "Add project",
+      "unassigned": "Unassigned",
+      "income": "Income",
+      "costs": "Costs",
+      "profit": "Profit",
+      "actions": "Actions",
+      "archive": "Archive",
+      "archiveConfirm": "Archive this project? Existing entries keep their tag.",
+      "empty": "No projects added yet.",
+      "saveFailed": "Could not save the project. Please try again.",
+      "archiveFailed": "Could not archive the project. Please try again.",
+      "exists": "That project already exists."
     }
   },
   "start": {

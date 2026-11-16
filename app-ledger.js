@@ -3,7 +3,7 @@
   const locale = root.dataset.locale === "zh-TW" ? "zh-TW" : "en";
   const messages = JSON.parse(document.getElementById("proto-messages").textContent);
   const dashboardMode = Boolean(document.querySelector("[data-dashboard]"));
-  const state = { fixedCosts: [], income: [], expenses: [], taxReserveRate: "", cashOnHand: "", features: { plan: "free", subscriptionLimit: 5, csv: false, sync: false, subscriptionReview: false } };
+  const state = { projects: [], fixedCosts: [], income: [], expenses: [], taxReserveRate: "", cashOnHand: "", features: { plan: "free", subscriptionLimit: 5, csv: false, sync: false, subscriptionReview: false } };
 
   const currency = new Intl.NumberFormat(locale === "zh-TW" ? "zh-TW" : "en-US", {
     style: "currency", currency: "USD", maximumFractionDigits: 2,
@@ -32,15 +32,21 @@
   };
 
   const calculate = () => {
-    const dailyFloor = state.fixedCosts.reduce(
-      (sum, item) => sum + (Number(item.amount) || 0) * (Number(item.multiplier) || 0)
-        * (Number(item.businessUse) || 0) / 100 / 365, 0,
-    );
+    const active = (item) => {
+      const current = today();
+      return (!item.startDate || item.startDate <= current) && (!item.endDate || item.endDate >= current);
+    };
+    const dailyFloor = state.fixedCosts.reduce((sum, item) => sum + (
+      active(item)
+        ? (Number(item.amount) || 0) * (Number(item.multiplier) || 0)
+          * (Number(item.businessUse) || 0) / 100 / 365
+        : 0
+    ), 0);
     const grossIncome = state.income.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
     const platformFees = state.income.reduce((sum, item) => sum + (Number(item.platformFee) || 0), 0);
     const netIncome = grossIncome - platformFees;
     const monthlyFixedCosts = state.fixedCosts.reduce(
-      (sum, item) => sum + (Number(item.amount) || 0) * (Number(item.multiplier) || 0) / 12, 0,
+      (sum, item) => sum + (active(item) ? (Number(item.amount) || 0) * (Number(item.multiplier) || 0) / 12 : 0), 0,
     );
     const monthlyExpenses = state.expenses.reduce(
       (sum, item) => sum + (Number(item.amount) || 0) * (Number(item.businessUse) || 0) / 100, 0,
@@ -56,7 +62,7 @@
       requiredToDate: dailyFloor * monthDayCount(),
       comparison: netIncome - dailyFloor * monthDayCount(),
       savings: state.cashOnHand === "" ? null : Number(state.cashOnHand),
-      aiMonthlyCosts: state.fixedCosts.filter((item) => item.isSubscription).reduce(
+      aiMonthlyCosts: state.fixedCosts.filter((item) => item.isSubscription && active(item)).reduce(
         (sum, item) => sum + (Number(item.amount) || 0) * (Number(item.multiplier) || 0) / 12
           * (Number(item.businessUse) || 0) / 100, 0,
       ),
@@ -174,13 +180,117 @@
     return cell;
   };
 
+  const projectNames = () => state.projects.filter((project) => !project.archived).map((project) => project.name);
+  const allocationTotal = (allocation) => (allocation || []).reduce(
+    (sum, entry) => sum + (Number(entry.percent) || 0),
+    0,
+  );
+
+  const projectCell = (item) => {
+    const cell = document.createElement("td");
+    const allocation = item.allocation?.length
+      ? item.allocation
+      : (item.projects?.length ? item.projects.map((name) => ({ name, percent: 100 })) : (item.project ? [{ name: item.project, percent: 100 }] : []));
+    if (allocation.length) {
+      cell.textContent = allocation.map((entry) => entry.percent === 100 ? entry.name : `${entry.name} ${entry.percent}%`).join(" · ");
+    } else {
+      cell.textContent = messages.projects.unassigned;
+      cell.classList.add("unassigned");
+    }
+    return cell;
+  };
+
+  const calculateProjectTotals = () => {
+    const totals = { income: {}, costs: {}, unassigned: { income: 0, costs: 0 } };
+    for (const item of state.income) {
+      const key = item.projects?.[0] || item.project;
+      const net = (Number(item.amount) || 0) - (Number(item.platformFee) || 0);
+      if (!key) {
+        totals.unassigned.income += net;
+        continue;
+      }
+      totals.income[key] = (totals.income[key] || 0) + net;
+    }
+    for (const item of state.expenses) {
+      const key = item.projects?.[0] || item.project;
+      const businessAmount = (Number(item.amount) || 0) * (Number(item.businessUse) || 0) / 100;
+      if (!key) {
+        totals.unassigned.costs += businessAmount;
+        continue;
+      }
+      totals.costs[key] = (totals.costs[key] || 0) + businessAmount;
+    }
+    for (const item of state.fixedCosts) {
+      const monthlyBusiness = (Number(item.amount) || 0) * (Number(item.multiplier) || 0) / 12
+        * (Number(item.businessUse) || 0) / 100;
+      const allocation = item.allocation?.length
+        ? item.allocation
+        : (item.projects?.length ? [{ name: item.projects[0], percent: 100 }] : []);
+      if (!allocation.length) {
+        totals.unassigned.costs += monthlyBusiness;
+        continue;
+      }
+      for (const entry of allocation) {
+        if (!entry.name) continue;
+        totals.costs[entry.name] = (totals.costs[entry.name] || 0) + monthlyBusiness * (Number(entry.percent) || 0) / 100;
+      }
+    }
+    return totals;
+  };
+
+  const totalsHaveUnassigned = (totals) => Math.abs(totals.unassigned.income) > 0.005
+    || Math.abs(totals.unassigned.costs) > 0.005;
+
+  const renderProjects = () => {
+    const tbody = document.querySelector("[data-proto='project-rows']");
+    if (!tbody) return;
+    const projectTotals = calculateProjectTotals();
+    tbody.innerHTML = "";
+    if (!state.projects.filter((project) => !project.archived).length) {
+      const row = document.createElement("tr");
+      row.innerHTML = `<td colspan="5">${messages.projects.empty}</td>`;
+      tbody.appendChild(row);
+    }
+    state.projects.filter((project) => !project.archived).forEach((project) => {
+      const row = document.createElement("tr");
+      const name = document.createElement("td"); name.textContent = project.name;
+      const income = document.createElement("td"); income.textContent = money(projectTotals.income[project.name] || 0);
+      const costs = document.createElement("td"); costs.textContent = money(projectTotals.costs[project.name] || 0);
+      const projectIncome = projectTotals.income[project.name] || 0;
+      const projectCosts = projectTotals.costs[project.name] || 0;
+      const profit = document.createElement("td"); profit.textContent = money(projectIncome - projectCosts);
+      const actions = document.createElement("td");
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "entry-delete";
+      button.textContent = messages.projects.archive;
+      button.setAttribute("data-archive-project", "");
+      button.setAttribute("data-project-id", project.id);
+      actions.append(button);
+      row.append(name, income, costs, profit, actions);
+      tbody.appendChild(row);
+    });
+    if (totalsHaveUnassigned(projectTotals)) {
+      const row = document.createElement("tr");
+      row.className = "project-unassigned-row";
+      const name = document.createElement("td"); name.textContent = messages.projects.unassigned;
+      const income = document.createElement("td"); income.textContent = money(projectTotals.unassigned.income);
+      const costs = document.createElement("td"); costs.textContent = money(projectTotals.unassigned.costs);
+      const profit = document.createElement("td");
+      profit.textContent = money(projectTotals.unassigned.income - projectTotals.unassigned.costs);
+      const actions = document.createElement("td");
+      row.append(name, income, costs, profit, actions);
+      tbody.appendChild(row);
+    }
+  };
+
   const renderFixedCosts = () => {
     const tbody = document.querySelector("[data-proto='fixed-cost-rows']");
     if (!tbody) return;
     tbody.innerHTML = "";
     if (!state.fixedCosts.length) {
       const row = document.createElement("tr");
-      row.innerHTML = `<td colspan="9">${messages.empty.fixed}</td>`;
+      row.innerHTML = `<td colspan="11">${messages.empty.fixed}</td>`;
       tbody.appendChild(row);
       return;
     }
@@ -197,6 +307,7 @@
       effective.textContent = item.startDate ? `${item.startDate}${item.endDate ? ` – ${item.endDate}` : ""}` : "";
       const cost = document.createElement("td");
       cost.textContent = dayMoney(Number(item.amount) * Number(item.multiplier) * Number(item.businessUse) / 100 / 365);
+      const project = projectCell(item);
       const actions = document.createElement("td");
       if (isSubscription) {
         const review = document.createElement("div");
@@ -238,12 +349,8 @@
         hint.textContent = messages.subscriptionReview.reviewHint;
         review.append(hint);
         actions.append(review);
-      } else {
-        actions.append(deleteButton("fixed-cost", item.id));
       }
-      const rowActions = document.createElement("td");
-      rowActions.append(actions);
-      row.append(name, type, cycle, amount, use, effective, linkCell(item), cost, rowActions, deleteButton("fixed-cost", item.id));
+      row.append(name, type, cycle, amount, use, project, effective, linkCell(item), cost, actions, deleteButton("fixed-cost", item.id));
       tbody.appendChild(row);
     });
   };
@@ -254,7 +361,7 @@
     tbody.innerHTML = "";
     if (!state.income.length) {
       const row = document.createElement("tr");
-      row.innerHTML = `<td colspan="6">${messages.empty.income}</td>`;
+      row.innerHTML = `<td colspan="7">${messages.empty.income}</td>`;
       tbody.appendChild(row);
       return;
     }
@@ -263,10 +370,11 @@
       const net = (Number(item.amount) || 0) - (Number(item.platformFee) || 0);
       const dateCell = document.createElement("td"); dateCell.textContent = item.date;
       const source = document.createElement("td"); source.textContent = item.client || item.source;
+      const project = projectCell(item);
       const amount = document.createElement("td"); amount.textContent = money(Number(item.amount));
       const fee = document.createElement("td"); fee.textContent = money(Number(item.platformFee));
       const netCell = document.createElement("td"); netCell.textContent = money(net);
-      row.append(dateCell, source, amount, fee, netCell, deleteButton("income", item.id));
+      row.append(dateCell, source, project, amount, fee, netCell, deleteButton("income", item.id));
       tbody.appendChild(row);
     });
   };
@@ -277,7 +385,7 @@
     tbody.innerHTML = "";
     if (!state.expenses.length) {
       const row = document.createElement("tr");
-      row.innerHTML = `<td colspan="7">${messages.empty.expenses}</td>`;
+      row.innerHTML = `<td colspan="8">${messages.empty.expenses}</td>`;
       tbody.appendChild(row);
       return;
     }
@@ -290,26 +398,143 @@
       const amount = document.createElement("td"); amount.textContent = money(Number(item.amount));
       const use = document.createElement("td"); use.textContent = `${Number(item.businessUse)}%`;
       const business = document.createElement("td"); business.textContent = money(businessAmount);
-      row.append(dateCell, category, merchant, amount, use, business, deleteButton("expense", item.id));
+      const project = projectCell(item);
+      row.append(dateCell, category, merchant, project, amount, use, business, deleteButton("expense", item.id));
       tbody.appendChild(row);
     });
   };
 
+  const renderProjectOptions = () => {
+    document.querySelectorAll("[data-project-options]").forEach((node) => {
+      const current = node.value;
+      node.replaceChildren();
+      const unassigned = document.createElement("option");
+      unassigned.value = "";
+      unassigned.textContent = messages.projects.unassigned;
+      node.appendChild(unassigned);
+      projectNames().forEach((name) => {
+        const item = document.createElement("option");
+        item.value = name;
+        item.textContent = name;
+        node.appendChild(item);
+      });
+      if ([...node.options].some((option) => option.value === current)) node.value = current;
+    });
+    document.querySelectorAll("[data-allocation-project]").forEach((node) => {
+      const current = node.value;
+      node.replaceChildren();
+      const blank = document.createElement("option");
+      blank.value = "";
+      blank.textContent = messages.projects.unassigned;
+      node.appendChild(blank);
+      projectNames().forEach((name) => {
+        const item = document.createElement("option");
+        item.value = name;
+        item.textContent = name;
+        node.appendChild(item);
+      });
+      if ([...node.options].some((option) => option.value === current)) node.value = current;
+    });
+  };
+
+  const allocationList = () => document.querySelector("[data-allocation-list]");
+  const allocationTotalNode = () => document.querySelector("[data-allocation-total]");
+
+  const updateAllocationTotal = () => {
+    const list = allocationList();
+    const node = allocationTotalNode();
+    if (!list || !node) return;
+    const total = [...list.querySelectorAll("[data-allocation-percent]")]
+      .reduce((sum, input) => sum + (Number(input.value) || 0), 0);
+    node.textContent = messages.fields.allocationTotal.replace("{total}", String(Math.round(total * 100) / 100));
+    node.classList.toggle("invalid", list.children.length > 0 && Math.abs(total - 100) > 0.01);
+  };
+
+  const addAllocationRow = (allocation = {}) => {
+    const list = allocationList();
+    if (!list) return;
+    const row = document.createElement("div");
+    row.className = "allocation-row";
+    const select = document.createElement("select");
+    select.setAttribute("data-allocation-project", "");
+    const blank = document.createElement("option");
+    blank.value = "";
+    blank.textContent = messages.projects.unassigned;
+    select.appendChild(blank);
+    projectNames().forEach((name) => {
+      const option = document.createElement("option");
+      option.value = name;
+      option.textContent = name;
+      select.appendChild(option);
+    });
+    if (allocation.name && [...select.options].some((option) => option.value === allocation.name)) {
+      select.value = allocation.name;
+    }
+    const percent = document.createElement("input");
+    percent.type = "number";
+    percent.min = "0";
+    percent.max = "100";
+    percent.step = "0.1";
+    percent.value = allocation.percent === undefined ? "" : String(allocation.percent);
+    percent.setAttribute("data-allocation-percent", "");
+    percent.setAttribute("aria-label", messages.fields.projectAllocation);
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.textContent = "×";
+    remove.title = messages.fields.removeProjectShare;
+    remove.setAttribute("aria-label", messages.fields.removeProjectShare);
+    remove.setAttribute("data-allocation-remove", "");
+    row.append(select, percent, remove);
+    list.appendChild(row);
+    updateAllocationTotal();
+  };
+
+  const readAllocation = () => {
+    const list = allocationList();
+    if (!list) return [];
+    return [...list.querySelectorAll(".allocation-row")].map((row) => ({
+      name: String(row.querySelector("[data-allocation-project]")?.value || "").trim(),
+      percent: Number(row.querySelector("[data-allocation-percent]")?.value || 0),
+    })).filter((entry) => entry.name && Number.isFinite(entry.percent) && entry.percent > 0);
+  };
+
+  const resetAllocation = () => {
+    const list = allocationList();
+    if (list) list.replaceChildren();
+    updateAllocationTotal();
+  };
+
   const render = () => {
     renderMetrics();
+    renderProjects();
     renderFixedCosts();
     renderIncome();
     renderExpenses();
+    renderProjectOptions();
     renderIntegration();
   };
 
   const fixedForm = document.querySelector("[data-proto-form='fixed']");
   if (fixedForm) {
+    document.querySelector("[data-allocation-add]")?.addEventListener("click", () => addAllocationRow());
+    document.querySelector("[data-allocation-list]")?.addEventListener("input", updateAllocationTotal);
+    document.addEventListener("click", (event) => {
+      const remove = event.target.closest("[data-allocation-remove]");
+      if (!remove) return;
+      remove.closest(".allocation-row")?.remove();
+      updateAllocationTotal();
+    });
     fixedForm.addEventListener("submit", (event) => {
       event.preventDefault();
       const data = new FormData(fixedForm);
       const selected = cycles.find((cycle) => cycle.value === data.get("cycle"));
       const startDate = String(data.get("startDate") || today());
+      const allocation = readAllocation();
+      if (allocation.length && Math.abs(allocationTotal(allocation) - 100) > 0.01) {
+        window.alert(messages.fields.allocationInvalid);
+        updateAllocationTotal();
+        return;
+      }
       state.fixedCosts.push({
         name: String(data.get("name") || ""),
         cycle: selected?.value || "monthly",
@@ -322,11 +547,14 @@
         productUrl: String(data.get("productUrl") || "") || null,
         manageUrl: String(data.get("manageUrl") || "") || null,
         nextBillingDate: String(data.get("nextBillingDate") || "") || null,
+        projects: allocation.map((entry) => entry.name),
+        allocation,
       });
       fixedForm.reset();
       fixedForm.elements.startDate.value = today();
       fixedForm.elements.businessUse.value = "100";
       fixedForm.elements.cycle.value = "monthly";
+      resetAllocation();
       const subscriptionFields = document.querySelector("[data-subscription-fields]");
       if (subscriptionFields) subscriptionFields.hidden = true;
       render();
@@ -344,6 +572,7 @@
         client: String(data.get("client") || ""),
         amount: Number(data.get("amount")) || 0,
         platformFee: Number(data.get("platformFee")) || 0,
+        projects: [String(data.get("project") || "").trim()].filter(Boolean),
       });
       incomeForm.reset();
       incomeForm.elements.date.value = today();
@@ -363,6 +592,7 @@
         amount: Number(data.get("amount")) || 0,
         businessUse: Number(data.get("businessUse")) || 100,
         notes: String(data.get("notes") || ""),
+        projects: [String(data.get("project") || "").trim()].filter(Boolean),
       });
       expenseForm.reset();
       expenseForm.elements.date.value = today();
@@ -390,6 +620,7 @@
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
+          projects: state.projects.filter((project) => !project.archived),
           fixedCosts: state.fixedCosts,
           income: state.income,
           expenses: state.expenses,
@@ -409,6 +640,60 @@
     }
   };
 
+  const refreshProjectOptions = () => {
+    renderProjectOptions();
+    renderProjects();
+  };
+
+  document.querySelector("[data-project-form]")?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const input = form.querySelector("[data-project-name]");
+    const name = String(input.value || "").trim();
+    if (!name) return;
+    const button = form.querySelector("button[type=submit]");
+    button.disabled = true;
+    try {
+      const response = await fetch("/api/workspace/projects", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ name }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !Array.isArray(data.projects)) throw new Error(data?.error || "project_save_failed");
+      state.projects = data.projects;
+      input.value = "";
+      refreshProjectOptions();
+      render();
+    } catch (error) {
+      window.alert(error?.message === "project_exists" ? messages.projects.exists : messages.projects.saveFailed);
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  document.addEventListener("click", async (event) => {
+    const button = event.target.closest("[data-archive-project]");
+    if (!button || button.disabled) return;
+    if (!window.confirm(messages.projects.archiveConfirm)) return;
+    button.disabled = true;
+    try {
+      const response = await fetch(`/api/workspace/projects?id=${encodeURIComponent(button.dataset.projectId)}`, {
+        method: "DELETE",
+        credentials: "same-origin",
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !Array.isArray(data.projects)) throw new Error("project_archive_failed");
+      state.projects = data.projects;
+      refreshProjectOptions();
+      render();
+    } catch {
+      button.disabled = false;
+      window.alert(messages.projects.archiveFailed);
+    }
+  });
+
   document.querySelector("[data-save-google]")?.addEventListener("click", saveDraft);
   const csvMessage = (node, message) => {
     if (!node) return;
@@ -416,12 +701,15 @@
     node.hidden = false;
   };
   const csvFailedCsv = (rows) => {
-    const headers = ["line_number", "reason", "date", "source", "amount", "platform_fee", "client", "external_ref", "notes"];
+    const headers = ["line_number", "reason", "date", "source", "amount", "platform_fee", "client", "project", "external_ref", "notes"];
     const escape = (value) => {
       const raw = value === null || value === undefined ? "" : String(value);
       return /[",\n\r]/.test(raw) ? `"${raw.replaceAll("\"", "\"\"")}"` : raw;
     };
-    const line = (row) => headers.map((header) => escape(row[header])).join(",");
+    const line = (row) => headers.map((header) => {
+      if (header === "project") return escape(row.projects?.[0] || row.project || "");
+      return escape(row[header]);
+    }).join(",");
     return [headers.join(","), ...rows.map(line)].join("\n");
   };
   document.querySelector("[data-csv-import]")?.addEventListener("change", async (event) => {
@@ -733,6 +1021,7 @@
   const applyLedger = (ledger) => {
     if (!ledger) return;
     if (ledger.workspace?.features) state.features = ledger.workspace.features;
+    state.projects = ledger.projects || [];
     state.taxReserveRate = ledger.workspace?.taxReserveRate === null
       || ledger.workspace?.taxReserveRate === undefined
       ? "" : String(Math.round(ledger.workspace.taxReserveRate * 10000));
@@ -750,6 +1039,8 @@
       productUrl: item.productUrl || "",
       manageUrl: item.manageUrl || "",
       nextBillingDate: item.nextBillingDate || "",
+      projects: item.projects || (item.project ? [item.project] : []),
+      allocation: item.allocation || (item.projects || []).map((name) => ({ name, percent: 100 })),
       startDate: item.startDate || "",
       endDate: item.endDate || "",
       reviews: item.reviews || [],
@@ -761,6 +1052,7 @@
       client: item.client || "",
       amount: Number(item.amount) || 0,
       platformFee: Number(item.platformFee) || 0,
+      projects: item.projects || (item.project ? [item.project] : []),
       id: item.id,
     }));
     state.expenses = (ledger.expenses || []).map((item) => ({
@@ -770,6 +1062,7 @@
       amount: Number(item.amount) || 0,
       businessUse: Number(item.businessUse) || 100,
       notes: item.notes || "",
+      projects: item.projects || (item.project ? [item.project] : []),
       id: item.id,
     }));
   };

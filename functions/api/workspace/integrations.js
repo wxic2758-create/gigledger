@@ -122,7 +122,7 @@ export const onRequestGet = async ({ env, request }) => {
 const saveStripeTransactions = async (env, workspaceId, integrationId, transactions) => {
   const normalized = await Promise.all(transactions.map((item) => normalizeDraft({ income: [item] })));
   const entries = normalized.map((item) => item.income[0]).filter(Boolean);
-  await saveWorkspaceDraft(env.DB, workspaceId, { fixedCosts: [], income: entries, expenses: [], taxReserveRate: null, cashOnHand: null });
+  await saveWorkspaceDraft(env, workspaceId, { fixedCosts: [], income: entries, expenses: [], taxReserveRate: null, cashOnHand: null });
   await env.DB.prepare("UPDATE integrations SET last_sync_at = ?, last_error = NULL, updated_at = ? WHERE id = ?")
     .bind(new Date().toISOString(), new Date().toISOString(), integrationId).run();
   return entries.length;

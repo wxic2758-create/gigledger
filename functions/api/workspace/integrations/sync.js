@@ -92,7 +92,7 @@ export const onRequestPost = async ({ env, request }) => {
     const transactions = await stripeTransactions(secretKey);
     const normalized = await Promise.all(transactions.map((item) => normalizeDraft({ income: [item] })));
     const entries = normalized.map((item) => item.income[0]).filter(Boolean);
-    await saveWorkspaceDraft(env.DB, workspace.id, {
+    await saveWorkspaceDraft(env, workspace.id, {
       fixedCosts: [],
       income: entries,
       expenses: [],

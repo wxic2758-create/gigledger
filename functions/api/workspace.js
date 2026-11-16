@@ -57,7 +57,7 @@ export const onRequestPost = async ({ env, request }) => {
   if (!draft.fixedCosts.length && !draft.income.length && !draft.expenses.length) {
     return json({ error: "empty_draft" }, 400);
   }
-  await saveWorkspaceDraft(env.DB, workspace.id, draft);
+  await saveWorkspaceDraft(env, workspace.id, draft);
   return json({ authenticated: true, ledger: await loadWorkspace(env.DB, workspace.id) });
 };
 
@@ -123,7 +123,9 @@ export const onRequestDelete = async ({ env, request }) => {
       env.DB.prepare("DELETE FROM income_entries WHERE workspace_id IN (SELECT id FROM workspaces WHERE owner_id = ?)").bind(userId),
       env.DB.prepare("DELETE FROM expenses WHERE workspace_id IN (SELECT id FROM workspaces WHERE owner_id = ?)").bind(userId),
       env.DB.prepare("DELETE FROM subscription_reviews WHERE workspace_id IN (SELECT id FROM workspaces WHERE owner_id = ?)").bind(userId),
+      env.DB.prepare("DELETE FROM fixed_cost_versions WHERE fixed_cost_id IN (SELECT id FROM fixed_costs WHERE workspace_id IN (SELECT id FROM workspaces WHERE owner_id = ?))").bind(userId),
       env.DB.prepare("DELETE FROM fixed_costs WHERE workspace_id IN (SELECT id FROM workspaces WHERE owner_id = ?)").bind(userId),
+      env.DB.prepare("DELETE FROM projects WHERE workspace_id IN (SELECT id FROM workspaces WHERE owner_id = ?)").bind(userId),
       env.DB.prepare("DELETE FROM workspaces WHERE owner_id = ?").bind(userId),
       env.DB.prepare("DELETE FROM users WHERE id = ?").bind(userId),
     ]);

@@ -28,12 +28,30 @@ const hash = async (value) => {
   return [...new Uint8Array(bytes)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 };
 
+const parseAllocationJson = (value) => {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    if (!Array.isArray(parsed) || !parsed.length) return [];
+    if (parsed.every((entry) => typeof entry === "string")) {
+      const percent = 100 / parsed.length;
+      return parsed.map((name) => ({ name, percent }));
+    }
+    return parsed
+      .map((entry) => ({ name: text(entry?.name, 80), percent: Number(entry?.percent) }))
+      .filter((entry) => entry.name && Number.isFinite(entry.percent) && entry.percent > 0);
+  } catch {
+    return [];
+  }
+};
+
 export const normalizeDraft = async (input) => {
   const data = input && typeof input === "object" ? input : {};
   const fixedCosts = Array.isArray(data.fixedCosts) ? data.fixedCosts.slice(0, 200) : [];
   const income = Array.isArray(data.income) ? data.income.slice(0, 500) : [];
   const normalizedFixed = [];
   const normalizedIncome = [];
+  const normalizedProjects = [];
 
   for (const item of fixedCosts) {
     const amount = Number(item?.amount);
@@ -46,7 +64,14 @@ export const normalizeDraft = async (input) => {
     const templateKey = text(item?.templateKey || item?.template_key, 80);
     const productUrl = text(item?.productUrl || item?.product_url, 500);
     const manageUrl = text(item?.manageUrl || item?.manage_url, 500);
+    const rawAllocation = Array.isArray(item?.allocation)
+      ? item.allocation
+      : (Array.isArray(item?.projects) ? item.projects.map((projectName) => ({ name: projectName, percent: 100 })) : []);
+    const allocation = rawAllocation
+      .map((entry) => ({ name: text(entry?.name || entry, 80), percent: Number(entry?.percent ?? 100) }))
+      .filter((entry) => entry.name && Number.isFinite(entry.percent) && entry.percent > 0 && entry.percent <= 100);
     if (!name || !cycle || !finite(amount) || !finite(businessUse) || businessUse > 100) continue;
+    if (allocation.length && Math.abs(allocation.reduce((sum, entry) => sum + entry.percent, 0) - 100) > 0.01) continue;
     normalizedFixed.push({
       externalRef: await hash(`${name}|${amount}|${cycle}|${businessUse}`),
       name,
@@ -60,6 +85,8 @@ export const normalizeDraft = async (input) => {
       productUrl,
       manageUrl,
       nextBillingDate,
+      projects: allocation.map((entry) => entry.name),
+      allocation,
     });
   }
 
@@ -70,6 +97,7 @@ export const normalizeDraft = async (input) => {
     const occurredOn = date(item?.date);
     const clientName = text(item?.client, 120);
     const externalRef = text(item?.externalRef, 160);
+    const incomeProjects = Array.isArray(item?.projects) ? item.projects : [];
     if (!source || !occurredOn || !finite(amount) || !finite(platformFee) || platformFee > amount) continue;
     normalizedIncome.push({
       externalRef: externalRef || await hash(`${occurredOn}|${source}|${clientName || ""}|${amount}|${platformFee}`),
@@ -78,6 +106,7 @@ export const normalizeDraft = async (input) => {
       clientName,
       amount,
       platformFee,
+      projects: incomeProjects,
     });
   }
 
@@ -91,6 +120,7 @@ export const normalizeDraft = async (input) => {
     const merchant = text(item?.merchant, 120);
     const notes = text(item?.notes, 300);
     const externalRef = text(item?.externalRef, 160);
+    const expenseProjects = Array.isArray(item?.projects) ? item.projects : [];
     if (!category || !occurredOn || !finite(amount) || !finite(businessUse) || businessUse > 100) continue;
     normalizedExpenses.push({
       externalRef: externalRef || await hash(`${occurredOn}|${category}|${merchant || ""}|${amount}|${businessUse}`),
@@ -100,6 +130,7 @@ export const normalizeDraft = async (input) => {
       amount,
       businessUse,
       notes,
+      projects: expenseProjects,
     });
   }
 
@@ -115,7 +146,19 @@ export const normalizeDraft = async (input) => {
     if (finite(cash)) cashOnHand = cash;
   }
 
+  const projectNames = new Set([
+    ...normalizedFixed.flatMap((item) => item.projects),
+    ...normalizedIncome.flatMap((item) => item.projects),
+    ...normalizedExpenses.flatMap((item) => item.projects),
+    ...(Array.isArray(data.projects) ? data.projects : []).map((item) => typeof item === "string" ? item : item?.name).filter(Boolean),
+  ]);
+  for (const projectName of projectNames) {
+    const name = text(projectName);
+    if (name) normalizedProjects.push({ name });
+  }
+
   return {
+    projects: normalizedProjects,
     fixedCosts: normalizedFixed,
     income: normalizedIncome,
     expenses: normalizedExpenses,
@@ -124,9 +167,10 @@ export const normalizeDraft = async (input) => {
   };
 };
 
-export const saveWorkspaceDraft = async (db, workspaceId, draft) => {
+export const saveWorkspaceDraft = async (env, workspaceId, draft) => {
   const timestamp = new Date().toISOString();
   const statements = [];
+  const db = env.DB;
 
   statements.push(db.prepare(
     `UPDATE workspaces
@@ -144,15 +188,69 @@ export const saveWorkspaceDraft = async (db, workspaceId, draft) => {
     workspaceId,
   ));
 
-  for (const item of draft.fixedCosts) {
-    const fixedCostId = crypto.randomUUID();
+  const projectNames = new Map();
+  for (const project of draft.projects || []) {
+    const key = String(project.name || "").trim().toLowerCase();
+    if (key) projectNames.set(key, project.name);
+  }
+  for (const item of [...(draft.fixedCosts || []), ...(draft.income || []), ...(draft.expenses || [])]) {
+    for (const projectName of item.projects || []) {
+      const key = String(projectName || "").trim().toLowerCase();
+      if (key) projectNames.set(key, projectName);
+    }
+  }
+  let existingByName = new Map();
+  if (projectNames.size) {
+    const existing = await db.prepare(
+      "SELECT id, name, archived FROM projects WHERE workspace_id = ?",
+    ).bind(workspaceId).all();
+    existingByName = new Map((existing.results || []).map((row) => [row.name.toLowerCase(), { id: row.id, archived: Boolean(row.archived) }]));
+    for (const [key, name] of projectNames.entries()) {
+      const current = existingByName.get(key);
+      if (current) {
+        if (current.archived) {
+          await db.prepare(
+            "UPDATE projects SET archived = 0, updated_at = ? WHERE id = ? AND workspace_id = ?",
+          ).bind(timestamp, current.id, workspaceId).run();
+          current.archived = false;
+        }
+        continue;
+      }
+      const id = crypto.randomUUID();
+      await db.prepare(
+        "INSERT INTO projects (id, workspace_id, name, archived, created_at, updated_at) VALUES (?, ?, ?, 0, ?, ?)",
+      ).bind(id, workspaceId, name, timestamp, timestamp).run();
+      existingByName.set(key, { id, archived: false });
+    }
+  }
 
+  const projectIdByName = async (name) => {
+    const key = String(name || "").toLowerCase();
+    const cached = existingByName.get(key);
+    if (cached?.id) return cached.id;
+    const row = await db.prepare(
+      "SELECT id FROM projects WHERE workspace_id = ? AND lower(name) = lower(?)",
+    ).bind(workspaceId, name).first();
+    if (row?.id) existingByName.set(key, { id: row.id, archived: false });
+    return row?.id || null;
+  };
+
+  const existingFixed = await db.prepare(
+    "SELECT id, external_ref FROM fixed_costs WHERE workspace_id = ?",
+  ).bind(workspaceId).all();
+  const fixedIdByRef = new Map((existingFixed.results || []).map((row) => [row.external_ref, row.id]));
+
+  for (const item of draft.fixedCosts) {
+    const fixedCostId = fixedIdByRef.get(item.externalRef) || crypto.randomUUID();
+    const projectJson = item.allocation?.length
+      ? JSON.stringify(item.allocation)
+      : (item.projects?.length ? JSON.stringify(item.projects) : null);
     statements.push(db.prepare(
       `INSERT INTO fixed_costs
-        (id, workspace_id, external_ref, name, amount, cycle, business_use, source,
+        (id, workspace_id, external_ref, name, amount, cycle, business_use, source, project_id, allocation_json,
          is_subscription, template_key, product_url, manage_url, next_billing_date, start_date, end_date,
          created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'manual', ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'manual', NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(workspace_id, external_ref) DO NOTHING`,
     ).bind(
       fixedCostId,
@@ -162,6 +260,7 @@ export const saveWorkspaceDraft = async (db, workspaceId, draft) => {
       item.amount,
       item.cycle,
       item.businessUse,
+      projectJson,
       item.isSubscription ? 1 : 0,
       item.templateKey,
       item.productUrl,
@@ -174,8 +273,8 @@ export const saveWorkspaceDraft = async (db, workspaceId, draft) => {
     ));
     statements.push(db.prepare(
       `INSERT INTO fixed_cost_versions
-        (id, fixed_cost_id, effective_from, effective_to, amount, cycle, business_use, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (id, fixed_cost_id, effective_from, effective_to, amount, cycle, business_use, allocation_json, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(fixed_cost_id, effective_from) DO NOTHING`,
     ).bind(
       crypto.randomUUID(),
@@ -185,16 +284,18 @@ export const saveWorkspaceDraft = async (db, workspaceId, draft) => {
       item.amount,
       item.cycle,
       item.businessUse,
+      projectJson,
       timestamp,
       timestamp,
     ));
+    fixedIdByRef.set(item.externalRef, fixedCostId);
   }
 
   for (const item of draft.expenses) {
     statements.push(db.prepare(
       `INSERT INTO expenses
-        (id, workspace_id, external_ref, occurred_on, category, merchant, amount, business_use, notes, source, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'manual', ?, ?)
+        (id, workspace_id, external_ref, occurred_on, category, merchant, amount, business_use, notes, source, project_id, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'manual', NULL, ?, ?)
        ON CONFLICT(workspace_id, external_ref) DO NOTHING`,
     ).bind(
       crypto.randomUUID(),
@@ -214,8 +315,8 @@ export const saveWorkspaceDraft = async (db, workspaceId, draft) => {
   for (const item of draft.income) {
     statements.push(db.prepare(
       `INSERT INTO income_entries
-        (id, workspace_id, external_ref, occurred_on, source, client_name, amount, platform_fee, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (id, workspace_id, external_ref, occurred_on, source, client_name, amount, platform_fee, project_id, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)
        ON CONFLICT(workspace_id, external_ref) DO NOTHING`,
     ).bind(
       crypto.randomUUID(),
@@ -232,16 +333,39 @@ export const saveWorkspaceDraft = async (db, workspaceId, draft) => {
   }
 
   await db.batch(statements);
+  const updateProject = async (table, item, projectJson = null) => {
+    const projectId = item.projects?.length ? await projectIdByName(item.projects[0]) : null;
+    if (projectJson !== null) {
+      await db.prepare(`UPDATE ${table} SET project_id = ?, allocation_json = ? WHERE workspace_id = ? AND external_ref = ?`)
+        .bind(projectId, projectJson, workspaceId, item.externalRef).run();
+      return;
+    }
+    if (!projectId) return;
+    await db.prepare(`UPDATE ${table} SET project_id = ? WHERE workspace_id = ? AND external_ref = ?`)
+      .bind(projectId, workspaceId, item.externalRef).run();
+  };
+  for (const item of draft.fixedCosts) {
+    const projectJson = item.allocation?.length
+      ? JSON.stringify(item.allocation)
+      : (item.projects?.length ? JSON.stringify(item.projects) : null);
+    await updateProject("fixed_costs", item, projectJson);
+  }
+  for (const item of draft.income) await updateProject("income_entries", item);
+  for (const item of draft.expenses) await updateProject("expenses", item);
 };
 
 export const loadWorkspace = async (db, workspaceId) => {
+  const projectRows = await db.prepare(
+    "SELECT id, name, archived, created_at, updated_at FROM projects WHERE workspace_id = ? ORDER BY created_at DESC",
+  ).bind(workspaceId).all();
+  const projectsById = new Map((projectRows.results || []).map((item) => [item.id, item.name]));
   const workspace = await db.prepare(
     "SELECT id, name, base_currency, tax_reserve_rate, cash_on_hand, cash_on_hand_as_of, plan FROM workspaces WHERE id = ?",
   ).bind(workspaceId).first();
   if (!workspace) return null;
 
   const fixedCosts = await db.prepare(
-    `SELECT id, name, amount, cycle, business_use, source, is_subscription, template_key,
+    `SELECT id, name, amount, cycle, business_use, source, project_id, allocation_json, is_subscription, template_key,
             product_url, manage_url, next_billing_date, start_date, end_date,
             created_at, updated_at
      FROM fixed_costs WHERE workspace_id = ? ORDER BY created_at DESC`,
@@ -259,16 +383,43 @@ export const loadWorkspace = async (db, workspaceId) => {
     if (reviews.length < 2) reviews.push({ period: row.period, answer: row.answer });
     reviewsByCost.set(row.fixed_cost_id, reviews);
   }
+  const fixedCostRows = fixedCosts.results || [];
+  const versionRows = fixedCostRows.length ? await db.prepare(
+    `SELECT fixed_cost_id, effective_from, effective_to, amount, cycle, business_use, allocation_json
+     FROM fixed_cost_versions
+     WHERE fixed_cost_id IN (${fixedCostRows.map(() => "?").join(",")})
+     ORDER BY effective_from ASC`,
+  ).bind(...fixedCostRows.map((item) => item.id)).all() : { results: [] };
+  const versionsByCost = new Map();
+  for (const row of versionRows.results || []) {
+    const versions = versionsByCost.get(row.fixed_cost_id) || [];
+    versions.push({
+      effectiveFrom: row.effective_from,
+      effectiveTo: row.effective_to,
+      amount: row.amount,
+      cycle: row.cycle,
+      businessUse: row.business_use,
+      allocation: row.allocation_json ? JSON.parse(row.allocation_json) : [],
+    });
+    versionsByCost.set(row.fixed_cost_id, versions);
+  }
   const income = await db.prepare(
-    `SELECT id, external_ref, occurred_on, source, client_name, amount, platform_fee, created_at, updated_at
+    `SELECT id, external_ref, occurred_on, source, client_name, amount, platform_fee, project_id, created_at, updated_at
      FROM income_entries WHERE workspace_id = ? ORDER BY occurred_on DESC, created_at DESC`,
   ).bind(workspaceId).all();
   const expenses = await db.prepare(
-    `SELECT id, occurred_on, category, merchant, amount, business_use, notes, source, created_at, updated_at
+    `SELECT id, occurred_on, category, merchant, amount, business_use, notes, source, project_id, created_at, updated_at
      FROM expenses WHERE workspace_id = ? ORDER BY occurred_on DESC, created_at DESC`,
   ).bind(workspaceId).all();
 
   return {
+    projects: (projectRows.results || []).map((item) => ({
+      id: item.id,
+      name: item.name,
+      archived: Boolean(item.archived),
+      createdAt: item.created_at,
+      updatedAt: item.updated_at,
+    })),
     workspace: {
       id: workspace.id,
       name: workspace.name,
@@ -280,6 +431,18 @@ export const loadWorkspace = async (db, workspaceId) => {
       features: planFeatures(workspace.plan),
     },
     fixedCosts: (fixedCosts.results || []).map((item) => ({
+      ...(() => {
+        const allocation = parseAllocationJson(item.allocation_json);
+        const projects = allocation.length
+          ? allocation.map((entry) => entry.name)
+          : (item.project_id ? [projectsById.get(item.project_id)].filter(Boolean) : []);
+        return {
+          projects,
+          allocation: allocation.length
+            ? allocation
+            : (item.project_id ? [{ name: projectsById.get(item.project_id), percent: 100 }].filter((entry) => entry.name) : []),
+        };
+      })(),
       id: item.id,
       name: item.name,
       amount: item.amount,
@@ -295,7 +458,7 @@ export const loadWorkspace = async (db, workspaceId) => {
       endDate: item.end_date,
       createdAt: item.created_at,
       updatedAt: item.updated_at,
-      versions: [],
+      versions: versionsByCost.get(item.id) || [],
       reviews: reviewsByCost.get(item.id) || [],
     })),
     income: (income.results || []).map((item) => ({
@@ -306,6 +469,7 @@ export const loadWorkspace = async (db, workspaceId) => {
       client: item.client_name,
       amount: item.amount,
       platformFee: item.platform_fee,
+      project: item.project_id ? projectsById.get(item.project_id) || null : null,
       createdAt: item.created_at,
       updatedAt: item.updated_at,
     })),
@@ -318,6 +482,7 @@ export const loadWorkspace = async (db, workspaceId) => {
       businessUse: item.business_use,
       notes: item.notes,
       source: item.source,
+      project: item.project_id ? projectsById.get(item.project_id) || null : null,
       createdAt: item.created_at,
       updatedAt: item.updated_at,
     })),

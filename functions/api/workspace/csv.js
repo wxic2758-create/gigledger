@@ -55,10 +55,15 @@ const mapIncome = (item) => ({
   currency: "USD",
   platform_fee: Number(item.platformFee) || 0,
   client: item.client || "",
-  project: "",
-  external_ref: item.id || item.externalRef || "",
+  project: item.project || "",
+  external_ref: item.externalRef || item.id || "",
   notes: "",
 });
+
+const equivalentRef = (item) => `${item.date}|${item.source}|${Number(item.amount) || 0}|${Number(item.platformFee) || 0}`;
+const dedupeKey = (item) => item.externalRef
+  ? `ref:${item.externalRef}`
+  : `equivalent:${equivalentRef(item)}`;
 
 export const onRequestGet = async ({ env, request }) => {
   const url = new URL(request.url);
@@ -103,9 +108,15 @@ export const onRequestPost = async ({ env, request }) => {
   const feeIndex = headers.indexOf("platform_fee");
   const refIndex = headers.indexOf("external_ref");
   const clientIndex = headers.indexOf("client");
+  const projectIndex = headers.indexOf("project");
   const notesIndex = headers.indexOf("notes");
   const existingLedger = await loadWorkspace(env.DB, workspace.id);
   const existingRefs = new Set((existingLedger.income || []).map((item) => item.externalRef));
+  const existingEquivalent = new Set((existingLedger.income || []).map(equivalentRef));
+  const existingKeys = new Set([
+    ...[...existingRefs].filter(Boolean).map((value) => `ref:${value}`),
+    ...[...existingEquivalent].map((value) => `equivalent:${value}`),
+  ]);
   const originalRows = lines.slice(1);
   const imported = [];
   const failed = [];
@@ -119,6 +130,7 @@ export const onRequestPost = async ({ env, request }) => {
       amount: Number(cells[amountIndex]),
       platformFee: feeIndex >= 0 ? Number(cells[feeIndex] || 0) || 0 : 0,
       client: clientIndex >= 0 ? cells[clientIndex] : "",
+      projects: projectIndex >= 0 && cells[projectIndex] ? [cells[projectIndex]] : [],
       externalRef: refIndex >= 0 ? cells[refIndex] : "",
       notes: notesIndex >= 0 ? cells[notesIndex] : "",
     };
@@ -135,20 +147,27 @@ export const onRequestPost = async ({ env, request }) => {
       continue;
     }
     const entry = normalized.income[0];
-    if (seen.has(entry.externalRef)) {
+    const key = dedupeKey({ ...entry, externalRef: item.externalRef });
+    if (seen.has(key)) {
       failed.push({ line_number: rowIndex + 2, row: item, reason: "duplicate_in_file" });
       continue;
     }
-    seen.add(entry.externalRef);
-    if (existingRefs.has(entry.externalRef)) {
+    seen.add(key);
+    if (existingKeys.has(key)) {
       failed.push({ line_number: rowIndex + 2, row: item, reason: "duplicate_in_workspace" });
       continue;
     }
+    existingRefs.add(entry.externalRef);
+    existingEquivalent.add(equivalentRef(entry));
+    existingKeys.add(`ref:${entry.externalRef}`);
+    existingKeys.add(`equivalent:${equivalentRef(entry)}`);
     imported.push(entry);
   }
 
   if (imported.length) {
-    await saveWorkspaceDraft(env.DB, workspace.id, {
+    const projectNames = [...new Set(imported.flatMap((item) => item.projects || []))];
+    await saveWorkspaceDraft(env, workspace.id, {
+      projects: projectNames.map((name) => ({ name })),
       fixedCosts: [],
       income: imported,
       expenses: [],

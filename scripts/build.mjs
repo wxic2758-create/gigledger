@@ -580,6 +580,25 @@ const appPage = ({ locale, t, mode = "app" }) => {
       </ol>
     </section>
 
+    <section class="app-section shell" id="projects">
+      <div class="app-section-head">
+        <h2>${esc(t.app.projects.title)}</h2>
+        <p>${esc(t.app.projects.body)}</p>
+      </div>
+      <div class="app-grid">
+        <form class="app-form" data-project-form novalidate>
+          <label><span>${esc(t.app.projects.name)}</span><input data-project-name required></label>
+          <button class="button button-dark" type="submit">${esc(t.app.projects.add)}</button>
+        </form>
+        <div class="app-table-wrap">
+          <table>
+            <thead><tr><th>${esc(t.app.projects.name)}</th><th>${esc(t.app.projects.income)}</th><th>${esc(t.app.projects.costs)}</th><th>${esc(t.app.projects.profit)}</th><th>${esc(t.app.projects.actions)}</th></tr></thead>
+            <tbody data-proto="project-rows"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
     <section class="app-section shell" id="fixed-costs">
       <div class="app-section-head">
         <h2>${esc(t.app.fixed.title)}</h2>
@@ -588,6 +607,13 @@ const appPage = ({ locale, t, mode = "app" }) => {
       <div class="app-grid">
         <form class="app-form" data-proto-form="fixed" novalidate>
           <label><span>${esc(t.app.fields.name)}</span><input name="name" required></label>
+          <div class="allocation-field">
+            <span class="allocation-label">${esc(t.app.fields.projectAllocation)}</span>
+            <p class="allocation-note">${esc(t.app.fields.projectAllocationNote)}</p>
+            <div class="allocation-list" data-allocation-list></div>
+            <button class="button button-ghost allocation-add" type="button" data-allocation-add>${esc(t.app.fields.addProjectShare)}</button>
+            <p class="allocation-total" data-allocation-total></p>
+          </div>
           <label class="app-checkbox"><input name="isSubscription" type="checkbox"> <span>${esc(t.app.fields.subscription)}</span></label>
           <label><span>${esc(t.app.fields.amount)}</span><input name="amount" type="number" min="0" step="0.01" required></label>
           <label><span>${esc(t.app.fields.cycle)}</span><select name="cycle">${["daily","weekly","biweekly","monthly","quarterly","yearly"].map(option).join("")}</select></label>
@@ -604,7 +630,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
         </form>
         <div class="app-table-wrap">
           <table>
-            <thead><tr><th>${esc(t.app.table.name)}</th><th>${esc(t.app.table.type)}</th><th>${esc(t.app.table.cycle)}</th><th>${esc(t.app.table.amount)}</th><th>${esc(t.app.table.businessUse)}</th><th>${esc(t.app.table.effective)}</th><th>${esc(t.app.table.links)}</th><th>${esc(t.app.table.review)}</th><th>${esc(t.app.table.actions)}</th></tr></thead>
+            <thead><tr><th>${esc(t.app.table.name)}</th><th>${esc(t.app.table.type)}</th><th>${esc(t.app.table.cycle)}</th><th>${esc(t.app.table.amount)}</th><th>${esc(t.app.table.businessUse)}</th><th>${esc(t.app.table.project)}</th><th>${esc(t.app.table.effective)}</th><th>${esc(t.app.table.links)}</th><th>${esc(t.app.table.daily)}</th><th>${esc(t.app.table.review)}</th><th>${esc(t.app.table.actions)}</th></tr></thead>
             <tbody data-proto="fixed-cost-rows"></tbody>
           </table>
         </div>
@@ -635,15 +661,16 @@ const appPage = ({ locale, t, mode = "app" }) => {
         </form>
         <form class="app-form" data-proto-form="income" novalidate>
           <label><span>${esc(t.app.fields.date)}</span><input name="date" type="date" value="${new Date().toISOString().slice(0, 10)}" required></label>
-          <label><span>${esc(t.app.fields.source)}</span><select name="source">${["upwork","fiverr","stripe","direct"].map(sourceOption).join("")}</select></label>
+          <label><span>${esc(t.app.fields.source)}</span><select name="source">${["upwork","fiverr","stripe","direct","paypal","other"].map(sourceOption).join("")}</select></label>
           <label><span>${esc(t.app.fields.client)}</span><input name="client"></label>
+          <label><span>${esc(t.app.fields.project)}</span><select name="project" data-project-options></select></label>
           <label><span>${esc(t.app.fields.amount)}</span><input name="amount" type="number" min="0" step="0.01" required></label>
           <label><span>${esc(t.app.fields.platformFee)}</span><input name="platformFee" type="number" min="0" step="0.01" value="0"></label>
           <button class="button button-dark" type="submit">${esc(t.app.income.add)}</button>
         </form>
         <div class="app-table-wrap">
           <table>
-            <thead><tr><th>${esc(t.app.table.date)}</th><th>${esc(t.app.table.source)}</th><th>${esc(t.app.table.amount)}</th><th>${esc(t.app.table.fee)}</th><th>${esc(t.app.table.net)}</th><th>${esc(t.app.table.actions)}</th></tr></thead>
+            <thead><tr><th>${esc(t.app.table.date)}</th><th>${esc(t.app.table.source)}</th><th>${esc(t.app.table.project)}</th><th>${esc(t.app.table.amount)}</th><th>${esc(t.app.table.fee)}</th><th>${esc(t.app.table.net)}</th><th>${esc(t.app.table.actions)}</th></tr></thead>
             <tbody data-proto="income-rows"></tbody>
           </table>
         </div>
@@ -661,6 +688,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
           <label><span>${esc(t.app.fields.date)}</span><input name="date" type="date" value="${new Date().toISOString().slice(0, 10)}" required></label>
           <label><span>${esc(t.app.fields.category)}</span><input name="category" required></label>
           <label><span>${esc(t.app.fields.merchant)}</span><input name="merchant"></label>
+          <label><span>${esc(t.app.fields.project)}</span><select name="project" data-project-options></select></label>
           <label><span>${esc(t.app.fields.amount)}</span><input name="amount" type="number" min="0" step="0.01" required></label>
           <label><span>${esc(t.app.fields.businessUse)}</span><input name="businessUse" type="number" min="0" max="100" value="100" required></label>
           <label><span>${esc(t.app.fields.notes)}</span><input name="notes"></label>
@@ -668,7 +696,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
         </form>
         <div class="app-table-wrap">
           <table>
-            <thead><tr><th>${esc(t.app.table.date)}</th><th>${esc(t.app.table.category)}</th><th>${esc(t.app.table.merchant)}</th><th>${esc(t.app.table.amount)}</th><th>${esc(t.app.table.businessUse)}</th><th>${esc(t.app.table.businessAmount)}</th><th>${esc(t.app.table.actions)}</th></tr></thead>
+            <thead><tr><th>${esc(t.app.table.date)}</th><th>${esc(t.app.table.category)}</th><th>${esc(t.app.table.merchant)}</th><th>${esc(t.app.table.project)}</th><th>${esc(t.app.table.amount)}</th><th>${esc(t.app.table.businessUse)}</th><th>${esc(t.app.table.businessAmount)}</th><th>${esc(t.app.table.actions)}</th></tr></thead>
             <tbody data-proto="expense-rows"></tbody>
           </table>
         </div>
@@ -682,7 +710,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
       <a href="/${t.alternatePath}app">${esc(t.nav.switchTo)}</a>
     </div>
   </footer>
-  <script src="/app-ledger.js?v=20261115-1" defer></script>
+  <script src="/app-ledger.js?v=20261116-2" defer></script>
   <script src="/app.js" defer></script>
 </body>
 </html>`;

@@ -69,6 +69,22 @@
 .app-checkbox span { margin-bottom: 0 !important; }
 .subscription-fields { display: grid; gap: 12px; padding-top: 2px; }
 .subscription-fields[hidden] { display: none; }
+.allocation-field { display: grid; gap: 8px; }
+.allocation-label { display: block; font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 0; }
+.allocation-note { font-size: 11px; line-height: 1.45; color: var(--ink-soft); }
+.allocation-list { display: grid; gap: 8px; }
+.allocation-row { display: grid; grid-template-columns: minmax(0, 1fr) 84px 38px; gap: 7px; align-items: center; }
+.allocation-row select, .allocation-row input { min-height: 42px; padding-inline: 9px; background: var(--paper); border: 1px solid var(--line); border-radius: 9px; }
+.allocation-row button {
+  min-height: 38px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--paper); color: var(--ink-soft); cursor: pointer;
+}
+.allocation-row button:hover { border-color: #b42318; color: #b42318; }
+.allocation-add { justify-self: start; min-height: 38px; }
+.allocation-total { font-size: 11px; font-weight: 700; color: var(--ink-soft); }
+.allocation-total.invalid { color: #b42318; }
+.project-unassigned-row { background: var(--paper); }
+.project-unassigned-row td:first-child { color: var(--ink-soft); font-style: italic; }
 .entry-links { display: flex; gap: 8px; align-items: center; }
 .entry-link { font-size: 11px; font-weight: 700; color: var(--orange-dark); text-decoration: none; }
 .entry-link:hover { text-decoration: underline; }

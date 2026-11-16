@@ -90,7 +90,7 @@ export const onRequestGet = async ({ env, request }) => {
   if (authState.intent === "save" && authState.draft_json) {
     try {
       const draft = JSON.parse(authState.draft_json);
-      await saveWorkspaceDraft(env.DB, workspaceId, draft);
+      await saveWorkspaceDraft(env, workspaceId, draft);
     } catch {
       return json({ error: "invalid_saved_draft" }, 400);
     }

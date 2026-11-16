@@ -120,7 +120,11 @@ export const onRequestPost = async ({ env, request }) => {
       if (features.subscriptionLimit !== null && existingCount.count + subscriptionCount > features.subscriptionLimit) {
         return json({ error: "subscription_limit", limit: features.subscriptionLimit }, 403);
       }
-      await saveWorkspaceDraft(env.DB, workspace.id, draft);
+      try {
+        await saveWorkspaceDraft(env, workspace.id, draft);
+      } catch (error) {
+        return json({ error: error?.message || "draft_save_failed" }, 400);
+      }
       return json({
         saved: true,
         redirectUrl: `${SITE_URL}/${locale(request)}/dashboard`,
