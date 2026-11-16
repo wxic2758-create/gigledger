@@ -232,7 +232,7 @@
       },
       {
         "q": "Does it connect to Stripe or the App Store?",
-        "a": "Official Stripe and App Store Connect sync is planned for Pro. Upwork, PayPal, and Fiverr can be imported with CSV. No bank passwords and no scraping."
+        "a": "Pro supports official Stripe sync and App Store Connect key storage. App Store report sync is not available yet and says so clearly. Upwork, PayPal, and Fiverr can be imported with CSV. No bank passwords and no scraping."
       },
       {
         "q": "What counts as a fixed cost?",
@@ -247,8 +247,8 @@
         "a": "After Sign in with Google, we store your Google email and name plus saved ledger data in Cloudflare D1. You can export and delete your account from the dashboard."
       },
       {
-        "q": "When will it launch?",
-        "a": "The first version is in development. You can try the calculator now, and sign in with Google to save your ledger."
+        "q": "Can I start now?",
+        "a": "Yes. Try the calculator without an account, then sign in with Google to save your ledger."
       }
     ]
   },

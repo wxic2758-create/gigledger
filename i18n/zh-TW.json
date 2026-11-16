@@ -232,7 +232,7 @@
       },
       {
         "q": "能連接 Stripe 或 App Store 嗎？",
-        "a": "Pro 版將提供 Stripe 與 App Store Connect 官方同步。Upwork、PayPal、Fiverr 可用 CSV 匯入。不收銀行密碼，也不抓取帳號。"
+        "a": "Pro 支援 Stripe 官方同步與 App Store Connect 金鑰儲存。App Store 報告同步目前尚未開放，介面會清楚說明。Upwork、PayPal、Fiverr 可用 CSV 匯入；不收銀行密碼，也不抓取帳號。"
       },
       {
         "q": "什麼算固定成本？",
@@ -247,8 +247,8 @@
         "a": "使用 Google 登入後，我們會在 Cloudflare D1 儲存 Google 信箱、姓名與你保存的帳本資料。可在 Dashboard 匯出或刪除帳號。"
       },
       {
-        "q": "什麼時候上線？",
-        "a": "第一版正在開發中。你現在可以試算，並使用 Google 登入保存你的帳本。"
+        "q": "現在可以開始用嗎？",
+        "a": "可以。先不登入試算，再使用 Google 登入保存你的帳本。"
       }
     ]
   },
