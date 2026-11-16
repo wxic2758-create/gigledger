@@ -507,6 +507,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
         </div>
         <div class="integration-grid">
           <form class="integration-form" data-stripe-form>
+            <h3>${esc(t.app.integrations.stripeTitle)}</h3>
             <label><span>${esc(t.app.integrations.keyLabel)}</span><input name="secretKey" type="password" autocomplete="off" placeholder="rk_live_… or sk_live_…" required></label>
             <label><span>${esc(t.app.integrations.accountLabel)}</span><input name="accountLabel" placeholder="${esc(t.app.integrations.accountPlaceholder)}"></label>
             <p class="app-note">${esc(t.app.integrations.keyNote)}</p>
@@ -523,6 +524,28 @@ const appPage = ({ locale, t, mode = "app" }) => {
             </div>
           </div>
         </div>
+        <div class="integration-grid">
+          <form class="integration-form" data-app-store-form>
+            <h3>${esc(t.app.integrations.appStoreTitle)}</h3>
+            <p class="app-note">${esc(t.app.integrations.appStoreBody)}</p>
+            <label><span>${esc(t.app.integrations.issuerLabel)}</span><input name="issuerId" required></label>
+            <label><span>${esc(t.app.integrations.keyIdLabel)}</span><input name="keyId" required></label>
+            <label><span>${esc(t.app.integrations.privateKeyLabel)}</span><textarea name="privateKey" rows="5" required></textarea></label>
+            <p class="app-note">${esc(t.app.integrations.privateKeyNote)}</p>
+            <button class="button button-dark" type="submit">${esc(t.app.integrations.connectAppStore)}</button>
+            <p class="form-message" data-app-store-message role="status" aria-live="polite" hidden></p>
+          </form>
+          <div class="integration-status" data-app-store-status>
+            <span>${esc(t.app.integrations.statusLabel)}</span>
+            <strong data-app-store-status-label>${esc(t.app.integrations.notConnected)}</strong>
+            <small data-app-store-sync-label></small>
+            <small data-app-store-pending hidden>${esc(t.app.integrations.appStorePending)}</small>
+            <div class="integration-actions">
+              <button class="button button-ghost" type="button" data-app-store-sync disabled>${esc(t.app.integrations.syncAppStore)}</button>
+              <button class="button button-danger" type="button" data-app-store-disconnect disabled>${esc(t.app.integrations.disconnect)}</button>
+            </div>
+          </div>
+        </div>
       </section>
       ` : ""}
       <div class="weekly-summary" data-weekly-summary hidden>
@@ -535,6 +558,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
         <article><span>${esc(t.app.metrics.comparison)}</span><strong data-proto="metric-comparison">-</strong></article>
         <article class="runway-card"><span>${esc(t.app.metrics.runway)}</span><strong data-proto="metric-runway">-</strong><small data-proto="metric-runway-average">${esc(t.app.metrics.runwayNote)}</small></article>
         <article><span>${esc(t.app.metrics.gross)}</span><strong data-proto="metric-gross">$0.00</strong></article>
+        <article data-sold-card hidden><span>${esc(t.app.metrics.sold)}</span><strong data-proto="metric-sold">$0.00</strong><small>${esc(t.app.metrics.soldNote)}</small></article>
         <article><span>${esc(t.app.metrics.fees)}</span><strong data-proto="metric-fees">$0.00</strong></article>
         <article><span>${esc(t.app.metrics.net)}</span><strong data-proto="metric-net">$0.00</strong></article>
         <article><span>${esc(t.app.metrics.costs)}</span><strong data-proto="metric-costs">$0.00</strong><small>${esc(t.app.metrics.costsNote)}</small></article>
@@ -687,7 +711,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
         </form>
         <form class="app-form" data-proto-form="income" novalidate>
           <label><span>${esc(t.app.fields.date)}</span><input name="date" type="date" value="${new Date().toISOString().slice(0, 10)}" required></label>
-          <label><span>${esc(t.app.fields.source)}</span><select name="source">${["upwork","fiverr","stripe","direct","paypal","other"].map(sourceOption).join("")}</select></label>
+          <label><span>${esc(t.app.fields.source)}</span><select name="source">${["upwork","fiverr","stripe","app_store","direct","paypal","other"].map(sourceOption).join("")}</select></label>
           <label><span>${esc(t.app.fields.client)}</span><input name="client"></label>
           <label><span>${esc(t.app.fields.project)}</span><select name="project" data-project-options></select></label>
           <label><span>${esc(t.app.fields.amount)}</span><input name="amount" type="number" min="0" step="0.01" required></label>
@@ -696,7 +720,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
         </form>
         <div class="app-table-wrap">
           <table>
-            <thead><tr><th>${esc(t.app.table.date)}</th><th>${esc(t.app.table.source)}</th><th>${esc(t.app.table.project)}</th><th>${esc(t.app.table.amount)}</th><th>${esc(t.app.table.fee)}</th><th>${esc(t.app.table.net)}</th><th>${esc(t.app.table.actions)}</th></tr></thead>
+            <thead><tr><th>${esc(t.app.table.date)}</th><th>${esc(t.app.table.source)}</th><th>${esc(t.app.table.recognition)}</th><th>${esc(t.app.table.project)}</th><th>${esc(t.app.table.amount)}</th><th>${esc(t.app.table.fee)}</th><th>${esc(t.app.table.net)}</th><th>${esc(t.app.table.actions)}</th></tr></thead>
             <tbody data-proto="income-rows"></tbody>
           </table>
         </div>
@@ -736,7 +760,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
       <a href="/${t.alternatePath}app">${esc(t.nav.switchTo)}</a>
     </div>
   </footer>
-  <script src="/app-ledger.js?v=20261116-6" defer></script>
+  <script src="/app-ledger.js?v=20261116-7" defer></script>
   <script src="/app.js" defer></script>
 </body>
 </html>`;

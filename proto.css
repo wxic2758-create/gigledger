@@ -314,10 +314,11 @@
   display: block; margin-bottom: 6px; font-size: 10px; font-weight: 800;
   letter-spacing: .1em; text-transform: uppercase;
 }
-.integration-form input {
+.integration-form input, .integration-form textarea {
   width: 100%; min-height: 44px; padding: 0 12px; color: var(--ink);
   background: var(--white); border: 1px solid var(--line); border-radius: 9px;
 }
+.integration-form textarea { min-height: 118px; padding-block: 10px; resize: vertical; font: inherit; }
 .integration-form .app-note { margin-top: 0; }
 .integration-status { display: grid; align-content: start; gap: 9px; }
 .integration-status strong { font-family: var(--display); font-size: 25px; letter-spacing: -.04em; }

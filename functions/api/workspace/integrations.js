@@ -97,6 +97,76 @@ const stripeTransactions = async (secretKey) => {
   return transactions;
 };
 
+const appStoreCredential = (payload) => ({
+  issuerId: String(payload?.issuerId || "").trim(),
+  keyId: String(payload?.keyId || "").trim(),
+  privateKey: String(payload?.privateKey || "").trim(),
+});
+
+const appStoreJwt = async (credential) => {
+  const pem = credential.privateKey
+    .replaceAll("-----BEGIN PRIVATE KEY-----", "")
+    .replaceAll("-----END PRIVATE KEY-----", "")
+    .replaceAll(/\s+/g, "");
+  let der;
+  try {
+    der = Uint8Array.from(atob(pem), (char) => char.charCodeAt(0));
+  } catch {
+    const error = new Error("invalid_app_store_private_key");
+    error.status = 400;
+    throw error;
+  }
+  if (der[0] !== 0x30) {
+    const error = new Error("invalid_app_store_private_key");
+    error.status = 400;
+    throw error;
+  }
+  try {
+    const privateKey = await crypto.subtle.importKey(
+      "pkcs8",
+      der,
+      { name: "ECDSA", namedCurve: "P-256" },
+      false,
+      ["sign"],
+    );
+    const encode = (value) => base64Url(new TextEncoder().encode(JSON.stringify(value)));
+    const now = Math.floor(Date.now() / 1000);
+    const header = encode({ alg: "ES256", kid: credential.keyId, typ: "JWT" });
+    const payload = encode({ iss: credential.issuerId, iat: now, exp: now + 600, aud: "appstoreconnect-v1" });
+    const signature = await crypto.subtle.sign(
+      { name: "ECDSA", hash: "SHA-256" },
+      privateKey,
+      new TextEncoder().encode(`${header}.${payload}`),
+    );
+    return `${header}.${payload}.${base64Url(new Uint8Array(signature))}`;
+  } catch {
+    const error = new Error("invalid_app_store_private_key");
+    error.status = 400;
+    throw error;
+  }
+};
+
+const saveAppStoreCredential = async (env, workspaceId, credential, label) => {
+  if (!/^[0-9a-f-]{36}$/i.test(credential.issuerId)
+    || !/^[A-Z0-9]{6,12}$/i.test(credential.keyId)
+    || !credential.privateKey.includes("BEGIN PRIVATE KEY")) {
+    const error = new Error("invalid_app_store_credentials");
+    error.status = 400;
+    throw error;
+  }
+  await appStoreJwt(credential);
+  return {
+    integrationId: await upsertIntegration(
+      env.DB,
+      workspaceId,
+      "app_store",
+      JSON.stringify(credential),
+      label || "App Store Connect",
+      env.SESSION_SECRET || env.GOOGLE_CLIENT_SECRET,
+    ),
+  };
+};
+
 export const onRequestGet = async ({ env, request }) => {
   const userId = await readAuthenticatedUserId(env, request.headers.get("cookie"));
   if (!userId) return json({ authenticated: false }, 401);
@@ -143,7 +213,22 @@ export const onRequestPost = async ({ env, request }) => {
     return json({ error: "invalid_json" }, 400);
   }
   const type = payload?.type;
-  if (type !== "stripe") return json({ error: "unsupported_integration" }, 400);
+  if (!["stripe", "app_store"].includes(type)) return json({ error: "unsupported_integration" }, 400);
+  if (type === "app_store") {
+    const credential = appStoreCredential(payload);
+    try {
+      await saveAppStoreCredential(env, workspace.id, credential, payload.accountLabel);
+      return json({
+        authenticated: true,
+        connected: true,
+        imported: 0,
+        pending: true,
+        message: "app_store_reports_pending",
+      });
+    } catch (error) {
+      return json({ error: error?.message || "app_store_connect_failed" }, Number(error?.status) || 400);
+    }
+  }
   const secretKey = String(payload?.secretKey || "").trim();
   if (!secretKey.startsWith("rk_") && !secretKey.startsWith("sk_")) {
     return json({ error: "invalid_stripe_key" }, 400);
@@ -181,7 +266,7 @@ export const onRequestDelete = async ({ env, request }) => {
   const workspace = await env.DB.prepare("SELECT id FROM workspaces WHERE owner_id = ?").bind(userId).first();
   if (!workspace) return json({ error: "workspace_not_found" }, 404);
   const type = new URL(request.url).searchParams.get("type");
-  if (type !== "stripe") return json({ error: "unsupported_integration" }, 400);
+  if (!["stripe", "app_store"].includes(type)) return json({ error: "unsupported_integration" }, 400);
   await env.DB.prepare("DELETE FROM integrations WHERE workspace_id = ? AND type = ?").bind(workspace.id, type).run();
   return json({ authenticated: true, deleted: type });
 };

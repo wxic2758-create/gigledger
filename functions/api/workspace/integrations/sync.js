@@ -78,6 +78,11 @@ export const onRequestPost = async ({ env, request }) => {
   if (!workspace) return json({ error: "workspace_not_found" }, 404);
   const record = await env.DB.prepare("SELECT plan FROM workspaces WHERE id = ?").bind(workspace.id).first();
   if (!planFeatures(record?.plan).sync) return json({ error: "pro_required" }, 403);
+  const type = new URL(request.url).searchParams.get("type") || "stripe";
+  if (type === "app_store") {
+    return json({ error: "app_store_report_sync_not_configured" }, 501);
+  }
+  if (type !== "stripe") return json({ error: "unsupported_integration" }, 400);
   const integration = await env.DB.prepare(
     "SELECT id, encrypted_credentials FROM integrations WHERE workspace_id = ? AND type = 'stripe' AND status = 'connected'",
   ).bind(workspace.id).first();

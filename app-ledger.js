@@ -3,7 +3,7 @@
   const locale = root.dataset.locale === "zh-TW" ? "zh-TW" : "en";
   const messages = JSON.parse(document.getElementById("proto-messages").textContent);
   const dashboardMode = Boolean(document.querySelector("[data-dashboard]"));
-  const state = { projects: [], fixedCosts: [], income: [], expenses: [], taxReserveRate: "", cashOnHand: "", features: { plan: "free", subscriptionLimit: 5, csv: false, sync: false, subscriptionReview: false } };
+  const state = { projects: [], fixedCosts: [], income: [], expenses: [], taxReserveRate: "", cashOnHand: "", features: { plan: "free", subscriptionLimit: 5, csv: false, sync: false, appStoreSync: false, subscriptionReview: false } };
   let editingFixedCostId = null;
 
   const currency = new Intl.NumberFormat(locale === "zh-TW" ? "zh-TW" : "en-US", {
@@ -72,6 +72,7 @@
     const currentMonth = monthKey(now);
     const buckets = new Map();
     for (const item of state.income) {
+      if (item.recognition === "sold") continue;
       const key = String(item.date || "").slice(0, 7);
       if (!/^\d{4}-\d{2}$/.test(key) || key >= currentMonth) continue;
       buckets.set(key, (buckets.get(key) || 0) + (Number(item.amount) || 0) - (Number(item.platformFee) || 0));
@@ -141,7 +142,10 @@
         ? monthlyAmountForVersion(effectiveVersionForItem(item)) * 12 / 365
         : 0
     ), 0);
-    const monthIncomeEntries = state.income.filter((item) => isInCurrentMonth(item.date));
+    const monthIncomeEntries = state.income.filter((item) => isInCurrentMonth(item.date) && item.recognition !== "sold");
+    const soldIncome = state.income
+      .filter((item) => isInCurrentMonth(item.date) && item.recognition === "sold")
+      .reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
     const grossIncome = monthIncomeEntries.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
     const platformFees = monthIncomeEntries.reduce((sum, item) => sum + (Number(item.platformFee) || 0), 0);
     const netIncome = grossIncome - platformFees;
@@ -175,6 +179,7 @@
     return {
       dailyFloor, grossIncome, platformFees, netIncome, monthlyFixedCosts,
       monthlyExpenses,
+      soldIncome,
       trueProfit: netIncome - monthlyFixedCosts - monthlyExpenses,
       taxReserve: Number.isFinite(rate) && state.taxReserveRate !== "" && rate >= 0
         ? netIncome * rate
@@ -228,6 +233,9 @@
     const result = calculate();
     set("metric-daily", dayMoney(result.dailyFloor));
     set("metric-gross", money(result.grossIncome));
+    set("metric-sold", money(result.soldIncome));
+    const soldCard = document.querySelector("[data-sold-card]");
+    if (soldCard) soldCard.hidden = result.soldIncome <= 0;
     set("metric-fees", money(result.platformFees));
     set("metric-net", money(result.netIncome));
     set("metric-profit", money(result.trueProfit));
@@ -320,6 +328,7 @@
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekEnd.getDate() + 7);
     const weekIncome = state.income.filter((item) => {
+      if (item.recognition === "sold") return false;
       const date = new Date(`${item.date}T00:00:00`);
       return date >= weekStart && date < weekEnd;
     }).reduce((sum, item) => sum + (Number(item.amount) - Number(item.platformFee)), 0);
@@ -418,6 +427,7 @@
   const calculateProjectTotals = () => {
     const totals = { income: {}, costs: {}, unassigned: { income: 0, costs: 0 } };
     for (const item of state.income) {
+      if (item.recognition === "sold") continue;
       const key = item.projects?.[0] || item.project;
       const net = (Number(item.amount) || 0) - (Number(item.platformFee) || 0);
       if (!key) {
@@ -591,7 +601,7 @@
     tbody.innerHTML = "";
     if (!state.income.length) {
       const row = document.createElement("tr");
-      row.innerHTML = `<td colspan="7">${messages.empty.income}</td>`;
+      row.innerHTML = `<td colspan="8">${messages.empty.income}</td>`;
       tbody.appendChild(row);
       return;
     }
@@ -599,12 +609,16 @@
       const row = document.createElement("tr");
       const net = (Number(item.amount) || 0) - (Number(item.platformFee) || 0);
       const dateCell = document.createElement("td"); dateCell.textContent = item.date;
-      const source = document.createElement("td"); source.textContent = item.client || item.source;
+      const source = document.createElement("td"); source.textContent = item.client || messages.sources[item.source] || item.source;
+      const recognition = document.createElement("td");
+      recognition.textContent = item.recognition === "sold"
+        ? messages.income.recognitionSold
+        : messages.income.recognitionReceived;
       const project = projectCell(item);
       const amount = document.createElement("td"); amount.textContent = money(Number(item.amount));
       const fee = document.createElement("td"); fee.textContent = money(Number(item.platformFee));
       const netCell = document.createElement("td"); netCell.textContent = money(net);
-      row.append(dateCell, source, project, amount, fee, netCell, deleteButton("income", item.id));
+      row.append(dateCell, source, recognition, project, amount, fee, netCell, deleteButton("income", item.id));
       tbody.appendChild(row);
     });
   };
@@ -1281,37 +1295,66 @@
 
   const integrationNodes = () => ({
     panel: document.querySelector("[data-integration-panel]"),
-    form: document.querySelector("[data-stripe-form]"),
-    message: document.querySelector("[data-stripe-message]"),
     badge: document.querySelector("[data-plan-badge]"),
-    statusLabel: document.querySelector("[data-stripe-status-label]"),
-    syncLabel: document.querySelector("[data-stripe-sync-label]"),
-    sync: document.querySelector("[data-stripe-sync]"),
-    disconnect: document.querySelector("[data-stripe-disconnect]"),
+    stripe: {
+      form: document.querySelector("[data-stripe-form]"),
+      message: document.querySelector("[data-stripe-message]"),
+      statusLabel: document.querySelector("[data-stripe-status-label]"),
+      syncLabel: document.querySelector("[data-stripe-sync-label]"),
+      sync: document.querySelector("[data-stripe-sync]"),
+      disconnect: document.querySelector("[data-stripe-disconnect]"),
+    },
+    appStore: {
+      form: document.querySelector("[data-app-store-form]"),
+      message: document.querySelector("[data-app-store-message]"),
+      statusLabel: document.querySelector("[data-app-store-status-label]"),
+      syncLabel: document.querySelector("[data-app-store-sync-label]"),
+      sync: document.querySelector("[data-app-store-sync]"),
+      disconnect: document.querySelector("[data-app-store-disconnect]"),
+      pending: document.querySelector("[data-app-store-pending]"),
+    },
   });
   let stripeIntegration = null;
+  let appStoreIntegration = null;
 
   const renderIntegration = () => {
     const nodes = integrationNodes();
     if (!nodes.panel) return;
     if (nodes.badge) nodes.badge.textContent = state.features.plan === "pro" ? messages.plan.pro : messages.plan.free;
-    const connected = stripeIntegration?.status === "connected";
-    if (nodes.statusLabel) nodes.statusLabel.textContent = connected ? messages.integrations.connected : messages.integrations.notConnected;
-    if (nodes.syncLabel) {
-      nodes.syncLabel.textContent = !connected
+    const stripeConnected = stripeIntegration?.status === "connected";
+    const stripeNodes = nodes.stripe;
+    if (stripeNodes.statusLabel) stripeNodes.statusLabel.textContent = stripeConnected ? messages.integrations.connected : messages.integrations.notConnected;
+    if (stripeNodes.syncLabel) {
+      stripeNodes.syncLabel.textContent = !stripeConnected
         ? messages.integrations.neverSynced
         : stripeIntegration.lastSyncAt
           ? messages.integrations.lastSync.replace("{date}", stripeIntegration.lastSyncAt.slice(0, 10))
           : messages.integrations.neverSynced;
     }
-    if (nodes.sync) nodes.sync.disabled = !connected || !state.features.sync;
-    if (nodes.disconnect) nodes.disconnect.disabled = !connected;
-    const formInputs = nodes.form ? [...nodes.form.elements] : [];
+    if (stripeNodes.sync) stripeNodes.sync.disabled = !stripeConnected || !state.features.sync;
+    if (stripeNodes.disconnect) stripeNodes.disconnect.disabled = !stripeConnected;
+    const formInputs = stripeNodes.form ? [...stripeNodes.form.elements] : [];
     formInputs.forEach((node) => { node.disabled = !state.features.sync; });
+
+    const appStoreConnected = appStoreIntegration?.status === "connected";
+    const appStoreNodes = nodes.appStore;
+    if (appStoreNodes.statusLabel) appStoreNodes.statusLabel.textContent = appStoreConnected ? messages.integrations.connected : messages.integrations.notConnected;
+    if (appStoreNodes.syncLabel) {
+      appStoreNodes.syncLabel.textContent = !appStoreConnected
+        ? messages.integrations.neverSynced
+        : appStoreIntegration.lastSyncAt
+          ? messages.integrations.lastSync.replace("{date}", appStoreIntegration.lastSyncAt.slice(0, 10))
+          : messages.integrations.neverSynced;
+    }
+    if (appStoreNodes.pending) appStoreNodes.pending.hidden = !appStoreConnected;
+    if (appStoreNodes.sync) appStoreNodes.sync.disabled = !appStoreConnected || !state.features.appStoreSync;
+    if (appStoreNodes.disconnect) appStoreNodes.disconnect.disabled = !appStoreConnected;
+    const appStoreFormInputs = appStoreNodes.form ? [...appStoreNodes.form.elements] : [];
+    appStoreFormInputs.forEach((node) => { node.disabled = !state.features.appStoreSync; });
   };
 
-  const showIntegrationMessage = (message, isError = false) => {
-    const node = integrationNodes().message;
+  const showIntegrationMessage = (message, isError = false, provider = "stripe") => {
+    const node = integrationNodes()[provider]?.message;
     if (!node) return;
     node.textContent = message;
     node.hidden = false;
@@ -1326,8 +1369,10 @@
       if (!response.ok) throw new Error(data?.error || "load_failed");
       if (data.features) state.features = data.features;
       stripeIntegration = (data.integrations || []).find((item) => item.type === "stripe") || null;
+      appStoreIntegration = (data.integrations || []).find((item) => item.type === "app_store") || null;
       renderIntegration();
       if (stripeIntegration?.lastError) showIntegrationMessage(messages.integrations.syncFailed.replace("{error}", stripeIntegration.lastError), true);
+      if (appStoreIntegration?.lastError) showIntegrationMessage(messages.integrations.appStoreSyncUnavailable, true, "appStore");
     } catch {
       renderIntegration();
       showIntegrationMessage(messages.integrations.loadFailed, true);
@@ -1416,12 +1461,114 @@
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data?.error || "disconnect_failed");
       stripeIntegration = null;
-      const message = integrationNodes().message;
+      const message = integrationNodes().stripe.message;
       if (message) message.hidden = true;
       renderIntegration();
     } catch {
       button.disabled = false;
       showIntegrationMessage(messages.integrations.disconnectFailed, true);
+    }
+  });
+
+  document.querySelector("[data-app-store-form]")?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    const issuerId = String(data.get("issuerId") || "").trim();
+    const keyId = String(data.get("keyId") || "").trim();
+    const privateKey = String(data.get("privateKey") || "").trim();
+    if (!issuerId || !keyId || !privateKey.includes("BEGIN PRIVATE KEY")) {
+      showIntegrationMessage(messages.integrations.invalidAppStore, true, "appStore");
+      return;
+    }
+    const button = form.querySelector("button[type=submit]");
+    const original = button.textContent;
+    button.disabled = true;
+    button.textContent = messages.integrations.syncing;
+    try {
+      const response = await fetch("/api/workspace/integrations", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ type: "app_store", issuerId, keyId, privateKey }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (response.status === 403 && result.error === "pro_required") {
+        showIntegrationMessage(messages.integrations.appStoreProRequired, true, "appStore");
+        return;
+      }
+      if (!response.ok) {
+        const invalid = ["invalid_app_store_credentials", "invalid_app_store_private_key"].includes(result.error);
+        showIntegrationMessage(invalid
+          ? messages.integrations.invalidAppStore
+          : messages.integrations.appStoreConnectFailed, true, "appStore");
+        return;
+      }
+      form.reset();
+      appStoreIntegration = { type: "app_store", status: "connected", lastSyncAt: null, lastError: null };
+      renderIntegration();
+      showIntegrationMessage(result.pending
+        ? messages.integrations.appStoreConnected
+        : messages.integrations.appStoreSaved, false, "appStore");
+    } catch {
+      showIntegrationMessage(messages.integrations.appStoreConnectFailed, true, "appStore");
+    } finally {
+      button.disabled = false;
+      button.textContent = original;
+      renderIntegration();
+    }
+  });
+
+  document.querySelector("[data-app-store-sync]")?.addEventListener("click", async (event) => {
+    const button = event.currentTarget;
+    const original = button.textContent;
+    button.disabled = true;
+    button.textContent = messages.integrations.syncing;
+    try {
+      const response = await fetch("/api/workspace/integrations/sync?type=app_store", {
+        method: "POST",
+        credentials: "same-origin",
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        showIntegrationMessage(
+          data.error === "app_store_report_sync_not_configured"
+            ? messages.integrations.appStoreSyncUnavailable
+            : data.error === "pro_required"
+              ? messages.integrations.appStoreProRequired
+              : messages.integrations.appStoreSyncUnavailable,
+          true,
+          "appStore",
+        );
+        return;
+      }
+      showIntegrationMessage(messages.integrations.appStoreSyncUnavailable, false, "appStore");
+    } catch {
+      showIntegrationMessage(messages.integrations.appStoreSyncUnavailable, true, "appStore");
+    } finally {
+      button.textContent = original;
+      renderIntegration();
+    }
+  });
+
+  document.querySelector("[data-app-store-disconnect]")?.addEventListener("click", async (event) => {
+    if (!window.confirm(messages.integrations.appStoreDisconnectConfirm)) return;
+    const button = event.currentTarget;
+    button.disabled = true;
+    try {
+      const response = await fetch("/api/workspace/integrations?type=app_store", {
+        method: "DELETE",
+        credentials: "same-origin",
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data?.error || "disconnect_failed");
+      appStoreIntegration = null;
+      const message = integrationNodes().appStore.message;
+      if (message) message.hidden = true;
+      renderIntegration();
+    } catch {
+      button.disabled = false;
+      showIntegrationMessage(messages.integrations.appStoreDisconnectFailed, true, "appStore");
     }
   });
 
@@ -1460,6 +1607,10 @@
       client: item.client || "",
       amount: Number(item.amount) || 0,
       platformFee: Number(item.platformFee) || 0,
+      saleDate: item.saleDate || "",
+      recognition: item.recognition || "received",
+      payoutStatus: item.payoutStatus || "",
+      integrationId: item.integrationId || null,
       projects: item.projects || (item.project ? [item.project] : []),
       id: item.id,
     }));

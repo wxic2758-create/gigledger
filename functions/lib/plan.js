@@ -9,6 +9,7 @@ export const planFeatures = (plan) => {
     subscriptionLimit: normalized === "pro" ? null : FREE_SUBSCRIPTION_LIMIT,
     csv: normalized === "pro",
     sync: normalized === "pro",
+    appStoreSync: normalized === "pro",
     subscriptionReview: normalized === "pro",
   };
 };

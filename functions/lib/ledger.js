@@ -9,7 +9,7 @@ export const cycles = {
   yearly: 1,
 };
 
-export const incomeSources = ["upwork", "fiverr", "stripe", "paypal", "direct", "other"];
+export const incomeSources = ["upwork", "fiverr", "stripe", "app_store", "paypal", "direct", "other"];
 
 const finite = (value) => Number.isFinite(value) && value >= 0;
 
@@ -98,6 +98,10 @@ export const normalizeDraft = async (input) => {
     const clientName = text(item?.client, 120);
     const externalRef = text(item?.externalRef, 160);
     const incomeProjects = Array.isArray(item?.projects) ? item.projects : [];
+    const saleDate = date(item?.saleDate || item?.sale_date);
+    const recognition = item?.recognition === "sold" ? "sold" : "received";
+    const payoutStatus = text(item?.payoutStatus || item?.payout_status, 80);
+    const integrationId = text(item?.integrationId || item?.integration_id, 80);
     if (!source || !occurredOn || !finite(amount) || !finite(platformFee) || platformFee > amount) continue;
     normalizedIncome.push({
       externalRef: externalRef || await hash(`${occurredOn}|${source}|${clientName || ""}|${amount}|${platformFee}`),
@@ -106,6 +110,10 @@ export const normalizeDraft = async (input) => {
       clientName,
       amount,
       platformFee,
+      saleDate,
+      recognition,
+      payoutStatus,
+      integrationId,
       projects: incomeProjects,
     });
   }
@@ -482,8 +490,9 @@ export const saveWorkspaceDraft = async (env, workspaceId, draft) => {
   for (const item of draft.income) {
     statements.push(db.prepare(
       `INSERT INTO income_entries
-        (id, workspace_id, external_ref, occurred_on, source, client_name, amount, platform_fee, project_id, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)
+        (id, workspace_id, external_ref, occurred_on, source, client_name, amount, platform_fee,
+         sale_date, recognition, payout_status, integration_id, project_id, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)
        ON CONFLICT(workspace_id, external_ref) DO NOTHING`,
     ).bind(
       crypto.randomUUID(),
@@ -494,6 +503,10 @@ export const saveWorkspaceDraft = async (env, workspaceId, draft) => {
       item.clientName,
       item.amount,
       item.platformFee,
+      item.saleDate,
+      item.recognition,
+      item.payoutStatus,
+      item.integrationId,
       timestamp,
       timestamp,
     ));
@@ -571,7 +584,8 @@ export const loadWorkspace = async (db, workspaceId) => {
     versionsByCost.set(row.fixed_cost_id, versions);
   }
   const income = await db.prepare(
-    `SELECT id, external_ref, occurred_on, source, client_name, amount, platform_fee, project_id, created_at, updated_at
+    `SELECT id, external_ref, occurred_on, source, client_name, amount, platform_fee, project_id, created_at, updated_at,
+            sale_date, recognition, payout_status, integration_id
      FROM income_entries WHERE workspace_id = ? ORDER BY occurred_on DESC, created_at DESC`,
   ).bind(workspaceId).all();
   const expenses = await db.prepare(
@@ -636,6 +650,10 @@ export const loadWorkspace = async (db, workspaceId) => {
       client: item.client_name,
       amount: item.amount,
       platformFee: item.platform_fee,
+      saleDate: item.sale_date,
+      recognition: item.recognition || "received",
+      payoutStatus: item.payout_status,
+      integrationId: item.integration_id,
       project: item.project_id ? projectsById.get(item.project_id) || null : null,
       createdAt: item.created_at,
       updatedAt: item.updated_at,

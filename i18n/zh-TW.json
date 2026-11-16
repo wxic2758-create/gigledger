@@ -215,7 +215,7 @@
       "CSV 匯入與重複偵測",
       "固定成本與每日底線"
     ],
-    "noTitle": "第一版不會有",
+    "noTitle": "我們絕不會",
     "no": [
       "不需要銀行密碼",
       "不抓取你的平台帳號",
@@ -298,6 +298,8 @@
       "daily": "每日底線",
       "dailyNote": "本月生效的固定成本與訂閱",
       "gross": "總收入",
+      "sold": "已售出、未到帳",
+      "soldNote": "到帳前不計入實際利潤",
       "fees": "平台手續費",
       "net": "淨收入",
       "costs": "固定成本",
@@ -364,7 +366,9 @@
     "income": {
       "title": "收入",
       "body": "記錄付款金額與平台手續費。原型會立即使用這些資料。",
-      "add": "加入收入"
+      "add": "加入收入",
+      "recognitionSold": "已售出",
+      "recognitionReceived": "已到帳"
     },
     "expenses": {
       "title": "一次性支出",
@@ -421,6 +425,7 @@
       "upwork": "Upwork",
       "fiverr": "Fiverr",
       "stripe": "Stripe",
+      "app_store": "App Store",
       "paypal": "PayPal",
       "other": "其他",
       "direct": "直接客戶"
@@ -444,7 +449,8 @@
       "notes": "備註",
       "actions": "操作",
       "review": "體檢",
-      "project": "專案"
+      "project": "專案",
+      "recognition": "狀態"
     },
     "empty": {
       "fixed": "尚未加入固定成本。",
@@ -472,13 +478,31 @@
     "deleteFailed": "刪除帳號失敗。你的資料仍然可用。",
     "integrations": {
       "kicker": "Pro 同步",
-      "title": "Stripe 官方同步",
-      "body": "連接只讀的 Stripe 受限金鑰，把收款、手續費與淨收入匯入帳本。只提供手動同步，維持在 Cloudflare 免費方案額度內。",
+      "title": "官方收入同步",
+      "body": "可連接 Stripe 與 App Store Connect。Stripe 匯入收款、手續費與淨收入；App Store 會把已售出與已到帳分開呈現。只提供手動同步，維持在 Cloudflare 免費方案額度內。",
       "keyLabel": "Stripe 受限金鑰",
       "accountLabel": "帳戶標籤（選填）",
       "accountPlaceholder": "例如 GigLedger live",
       "keyNote": "請使用具備 Charges 與 Balance transactions 讀取權限的受限金鑰，不要使用可發布金鑰。金鑰會先加密再儲存，之後不會再次顯示。",
       "connect": "連接 Stripe",
+      "stripeTitle": "Stripe",
+      "appStoreTitle": "App Store Connect",
+      "appStoreBody": "請使用可讀取銷售與財務報告、權限最低的 App Store Connect API 金鑰。.p8 私鑰會先加密再儲存，不會回傳到瀏覽器。",
+      "issuerLabel": "Issuer ID",
+      "keyIdLabel": "Key ID",
+      "privateKeyLabel": ".p8 私鑰",
+      "privateKeyNote": "貼上 .p8 檔案的完整內容，包括 BEGIN/END PRIVATE KEY。若較低權限角色已足夠，不要使用帳號持有者金鑰。",
+      "connectAppStore": "連接 App Store",
+      "appStoreConnected": "App Store 已連接。銷售與財務報告同步仍待設定。",
+      "appStorePending": "API 金鑰已儲存，報告同步尚未設定。",
+      "invalidAppStore": "請提供有效的 Issuer ID、Key ID 與 App Store Connect .p8 私鑰。",
+      "appStoreSaved": "金鑰已儲存",
+      "appStoreProRequired": "App Store Connect 同步是 Pro 功能，封測後才會公布價格。",
+      "appStoreDisconnectConfirm": "要移除 App Store Connect 金鑰嗎？已匯入的收入會保留在帳本中。",
+      "appStoreDisconnectFailed": "無法移除 App Store Connect 金鑰，請再試一次。",
+      "appStoreConnectFailed": "無法儲存 App Store Connect 金鑰，請檢查憑證後再試。",
+      "syncAppStore": "同步 App Store",
+      "appStoreSyncUnavailable": "App Store 報告同步尚未開放。金鑰已連接，但在報告解析器設定完成前不會匯入資料。",
       "statusLabel": "連接狀態",
       "notConnected": "尚未連接",
       "connected": "已連接",

@@ -215,7 +215,7 @@
       "CSV import with duplicate detection",
       "Fixed costs and daily floor"
     ],
-    "noTitle": "Not in the first version",
+    "noTitle": "We will never",
     "no": [
       "No bank passwords",
       "No scraping your platform accounts",
@@ -298,6 +298,8 @@
       "daily": "Daily floor",
       "dailyNote": "Effective fixed costs and subscriptions",
       "gross": "Gross income",
+      "sold": "Sold, not received",
+      "soldNote": "Excluded from true profit until received",
       "fees": "Platform fees",
       "net": "Net income",
       "costs": "Fixed costs",
@@ -364,7 +366,9 @@
     "income": {
       "title": "Income",
       "body": "Record the payment amount and platform fee. The prototype uses these entries immediately.",
-      "add": "Add income"
+      "add": "Add income",
+      "recognitionSold": "Sold",
+      "recognitionReceived": "Received"
     },
     "expenses": {
       "title": "One-time expenses",
@@ -421,6 +425,7 @@
       "upwork": "Upwork",
       "fiverr": "Fiverr",
       "stripe": "Stripe",
+      "app_store": "App Store",
       "paypal": "PayPal",
       "other": "Other",
       "direct": "Direct client"
@@ -444,7 +449,8 @@
       "notes": "Notes",
       "actions": "Actions",
       "review": "Review",
-      "project": "Project"
+      "project": "Project",
+      "recognition": "Status"
     },
     "empty": {
       "fixed": "No fixed costs added yet.",
@@ -472,13 +478,31 @@
     "deleteFailed": "Account deletion failed. Your data is still available.",
     "integrations": {
       "kicker": "Pro sync",
-      "title": "Official Stripe sync",
-      "body": "Connect a read-only Stripe restricted key to import charges, fees, and net income into your ledger. Manual sync only, so it stays within the free Cloudflare plan.",
+      "title": "Official income sync",
+      "body": "Connect Stripe or App Store Connect. Stripe imports charges, fees, and net income. App Store keeps sold and received revenue separate. Sync is manual, so it stays within the free Cloudflare plan.",
       "keyLabel": "Stripe restricted key",
       "accountLabel": "Account label (optional)",
       "accountPlaceholder": "e.g. GigLedger live",
       "keyNote": "Use a restricted key with read access to Charges and Balance transactions. Do not use a publishable key. The key is encrypted before storage and is never shown again.",
       "connect": "Connect Stripe",
+      "stripeTitle": "Stripe",
+      "appStoreTitle": "App Store Connect",
+      "appStoreBody": "Use an App Store Connect API key with the lowest role that can read sales and finance reports. The .p8 private key is encrypted before storage and never returned to the browser.",
+      "issuerLabel": "Issuer ID",
+      "keyIdLabel": "Key ID",
+      "privateKeyLabel": ".p8 private key",
+      "privateKeyNote": "Paste the full contents of the .p8 file, including BEGIN/END PRIVATE KEY. Do not use an Account Holder key when a lower role is enough.",
+      "connectAppStore": "Connect App Store",
+      "appStoreConnected": "App Store connected. Sales and finance report sync is pending configuration.",
+      "appStorePending": "API key saved. Report sync is not configured yet.",
+      "invalidAppStore": "Use the Issuer ID, Key ID, and a valid App Store Connect .p8 private key.",
+      "appStoreSaved": "Key saved",
+      "appStoreProRequired": "App Store Connect sync is a Pro feature. Pricing is available after private beta.",
+      "appStoreDisconnectConfirm": "Remove the App Store Connect key? Imported income stays in the ledger.",
+      "appStoreDisconnectFailed": "Could not remove the App Store Connect key. Please try again.",
+      "appStoreConnectFailed": "Could not save the App Store Connect key. Check the credentials and try again.",
+      "syncAppStore": "Sync App Store",
+      "appStoreSyncUnavailable": "App Store report sync is not available yet. Your key is connected, but no report data will be imported until the report parser is configured.",
       "statusLabel": "Connection",
       "notConnected": "Not connected",
       "connected": "Connected",
