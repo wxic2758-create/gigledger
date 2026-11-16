@@ -138,7 +138,7 @@
       {
         "tag": "收入",
         "title": "收入四散，集中一處。",
-        "body": "可手動輸入、匯入 CSV，Pro 版將同步 Stripe 與 App Store 官方報表。每筆收入都保留手續費與淨額。",
+        "body": "可手動輸入、匯入 CSV，Pro 支援 Stripe 官方同步。App Store Connect 金鑰儲存與已售出狀態已可用；報告同步會清楚標示為尚未開放。",
         "tone": "dark",
         "icon": "income"
       },
@@ -208,7 +208,7 @@
   "honesty": {
     "kicker": "有官方 API 就用官方 API。不收銀行密碼，不抓取帳號。",
     "title": "先提供可用的計算機，Pro 再加入官方同步。",
-    "body": "GigLedger 從計算機、手動輸入與 CSV 匯入開始。Pro 版將支援 Stripe 與 App Store Connect 官方同步。我們不會要求銀行密碼、抓取帳號，也不會代你報稅。",
+    "body": "GigLedger 從計算機、手動輸入與 CSV 匯入開始。Pro 支援 Stripe 官方同步與 App Store Connect 金鑰儲存；App Store 報告同步目前尚未開放。我們不會要求銀行密碼、抓取帳號，也不會代你報稅。",
     "yesTitle": "第一版會有",
     "yes": [
       "手動輸入收入與支出",
@@ -479,7 +479,7 @@
     "integrations": {
       "kicker": "Pro 同步",
       "title": "官方收入同步",
-      "body": "可連接 Stripe 與 App Store Connect。Stripe 匯入收款、手續費與淨收入；App Store 會把已售出與已到帳分開呈現。只提供手動同步，維持在 Cloudflare 免費方案額度內。",
+      "body": "Stripe 同步會匯入收款、手續費與淨收入。App Store Connect 會安全儲存已驗證金鑰，並把已售出與已到帳分開呈現；報告同步尚未設定。只提供手動同步，維持在 Cloudflare 免費方案額度內。",
       "keyLabel": "Stripe 受限金鑰",
       "accountLabel": "帳戶標籤（選填）",
       "accountPlaceholder": "例如 GigLedger live",

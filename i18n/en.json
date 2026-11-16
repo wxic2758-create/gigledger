@@ -138,7 +138,7 @@
       {
         "tag": "Income",
         "title": "Scattered income, one place.",
-        "body": "Add manually, import CSV, or sync official Stripe and App Store reports in Pro. Keep fees and net payouts attached to every entry.",
+        "body": "Add manually, import CSV, or sync official Stripe reports in Pro. App Store Connect key storage and sold-income status are available; report sync is clearly marked as pending.",
         "tone": "dark",
         "icon": "income"
       },
@@ -208,7 +208,7 @@
   "honesty": {
     "kicker": "Official APIs where they exist. No bank passwords. No scraping.",
     "title": "Start with a working calculator. Add official sync in Pro.",
-    "body": "GigLedger starts with a calculator, manual entry, and CSV import. Pro adds official Stripe and App Store Connect sync. We will not ask for bank passwords, scrape your accounts, or file taxes for you.",
+    "body": "GigLedger starts with a calculator, manual entry, and CSV import. Pro adds official Stripe sync and App Store Connect key storage. App Store report sync is not available yet. We will not ask for bank passwords, scrape your accounts, or file taxes for you.",
     "yesTitle": "In the first version",
     "yes": [
       "Manual income and expense entry",
@@ -479,7 +479,7 @@
     "integrations": {
       "kicker": "Pro sync",
       "title": "Official income sync",
-      "body": "Connect Stripe or App Store Connect. Stripe imports charges, fees, and net income. App Store keeps sold and received revenue separate. Sync is manual, so it stays within the free Cloudflare plan.",
+      "body": "Stripe sync imports charges, fees, and net income. App Store Connect securely stores a validated key and separates sold from received revenue; report sync is not configured yet. Sync is manual, so it stays within the free Cloudflare plan.",
       "keyLabel": "Stripe restricted key",
       "accountLabel": "Account label (optional)",
       "accountPlaceholder": "e.g. GigLedger live",
