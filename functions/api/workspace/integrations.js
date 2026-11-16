@@ -32,7 +32,7 @@ const plan = async (db, workspaceId) => {
   return planFeatures(workspace?.plan);
 };
 
-const upsertIntegration = async (db, workspaceId, type, credential, label, secret) => {
+const upsertIntegration = async (db, workspaceId, type, credential, label, secret, status = "connected") => {
   const timestamp = new Date().toISOString();
   const encrypted = await encryptCredential(credential, secret);
   const existing = await db.prepare("SELECT id FROM integrations WHERE workspace_id = ? AND type = ?")
@@ -40,17 +40,17 @@ const upsertIntegration = async (db, workspaceId, type, credential, label, secre
   if (existing) {
     await db.prepare(
       `UPDATE integrations
-       SET status = 'connected', account_label = ?, encrypted_credentials = ?, last_error = NULL, updated_at = ?, revoked_at = NULL
+       SET status = ?, account_label = ?, encrypted_credentials = ?, last_error = NULL, updated_at = ?, revoked_at = NULL
        WHERE id = ?`,
-    ).bind(label, encrypted, timestamp, existing.id).run();
+    ).bind(status, label, encrypted, timestamp, existing.id).run();
     return existing.id;
   }
   const id = crypto.randomUUID();
   await db.prepare(
     `INSERT INTO integrations
       (id, workspace_id, type, status, account_label, encrypted_credentials, created_at, updated_at)
-     VALUES (?, ?, ?, 'connected', ?, ?, ?, ?)`,
-  ).bind(id, workspaceId, type, label, encrypted, timestamp, timestamp).run();
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+  ).bind(id, workspaceId, type, status, label, encrypted, timestamp, timestamp).run();
   return id;
 };
 
@@ -163,6 +163,7 @@ const saveAppStoreCredential = async (env, workspaceId, credential, label) => {
       JSON.stringify(credential),
       label || "App Store Connect",
       env.SESSION_SECRET || env.GOOGLE_CLIENT_SECRET,
+      "pending",
     ),
   };
 };

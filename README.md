@@ -1,6 +1,6 @@
-# GigLedger Landing Page
+# GigLedger
 
-English + Traditional Chinese (`zh-TW`) pre-launch site for `gigledger.xyz`.
+English + Traditional Chinese (`zh-TW`) income, cost, and true-profit ledger for one-person companies at `gigledger.xyz`.
 
 ## Structure
 
@@ -8,13 +8,13 @@ English + Traditional Chinese (`zh-TW`) pre-launch site for `gigledger.xyz`.
 assets/          Local brand assets and social share image
 en/              Generated English pages
 zh-TW/           Generated Traditional Chinese pages
-en/app/          Generated interactive calculator prototype
-zh-TW/app/       Generated Traditional Chinese calculator prototype
+en/app/          Generated English onboarding and ledger
+zh-TW/app/       Generated Traditional Chinese onboarding and ledger
 i18n/            Source copy for both locales
 scripts/build.mjs
 styles.css
-proto.css        Interactive prototype styles
-app-proto.js     Client-side prototype calculations
+proto.css        Ledger and dashboard styles
+app-ledger.js    Authenticated and in-page ledger UI
 app.js
 _redirects       Cloudflare Pages redirects for legacy `.html` app URLs
 ```
@@ -44,20 +44,28 @@ Open:
 
 ## Deploy
 
-This is a static site. Upload the contents of this folder to Cloudflare Pages, Netlify, Vercel, or any static host.
+Cloudflare Pages hosts the site and Pages Functions API; Cloudflare D1 stores accounts and ledger data.
 
 - Build command: `node scripts/build.mjs`
 - Output directory: `.` (this folder)
 - Domain: `gigledger.xyz`
+- D1 binding: `DB` in `wrangler.toml`
+- Required secrets: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `SESSION_SECRET`
+
+## Current Scope
+
+- Google OAuth login, D1 persistence, JSON export, and account deletion are implemented.
+- Three-step onboarding, fixed costs, subscriptions, projects, one-time expenses, CSV import/export, subscription review, runway, and share cards are implemented.
+- Stripe sync imports balance transactions with a restricted key.
+- App Store Connect stores an encrypted API key and validates its JWT signing shape. Report parsing/sync remains intentionally unavailable and returns a clear error instead of pretending to import data.
+- English and Traditional Chinese are the only published locales in this version.
 
 ## Before Launch
 
-- The `/app` pages are an interactive prototype. They calculate in memory only and do not persist data.
-- Replace the preview-only waitlist form with a real endpoint. The current form does not send or store emails.
 - Review the privacy notice and tax disclaimer for the operating jurisdiction.
 - Replace the pre-launch legal drafts with reviewed copies.
-- Keep the 36-language architecture in mind, but only publish `en` and `zh-TW` in this version.
 - Add analytics only after confirming no income or tax data is collected.
+- Configure an App Store Connect report parser against real credentials or a sandbox before advertising App Store sync as available.
 
 ## Localization
 

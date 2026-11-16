@@ -1336,9 +1336,9 @@
     const formInputs = stripeNodes.form ? [...stripeNodes.form.elements] : [];
     formInputs.forEach((node) => { node.disabled = !state.features.sync; });
 
-    const appStoreConnected = appStoreIntegration?.status === "connected";
+    const appStoreConnected = ["connected", "pending"].includes(appStoreIntegration?.status);
     const appStoreNodes = nodes.appStore;
-    if (appStoreNodes.statusLabel) appStoreNodes.statusLabel.textContent = appStoreConnected ? messages.integrations.connected : messages.integrations.notConnected;
+    if (appStoreNodes.statusLabel) appStoreNodes.statusLabel.textContent = appStoreConnected ? messages.integrations.appStoreStored : messages.integrations.notConnected;
     if (appStoreNodes.syncLabel) {
       appStoreNodes.syncLabel.textContent = !appStoreConnected
         ? messages.integrations.neverSynced
@@ -1505,7 +1505,7 @@
         return;
       }
       form.reset();
-      appStoreIntegration = { type: "app_store", status: "connected", lastSyncAt: null, lastError: null };
+      appStoreIntegration = { type: "app_store", status: "pending", lastSyncAt: null, lastError: null };
       renderIntegration();
       showIntegrationMessage(result.pending
         ? messages.integrations.appStoreConnected
@@ -1578,7 +1578,7 @@
     state.projects = ledger.projects || [];
     state.taxReserveRate = ledger.workspace?.taxReserveRate === null
       || ledger.workspace?.taxReserveRate === undefined
-      ? "" : String(Math.round(ledger.workspace.taxReserveRate * 100));
+      ? "" : String(Math.round(ledger.workspace.taxReserveRate * 1000) / 10);
     state.cashOnHand = ledger.workspace?.cashOnHand === null
       || ledger.workspace?.cashOnHand === undefined
       ? "" : String(ledger.workspace.cashOnHand);

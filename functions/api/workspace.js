@@ -140,6 +140,7 @@ export const onRequestDelete = async ({ env, request }) => {
       env.DB.prepare("DELETE FROM fixed_cost_versions WHERE fixed_cost_id IN (SELECT id FROM fixed_costs WHERE workspace_id IN (SELECT id FROM workspaces WHERE owner_id = ?))").bind(userId),
       env.DB.prepare("DELETE FROM fixed_costs WHERE workspace_id IN (SELECT id FROM workspaces WHERE owner_id = ?)").bind(userId),
       env.DB.prepare("DELETE FROM projects WHERE workspace_id IN (SELECT id FROM workspaces WHERE owner_id = ?)").bind(userId),
+      env.DB.prepare("DELETE FROM integrations WHERE workspace_id IN (SELECT id FROM workspaces WHERE owner_id = ?)").bind(userId),
       env.DB.prepare("DELETE FROM workspaces WHERE owner_id = ?").bind(userId),
       env.DB.prepare("DELETE FROM users WHERE id = ?").bind(userId),
     ]);

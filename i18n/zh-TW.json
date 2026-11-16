@@ -282,12 +282,12 @@
     "back": "回到 GigLedger"
   },
   "app": {
-    "title": "互動原型",
-    "badge": "互動原型 · 不會儲存資料",
+    "title": "帳本",
+    "badge": "互動帳本 · 帳號資料儲存在 Cloudflare D1",
     "heading": "三個步驟，看清你的真實帳本。",
-    "subheading": "這個原型呈現核心計算。加入固定成本與收入，即可查看每日底線與實際到手金額。",
+    "subheading": "加入固定成本與收入，即可查看每日底線與實際到手金額。使用 Google 登入，讓帳本在各種裝置間保存。",
     "back": "回到網站",
-    "navAria": "原型導覽",
+    "navAria": "帳本導覽",
     "nav": {
       "dashboard": "儀表板",
       "fixed": "固定成本",
@@ -326,7 +326,7 @@
     },
     "taxNote": "僅供預估 · 非稅務建議",
     "onboarding": {
-      "kicker": "這個原型怎麼用",
+      "kicker": "帳本怎麼運作",
       "steps": [
         {
           "title": "先看你必須付的成本",
@@ -365,7 +365,7 @@
     },
     "income": {
       "title": "收入",
-      "body": "記錄付款金額與平台手續費。原型會立即使用這些資料。",
+      "body": "記錄付款金額與平台手續費，你的帳本會立即更新。",
       "add": "加入收入",
       "recognitionSold": "已售出",
       "recognitionReceived": "已到帳"
@@ -495,6 +495,7 @@
       "connectAppStore": "連接 App Store",
       "appStoreConnected": "App Store 已連接。銷售與財務報告同步仍待設定。",
       "appStorePending": "API 金鑰已儲存，報告同步尚未設定。",
+      "appStoreStored": "金鑰已儲存",
       "invalidAppStore": "請提供有效的 Issuer ID、Key ID 與 App Store Connect .p8 私鑰。",
       "appStoreSaved": "金鑰已儲存",
       "appStoreProRequired": "App Store Connect 同步是 Pro 功能，封測後才會公布價格。",
@@ -502,7 +503,7 @@
       "appStoreDisconnectFailed": "無法移除 App Store Connect 金鑰，請再試一次。",
       "appStoreConnectFailed": "無法儲存 App Store Connect 金鑰，請檢查憑證後再試。",
       "syncAppStore": "同步 App Store",
-      "appStoreSyncUnavailable": "App Store 報告同步尚未開放。金鑰已連接，但在報告解析器設定完成前不會匯入資料。",
+      "appStoreSyncUnavailable": "App Store 報告同步尚未開放。金鑰已儲存，但在報告解析器設定完成前不會匯入資料。",
       "statusLabel": "連接狀態",
       "notConnected": "尚未連接",
       "connected": "已連接",

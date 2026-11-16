@@ -282,12 +282,12 @@
     "back": "Back to GigLedger"
   },
   "app": {
-    "title": "Prototype",
-    "badge": "Interactive prototype · No data is stored",
+    "title": "Ledger",
+    "badge": "Interactive ledger · Account data is stored in Cloudflare D1",
     "heading": "Your real ledger, in three steps.",
-    "subheading": "This prototype shows the core calculation. Add fixed costs and income to see your daily floor and true take-home.",
+    "subheading": "Add fixed costs and income to see your daily floor and true take-home. Sign in with Google to keep your ledger across devices.",
     "back": "Back to site",
-    "navAria": "Prototype navigation",
+    "navAria": "Ledger navigation",
     "nav": {
       "dashboard": "Dashboard",
       "fixed": "Fixed costs",
@@ -326,7 +326,7 @@
     },
     "taxNote": "Estimate only · Not tax advice",
     "onboarding": {
-      "kicker": "How this prototype works",
+      "kicker": "How your ledger works",
       "steps": [
         {
           "title": "Start with what you must pay",
@@ -365,7 +365,7 @@
     },
     "income": {
       "title": "Income",
-      "body": "Record the payment amount and platform fee. The prototype uses these entries immediately.",
+      "body": "Record the payment amount and platform fee. Your entries update the ledger immediately.",
       "add": "Add income",
       "recognitionSold": "Sold",
       "recognitionReceived": "Received"
@@ -495,6 +495,7 @@
       "connectAppStore": "Connect App Store",
       "appStoreConnected": "App Store connected. Sales and finance report sync is pending configuration.",
       "appStorePending": "API key saved. Report sync is not configured yet.",
+      "appStoreStored": "Key saved",
       "invalidAppStore": "Use the Issuer ID, Key ID, and a valid App Store Connect .p8 private key.",
       "appStoreSaved": "Key saved",
       "appStoreProRequired": "App Store Connect sync is a Pro feature. Pricing is available after private beta.",
@@ -502,7 +503,7 @@
       "appStoreDisconnectFailed": "Could not remove the App Store Connect key. Please try again.",
       "appStoreConnectFailed": "Could not save the App Store Connect key. Check the credentials and try again.",
       "syncAppStore": "Sync App Store",
-      "appStoreSyncUnavailable": "App Store report sync is not available yet. Your key is connected, but no report data will be imported until the report parser is configured.",
+      "appStoreSyncUnavailable": "App Store report sync is not available yet. Your key is saved, but no report data will be imported until the report parser is configured.",
       "statusLabel": "Connection",
       "notConnected": "Not connected",
       "connected": "Connected",
