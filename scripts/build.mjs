@@ -761,7 +761,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
       <a href="/${t.alternatePath}app">${esc(t.nav.switchTo)}</a>
     </div>
   </footer>
-  <script src="/app-ledger.js?v=20261116-9" defer></script>
+  <script src="/app-ledger.js?v=20261116-12" defer></script>
   <script src="/app.js" defer></script>
 </body>
 </html>`;

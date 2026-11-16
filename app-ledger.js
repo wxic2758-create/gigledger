@@ -120,14 +120,39 @@
       * (Number(version?.businessUse) || 0) / 100;
   };
 
-  const activeDaysInMonth = (item, date = new Date()) => {
+  const activeDaysInPeriod = (item, date = new Date(), selectedMonth = monthKey(date)) => {
     const daysInMonth = monthDayCount(date);
-    const first = `${monthKey(date)}-01`;
-    const last = `${monthKey(date)}-${String(daysInMonth).padStart(2, "0")}`;
+    const first = `${selectedMonth}-01`;
+    const last = `${selectedMonth}-${String(daysInMonth).padStart(2, "0")}`;
     const start = item.startDate && item.startDate > first ? item.startDate : first;
     const end = item.endDate && item.endDate < last ? item.endDate : last;
     if (start > end) return 0;
     return Math.floor((new Date(`${end}T00:00:00`) - new Date(`${start}T00:00:00`)) / 86400000) + 1;
+  };
+
+  const monthlyCostInMonth = (item, selectedMonth) => {
+    const daysInMonth = monthDayCount(new Date(`${selectedMonth}-01T12:00:00`));
+    const monthStart = `${selectedMonth}-01`;
+    const monthEnd = `${selectedMonth}-${String(daysInMonth).padStart(2, "0")}`;
+    const versionFallback = effectiveVersionForItem(item, monthEnd);
+    const baseVersion = {
+      ...versionFallback,
+      effectiveFrom: item.startDate || versionFallback.effectiveFrom,
+      effectiveTo: item.endDate || versionFallback.effectiveTo,
+    };
+    const overlap = (item.versions || []).filter((version) => version.effectiveFrom <= monthEnd
+      && (!version.effectiveTo || version.effectiveTo >= monthStart));
+    if (!overlap.length) {
+      return monthlyAmountForVersion(baseVersion)
+        * activeDaysInPeriod(item, new Date(`${selectedMonth}-01T12:00:00`), selectedMonth) / daysInMonth;
+    }
+    return overlap.reduce((versionSum, version) => {
+      const versionStart = version.effectiveFrom > monthStart ? version.effectiveFrom : monthStart;
+      const versionEnd = version.effectiveTo && version.effectiveTo < monthEnd ? version.effectiveTo : monthEnd;
+      if (versionStart > versionEnd) return versionSum;
+      const days = Math.floor((new Date(`${versionEnd}T00:00:00`) - new Date(`${versionStart}T00:00:00`)) / 86400000) + 1;
+      return versionSum + monthlyAmountForVersion(version) * days / daysInMonth;
+    }, 0);
   };
 
   const isInCurrentMonth = (value) => String(value || "").slice(0, 7) === monthKey();
@@ -149,24 +174,10 @@
     const grossIncome = monthIncomeEntries.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
     const platformFees = monthIncomeEntries.reduce((sum, item) => sum + (Number(item.platformFee) || 0), 0);
     const netIncome = grossIncome - platformFees;
-    const currentMonthDays = monthDayCount();
-    const monthlyFixedCosts = state.fixedCosts.reduce((sum, item) => {
-      const monthStart = `${monthKey()}-01`;
-      const monthEnd = `${monthKey()}-${String(currentMonthDays).padStart(2, "0")}`;
-      const overlap = (item.versions || []).filter((version) => version.effectiveFrom <= monthEnd
-        && (!version.effectiveTo || version.effectiveTo >= monthStart));
-      if (!overlap.length) {
-        return sum + monthlyAmountForVersion(effectiveVersionForItem(item))
-          * activeDaysInMonth(item) / currentMonthDays;
-      }
-      return sum + overlap.reduce((versionSum, version) => {
-        const versionStart = version.effectiveFrom > monthStart ? version.effectiveFrom : monthStart;
-        const versionEnd = version.effectiveTo && version.effectiveTo < monthEnd ? version.effectiveTo : monthEnd;
-        if (versionStart > versionEnd) return versionSum;
-        const days = Math.floor((new Date(`${versionEnd}T00:00:00`) - new Date(`${versionStart}T00:00:00`)) / 86400000) + 1;
-        return versionSum + monthlyAmountForVersion(version) * days / currentMonthDays;
-      }, 0);
-    }, 0);
+    const monthlyFixedCosts = state.fixedCosts.reduce(
+      (sum, item) => sum + monthlyCostInMonth(item, monthKey()),
+      0,
+    );
     const monthlyExpenses = state.expenses
       .filter((item) => isInCurrentMonth(item.date))
       .reduce((sum, item) => sum + (Number(item.amount) || 0) * (Number(item.businessUse) || 0) / 100, 0);
@@ -1634,6 +1645,7 @@
       multiplier: cycles.find((cycle) => cycle.value === (cycleValues.has(item.cycle) ? item.cycle : "monthly"))?.multiplier || 12,
       businessUse: Number(item.businessUse) || 0,
       isSubscription: Boolean(item.isSubscription),
+      templateKey: item.templateKey || "",
       productUrl: item.productUrl || "",
       manageUrl: item.manageUrl || "",
       nextBillingDate: item.nextBillingDate || "",
@@ -1691,6 +1703,8 @@
         startDate: today(),
         isSubscription: true,
         templateKey: key,
+        productUrl: template?.productUrl || null,
+        manageUrl: template?.manageUrl || null,
       };
     });
 

@@ -582,6 +582,13 @@
           "key": "copilot",
           "label": "GitHub Copilot",
           "amount": 10
+        },
+        {
+          "key": "app_store",
+          "label": "App Store 訂閱",
+          "amount": 0,
+          "productUrl": "https://apps.apple.com/",
+          "manageUrl": "https://apps.apple.com/account/subscriptions"
         }
       ]
     },
