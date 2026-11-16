@@ -3,7 +3,7 @@
   const locale = root.dataset.locale === "zh-TW" ? "zh-TW" : "en";
   const messages = JSON.parse(document.getElementById("proto-messages").textContent);
   const dashboardMode = Boolean(document.querySelector("[data-dashboard]"));
-  const state = { projects: [], fixedCosts: [], income: [], expenses: [], taxReserveRate: "", cashOnHand: "", features: { plan: "free", subscriptionLimit: 5, csv: false, sync: false, appStoreSync: false, subscriptionReview: false } };
+  const state = { projects: [], fixedCosts: [], income: [], expenses: [], taxReserveRate: "", appleFeeRate: "", cashOnHand: "", features: { plan: "free", subscriptionLimit: 5, csv: false, sync: false, appStoreSync: false, subscriptionReview: false } };
   let editingFixedCostId = null;
 
   const currency = new Intl.NumberFormat(locale === "zh-TW" ? "zh-TW" : "en-US", {
@@ -778,6 +778,11 @@
     inputs.forEach((input) => { input.value = state.taxReserveRate; });
   };
 
+  const refreshAppleFeeInput = () => {
+    const input = document.querySelector('[data-proto-form="settings"]')?.elements.appleFeeRate;
+    if (input) input.value = state.appleFeeRate;
+  };
+
   const fixedForm = document.querySelector("[data-proto-form='fixed']");
   if (fixedForm) {
     const revisionDate = fixedForm.querySelector("[data-revision-date]");
@@ -904,7 +909,10 @@
           }
           applyLedger(result.ledger);
           const settingsForm = document.querySelector('[data-proto-form="settings"]');
-          if (settingsForm) settingsForm.elements.cashOnHand.value = state.cashOnHand;
+          if (settingsForm) {
+            settingsForm.elements.cashOnHand.value = state.cashOnHand;
+            settingsForm.elements.appleFeeRate.value = state.appleFeeRate;
+          }
           refreshTaxInputs();
           setRevisionMode();
           render();
@@ -982,19 +990,44 @@
     amountInput.addEventListener("input", feeFromPercent);
     percentInput.addEventListener("input", feeFromPercent);
     feeInput.addEventListener("input", percentFromFee);
+    incomeForm.addEventListener("change", (event) => {
+      if (event.target !== incomeForm.elements.source) return;
+      const isAppStore = incomeForm.elements.source.value === "app_store";
+      const statusField = incomeForm.querySelector("[data-income-recognition-field]");
+      if (statusField) statusField.hidden = !isAppStore;
+      if (!isAppStore || !state.appleFeeRate) return;
+      if (incomeForm.elements.recognition.value === "sold") {
+        percentInput.value = Number(state.appleFeeRate).toFixed(2);
+        feeFromPercent();
+      }
+    });
+    incomeForm.elements.recognition?.addEventListener("change", () => {
+      if (incomeForm.elements.source.value !== "app_store") return;
+      if (incomeForm.elements.recognition.value === "sold" && state.appleFeeRate) {
+        percentInput.value = Number(state.appleFeeRate).toFixed(2);
+        feeFromPercent();
+      }
+    });
     incomeForm.addEventListener("submit", (event) => {
       event.preventDefault();
       const data = new FormData(incomeForm);
+      const source = String(data.get("source") || "");
+      const amount = Number(data.get("amount")) || 0;
+      const suppliedFee = Number(data.get("platformFee")) || 0;
+      const recognition = source === "app_store" && data.get("recognition") === "sold" ? "sold" : "received";
       state.income.push({
         date: String(data.get("date") || today()),
-        source: String(data.get("source") || ""),
+        source,
         client: String(data.get("client") || ""),
-        amount: Number(data.get("amount")) || 0,
-        platformFee: Number(data.get("platformFee")) || 0,
+        amount,
+        platformFee: suppliedFee,
+        recognition,
         projects: [String(data.get("project") || "").trim()].filter(Boolean),
       });
       incomeForm.reset();
       incomeForm.elements.date.value = today();
+      const statusField = incomeForm.querySelector("[data-income-recognition-field]");
+      if (statusField) statusField.hidden = true;
       incomeForm.elements.platformFee.value = "0.00";
       incomeForm.elements.platformFeePercent.value = "0.00";
       render();
@@ -1064,6 +1097,7 @@
           income: state.income,
           expenses: state.expenses,
           taxReserveRate: state.taxReserveRate,
+          appleFeeRate: state.appleFeeRate,
           cashOnHand: state.cashOnHand,
           locale,
         }),
@@ -1164,10 +1198,11 @@
     }
   };
 
-  const csvMessage = (node, message) => {
+  const csvMessage = (node, message, isError = false) => {
     if (!node) return;
     node.textContent = message;
     node.hidden = false;
+    node.classList.toggle("is-error", isError);
   };
   const csvFailedCsv = (rows) => {
     const headers = ["line_number", "reason", "date", "source", "amount", "platform_fee", "client", "project", "external_ref", "notes"];
@@ -1194,7 +1229,7 @@
     const failedLink = document.querySelector("[data-csv-failed-download]");
     const file = input.files?.[0];
     if (!status || !failedStatus || !failedLink || !file) {
-      csvMessage(status, messages.csv.invalidFile);
+      csvMessage(status, messages.csv.invalidFile, true);
       return;
     }
     const original = label?.textContent || messages.csv.import;
@@ -1209,15 +1244,17 @@
       if (!response.ok) throw new Error(data?.error || "import_failed");
       csvMessage(status, messages.csv.result.replaceAll("{imported}", String(data.imported || 0)).replaceAll("{failed}", String(data.failed || 0)));
       if (data.failedRows?.length) {
-        const blob = new Blob([csvFailedCsv(data.failedRows)], { type: "text/csv;charset=utf-8" });
-        failedLink.href = URL.createObjectURL(blob);
+        const blob = new Blob([`\uFEFF${csvFailedCsv(data.failedRows)}\n`], { type: "text/csv;charset=utf-8" });
+        if (failedLink.dataset.url) URL.revokeObjectURL(failedLink.dataset.url);
+        const url = URL.createObjectURL(blob);
+        failedLink.href = url;
+        failedLink.dataset.url = url;
         failedStatus.hidden = false;
       }
-      const dashboardMode = Boolean(document.querySelector("[data-dashboard]"));
       if (dashboardMode && data.imported) await loadDashboard();
     } catch (error) {
       const reason = error?.message === "pro_required" ? messages.plan.proRequiredCsv : error?.message === "empty_file" ? messages.csv.emptyFile : messages.csv.importFailed;
-      csvMessage(status, reason);
+      csvMessage(status, reason, true);
     } finally {
       if (label) label.textContent = original;
       input.value = "";
@@ -1256,7 +1293,10 @@
       if (!response.ok || !data.ledger) throw new Error("delete_entry_failed");
       applyLedger(data.ledger);
       const settingsForm = document.querySelector('[data-proto-form="settings"]');
-      if (settingsForm) settingsForm.elements.cashOnHand.value = state.cashOnHand;
+      if (settingsForm) {
+        settingsForm.elements.cashOnHand.value = state.cashOnHand;
+        settingsForm.elements.appleFeeRate.value = state.appleFeeRate;
+      }
       refreshTaxInputs();
       render();
     } catch {
@@ -1267,6 +1307,7 @@
   const settingsForm = document.querySelector('[data-proto-form="settings"]');
   settingsForm?.addEventListener("input", () => {
     state.taxReserveRate = String(settingsForm.elements.taxReserveRate.value || "");
+    state.appleFeeRate = String(settingsForm.elements.appleFeeRate.value || "");
     state.cashOnHand = String(settingsForm.elements.cashOnHand.value || "");
     renderMetrics();
   });
@@ -1339,7 +1380,11 @@
       }
       applyLedger(data.ledger);
       const settingsForm = document.querySelector('[data-proto-form="settings"]');
-      if (settingsForm) settingsForm.elements.cashOnHand.value = state.cashOnHand;
+      if (settingsForm) {
+        settingsForm.elements.cashOnHand.value = state.cashOnHand;
+        settingsForm.elements.appleFeeRate.value = state.appleFeeRate;
+      }
+      refreshAppleFeeInput();
       refreshTaxInputs();
       render();
       loadIntegrations();
@@ -1634,6 +1679,9 @@
     state.taxReserveRate = ledger.workspace?.taxReserveRate === null
       || ledger.workspace?.taxReserveRate === undefined
       ? "" : String(Math.round(ledger.workspace.taxReserveRate * 1000) / 10);
+    state.appleFeeRate = ledger.workspace?.appleFeeRate === null
+      || ledger.workspace?.appleFeeRate === undefined
+      ? "" : String(Math.round(ledger.workspace.appleFeeRate * 100));
     state.cashOnHand = ledger.workspace?.cashOnHand === null
       || ledger.workspace?.cashOnHand === undefined
       ? "" : String(ledger.workspace.cashOnHand);
@@ -1764,7 +1812,10 @@
     state.taxReserveRate = String(document.querySelector("[data-flow-tax]")?.value || "");
     state.cashOnHand = String(document.querySelector("[data-flow-cash]")?.value || "");
     const settingsForm = document.querySelector('[data-proto-form="settings"]');
-    if (settingsForm) settingsForm.elements.cashOnHand.value = state.cashOnHand;
+    if (settingsForm) {
+      settingsForm.elements.cashOnHand.value = state.cashOnHand;
+      settingsForm.elements.appleFeeRate.value = state.appleFeeRate;
+    }
     refreshTaxInputs();
     render();
     renderFlowResults();
@@ -1812,7 +1863,10 @@
       if (!response.ok || !data.ledger) throw new Error("review_failed");
       applyLedger(data.ledger);
       const currentSettings = document.querySelector('[data-proto-form="settings"]');
-      if (currentSettings) currentSettings.elements.cashOnHand.value = state.cashOnHand;
+      if (currentSettings) {
+        currentSettings.elements.cashOnHand.value = state.cashOnHand;
+        currentSettings.elements.appleFeeRate.value = state.appleFeeRate;
+      }
       refreshTaxInputs();
       render();
     } catch {

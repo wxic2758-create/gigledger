@@ -6,10 +6,10 @@
   "path": "en/",
   "alternatePath": "zh-TW/",
   "meta": {
-    "title": "GigLedger — Know what you actually take home",
-    "description": "A simple ledger for freelancers. Track income, platform fees, expenses, and fixed costs, then see your true profit and tax reserve target.",
-    "ogTitle": "Know what you actually take home.",
-    "ogDescription": "One ledger for freelance income, fixed costs, true profit, and tax reserves."
+    "title": "GigLedger — Daily cost, real profit, cash runway",
+    "description": "A ledger for one-person companies. Turn fixed costs and subscriptions into a Daily Floor, then see net income, true profit, tax reserve, and cash runway.",
+    "ogTitle": "Your daily cost. Your real profit.",
+    "ogDescription": "Turn fixed costs into a Daily Floor, see true profit and tax reserve, and track how many days of runway you have left."
   },
   "nav": {
     "aria": "Primary navigation",
@@ -24,19 +24,19 @@
     "menuClose": "Close menu"
   },
   "hero": {
-    "kicker": "For freelancers and independent professionals",
-    "titleBefore": "Know what you",
-    "titleAccent": "actually take home.",
-    "sub": "Track income, platform fees, expenses, and fixed costs in one ledger. See your true profit, and how much to set aside for taxes.",
-    "primaryCta": "Calculate now",
+    "kicker": "For one-person companies",
+    "titleBefore": "Your daily cost.",
+    "titleAccent": "Your real profit.",
+    "sub": "GigLedger turns AI subscriptions and other fixed costs into one Daily Floor, then shows true profit, tax reserve, and how many days of runway you have left.",
+    "primaryCta": "Calculate your Daily Floor",
     "secondaryCta": "Sign in with Google",
     "trust": [
-      "Built for freelance income",
-      "Manual entry + CSV import",
+      "Built for one-person companies",
+      "Try the calculator without an account",
       "Estimates, not tax advice"
     ],
     "sampleLabel": "Sample data",
-    "visualAria": "GigLedger dashboard preview with sample income, fees, fixed costs, profit, and tax reserve."
+    "visualAria": "GigLedger dashboard preview with sample income, fixed costs, true profit, tax reserve, and runway."
   },
   "dashboard": {
     "title": "Dashboard",
@@ -110,25 +110,25 @@
     "index": "01",
     "kicker": "The daily number",
     "title": "Your daily floor.",
-    "body": "Rent. Software. Insurance. The costs that keep running whether you bill a client or not. GigLedger turns them into one number you can act on.",
+    "body": "AI tools. Software. Rent. The costs that keep running whether you ship or not. GigLedger turns them into one number you can act on: your Daily Floor.",
     "value": "$29.59",
     "unit": "per day",
     "formula": "Monthly fixed costs × 12 ÷ 365",
     "items": [
       {
         "label": "Coworking",
-        "value": "$18 / day"
+        "value": "about $18 / day"
       },
       {
         "label": "Software",
-        "value": "$7 / day"
+        "value": "about $7 / day"
       },
       {
         "label": "Insurance",
-        "value": "$5 / day"
+        "value": "about $5 / day"
       }
     ],
-    "note": "Example: $900 in monthly business fixed costs at 100% business use."
+    "note": "Rounded illustration. Exact example: $900 in monthly business fixed costs at 100% business use."
   },
   "features": {
     "index": "02",
@@ -138,7 +138,7 @@
       {
         "tag": "Income",
         "title": "Scattered income, one place.",
-        "body": "Add manually, import CSV, or sync official Stripe reports in Pro. App Store Connect key storage and sold-income status are available; report sync is clearly marked as pending.",
+        "body": "Add manually, import CSV, or sync official Stripe reports in Pro. App Store Connect key storage and sold-income status are available; report sync is clearly marked as pending. No bank passwords, no scraping.",
         "tone": "dark",
         "icon": "income"
       },
@@ -208,12 +208,14 @@
   "honesty": {
     "kicker": "Official APIs where they exist. No bank passwords. No scraping.",
     "title": "Start with a working calculator. Add official sync in Pro.",
-    "body": "GigLedger starts with a calculator, manual entry, and CSV import. Pro adds official Stripe sync and App Store Connect key storage. App Store report sync is not available yet. We will not ask for bank passwords, scrape your accounts, or file taxes for you.",
+    "body": "GigLedger starts with a free calculator. Free includes manual entry and up to five subscriptions. Pro adds CSV import, official Stripe sync, subscription reviews, and App Store Connect key storage. App Store report sync is not available yet. We will not ask for bank passwords, scrape your accounts, or file taxes for you.",
     "yesTitle": "In the first version",
     "yes": [
-      "Manual income and expense entry",
-      "CSV import with duplicate detection",
-      "Fixed costs and daily floor"
+      "Free calculator, manual entry, and five subscriptions",
+      "CSV import with duplicate detection in Pro",
+      "Fixed costs and Daily Floor",
+      "Official Stripe sync in Pro",
+      "App Store sold-income fee at 15% or 30%"
     ],
     "noTitle": "We will never",
     "no": [
@@ -232,11 +234,11 @@
       },
       {
         "q": "Does it connect to Stripe or the App Store?",
-        "a": "Pro supports official Stripe sync and App Store Connect key storage. App Store report sync is not available yet and says so clearly. Upwork, PayPal, and Fiverr can be imported with CSV. No bank passwords and no scraping."
+        "a": "Pro supports official Stripe sync and App Store Connect key storage. App Store report sync is not available yet and says so clearly. Upwork, PayPal, and Fiverr can be imported with CSV in Pro. No bank passwords and no scraping."
       },
       {
         "q": "What counts as a fixed cost?",
-        "a": "Subscriptions, software, rent, insurance, and hosting that recur. One-time purchases belong in expenses; do not record a subscription again as an expense."
+        "a": "Subscriptions, software, rent, insurance, and hosting that recur. One-time purchases belong in expenses; do not record a subscription again as an expense. GigLedger tracks business use, but does not decide whether an item is deductible."
       },
       {
         "q": "Can I use it outside the US?",
@@ -266,6 +268,7 @@
   },
   "legal": {
     "privacyTitle": "Privacy notice",
+    "privacyDescription": "How GigLedger stores Google account details and ledger data in Cloudflare D1, how to export it, and how account deletion works.",
     "privacyDraft": "Pre-launch draft. This notice must be reviewed before launch.",
     "privacyBody": [
       "When you use “Sign in with Google”, GigLedger stores your Google account email and name, plus the ledger entries you save. Your Google password is never stored.",
@@ -274,6 +277,7 @@
       "This pre-launch draft still requires the legal entity, contact details, retention period, processors, and final deletion workflow before general launch."
     ],
     "disclaimerTitle": "Tax disclaimer",
+    "disclaimerDescription": "GigLedger tax reserve figures are planning estimates set by you, not tax advice or a tax return.",
     "disclaimerBody": [
       "GigLedger provides estimates for planning only. It is not a tax, legal, or accounting advisor.",
       "You choose your own reserve rate. GigLedger may show a common range of 25%–30% for US self-employment planning. It does not calculate your actual federal, self-employment, or state tax, and it does not file a return.",
@@ -401,6 +405,7 @@
       "manageUrl": "Manage subscription URL (optional)",
       "date": "Date",
       "source": "Source",
+      "recognition": "Income status",
       "client": "Client or project",
       "platformFee": "Platform fee (USD)",
       "platformFeePercent": "Platform fee %",
@@ -467,6 +472,9 @@
     "saveFailed": "Could not start Google sign-in. Your entries are still here.",
     "savedRedirect": "Signed in. Saving your entries…",
     "taxRateLabel": "Tax reserve rate % (optional)",
+    "appleFeeLabel": "Apple fee on new App Store sales",
+    "appleFeeUnset": "Not set",
+    "appleFeeNote": "Applies only to new App Store income marked as sold. Confirmed received income is never rewritten.",
     "cashLabel": "Cash on hand (USD, optional)",
     "taxRatePlaceholder": "Common US range: 25–30",
     "taxUnset": "Set your own rate",

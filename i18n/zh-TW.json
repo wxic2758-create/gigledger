@@ -6,10 +6,10 @@
   "path": "zh-TW/",
   "alternatePath": "en/",
   "meta": {
-    "title": "GigLedger — 看清你實際拿到多少",
-    "description": "為自由工作者而做的簡單帳本。記錄收入、平台手續費、支出與固定成本，看清實際利潤與預留稅款。",
-    "ogTitle": "看清你實際拿到多少。",
-    "ogDescription": "用一個帳本整理自由工作收入、固定成本、實際利潤與預留稅款。"
+    "title": "GigLedger — 每日成本、真實利潤、現金跑道",
+    "description": "為一人公司而做的帳本。把固定成本與訂閱換算成每日底線，再看淨收入、實際利潤、預留稅款與現金跑道。",
+    "ogTitle": "你的每日成本，你的真實利潤。",
+    "ogDescription": "把固定成本換算成每日底線，查看實際利潤、預留稅款，以及手頭現金還能支撐多少天。"
   },
   "nav": {
     "aria": "主要導覽",
@@ -24,19 +24,19 @@
     "menuClose": "關閉選單"
   },
   "hero": {
-    "kicker": "為自由工作者與獨立專業者而做",
-    "titleBefore": "看清你",
-    "titleAccent": "實際拿到多少。",
-    "sub": "在同一個帳本裡記錄收入、平台手續費、支出與固定成本，看清實際利潤，也知道該為稅款預留多少。",
-    "primaryCta": "立即試算",
+    "kicker": "為一人公司而做",
+    "titleBefore": "你的每日成本。",
+    "titleAccent": "你的真實利潤。",
+    "sub": "GigLedger 把 AI 訂閱與其他固定成本換算成每日底線，再看實際利潤、預留稅款，以及手頭現金還能支撐多少天。",
+    "primaryCta": "3 分鐘算出每日底線",
     "secondaryCta": "使用 Google 登入",
     "trust": [
-      "為自由工作收入而做",
-      "手動輸入 + CSV 匯入",
+      "為一人公司而做",
+      "不用登入也能先試算",
       "僅供預估，非稅務建議"
     ],
     "sampleLabel": "範例資料",
-    "visualAria": "GigLedger 儀表板預覽，包含範例收入、手續費、固定成本、利潤與預留稅款。"
+    "visualAria": "GigLedger 儀表板預覽，包含範例收入、固定成本、實際利潤、預留稅款與現金跑道。"
   },
   "dashboard": {
     "title": "儀表板",
@@ -110,25 +110,25 @@
     "index": "01",
     "kicker": "每日數字",
     "title": "你的每日底線。",
-    "body": "租金、軟體、保險。不管你這個月有沒有接到案，這些成本都照樣在跑。GigLedger 把它們換算成一個能採取行動的數字。",
+    "body": "AI 工具、軟體、租金。不管你這個月有沒有出貨，這些成本都照樣在跑。GigLedger 把它們換算成一個能採取行動的數字：你的每日底線。",
     "value": "$29.59",
     "unit": "每天",
     "formula": "每月固定成本 × 12 ÷ 365",
     "items": [
       {
         "label": "共享空間",
-        "value": "$18 / 天"
+        "value": "約 $18 / 天"
       },
       {
         "label": "軟體",
-        "value": "$7 / 天"
+        "value": "約 $7 / 天"
       },
       {
         "label": "保險",
-        "value": "$5 / 天"
+        "value": "約 $5 / 天"
       }
     ],
-    "note": "範例：每月營業固定成本 $900，營業使用比例 100%。"
+    "note": "以下為四捨五入示意。精確範例：每月營業固定成本 $900，營業使用比例 100%。"
   },
   "features": {
     "index": "02",
@@ -138,7 +138,7 @@
       {
         "tag": "收入",
         "title": "收入四散，集中一處。",
-        "body": "可手動輸入、匯入 CSV，Pro 支援 Stripe 官方同步。App Store Connect 金鑰儲存與已售出狀態已可用；報告同步會清楚標示為尚未開放。",
+        "body": "可手動輸入、匯入 CSV，Pro 支援 Stripe 官方同步。App Store Connect 金鑰儲存與已售出狀態已可用；報告同步會清楚標示為尚未開放。不收銀行密碼，也不抓取帳號。",
         "tone": "dark",
         "icon": "income"
       },
@@ -208,12 +208,14 @@
   "honesty": {
     "kicker": "有官方 API 就用官方 API。不收銀行密碼，不抓取帳號。",
     "title": "先提供可用的計算機，Pro 再加入官方同步。",
-    "body": "GigLedger 從計算機、手動輸入與 CSV 匯入開始。Pro 支援 Stripe 官方同步與 App Store Connect 金鑰儲存；App Store 報告同步目前尚未開放。我們不會要求銀行密碼、抓取帳號，也不會代你報稅。",
+    "body": "GigLedger 以免費計算機開始。免費版包含手動輸入與最多 5 個訂閱；Pro 再加入 CSV 匯入、Stripe 官方同步、訂閱體檢與 App Store Connect 金鑰儲存。App Store 報告同步目前尚未開放。我們不會要求銀行密碼、抓取帳號，也不會代你報稅。",
     "yesTitle": "第一版會有",
     "yes": [
-      "手動輸入收入與支出",
-      "CSV 匯入與重複偵測",
-      "固定成本與每日底線"
+      "免費計算機、手動輸入與 5 個訂閱",
+      "Pro 的 CSV 匯入與重複偵測",
+      "固定成本與每日底線",
+      "Pro 的 Stripe 官方同步",
+      "App Store 已售出收入的 15% / 30% 抽成"
     ],
     "noTitle": "我們絕不會",
     "no": [
@@ -232,11 +234,11 @@
       },
       {
         "q": "能連接 Stripe 或 App Store 嗎？",
-        "a": "Pro 支援 Stripe 官方同步與 App Store Connect 金鑰儲存。App Store 報告同步目前尚未開放，介面會清楚說明。Upwork、PayPal、Fiverr 可用 CSV 匯入；不收銀行密碼，也不抓取帳號。"
+        "a": "Pro 支援 Stripe 官方同步與 App Store Connect 金鑰儲存。App Store 報告同步目前尚未開放，介面會清楚說明。Upwork、PayPal、Fiverr 可在 Pro 用 CSV 匯入；不收銀行密碼，也不抓取帳號。"
       },
       {
         "q": "什麼算固定成本？",
-        "a": "訂閱、軟體、租金、保險、主機等重複發生的成本。一次性花費記為支出；訂閱不要在支出裡再記一次。"
+        "a": "訂閱、軟體、租金、保險、主機等重複發生的成本。一次性花費記為支出；訂閱不要在支出裡再記一次。GigLedger 會記錄營業使用比例，但不判斷某項支出是否能抵稅。"
       },
       {
         "q": "美國以外能用嗎？",
@@ -266,6 +268,7 @@
   },
   "legal": {
     "privacyTitle": "隱私說明",
+    "privacyDescription": "GigLedger 如何把 Google 帳號資料與帳本儲存在 Cloudflare D1、如何匯出資料，以及如何刪除帳號。",
     "privacyDraft": "上線前草稿。正式上線前仍需完成法律審閱。",
     "privacyBody": [
       "使用「使用 Google 登入」時，GigLedger 會儲存你的 Google 帳號電子郵件與姓名，以及你保存的帳本資料。我們不會儲存你的 Google 密碼。",
@@ -274,6 +277,7 @@
       "本上線前草稿在正式公開前，仍須補上法律實體、聯絡方式、保存期限、處理者與最終刪除流程。"
     ],
     "disclaimerTitle": "稅務免責聲明",
+    "disclaimerDescription": "GigLedger 的預留稅款數字是由你設定的規劃預估，不是稅務建議，也不是報稅結果。",
     "disclaimerBody": [
       "GigLedger 僅提供規劃用的預估，不是稅務、法律或會計顧問。",
       "預留比例由你自行設定。GigLedger 可能顯示美國自僱情境常見的 25%–30% 參考範圍，但不會計算實際聯邦稅、自僱稅或州稅，也不代為申報。",
@@ -401,6 +405,7 @@
       "manageUrl": "管理訂閱連結（可選）",
       "date": "日期",
       "source": "收入來源",
+      "recognition": "收入狀態",
       "client": "客戶或專案",
       "platformFee": "平台手續費（USD）",
       "platformFeePercent": "平台手續費 %",
@@ -467,6 +472,9 @@
     "saveFailed": "無法開始 Google 登入。你的資料仍在目前頁面。",
     "savedRedirect": "已登入，正在保存你的資料…",
     "taxRateLabel": "預留稅款比例 %（可選）",
+    "appleFeeLabel": "新 App Store 銷售的 Apple 抽成",
+    "appleFeeUnset": "未設定",
+    "appleFeeNote": "只套用到新標記為「已售出」的 App Store 收入。已確認到帳的收入不會被改寫。",
     "cashLabel": "現有現金（USD，可選）",
     "taxRatePlaceholder": "美國常見範圍：25–30",
     "taxUnset": "設定你的預留比例",

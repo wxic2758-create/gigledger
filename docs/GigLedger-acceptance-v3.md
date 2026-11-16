@@ -64,7 +64,7 @@ All product calculations use USD and allow a tolerance of `$0.01`.
 | AF-14 | 5.2 tax separation | Tax reserve is displayed separately and is not deducted from profit | Pass | Reserve and true profit are separate metrics. |
 | AF-15 | 5.2 income date | Income defaults to the received date | Pass | The income form defaults to today. |
 | AF-16 | 5.2 App Store | Sold, not received is visible but excluded from profit | Pass | `{$99 sold, $50 received, $5 fee}` produced gross `$50`, net `$45`, sold `$99`, profit `$45`. |
-| AF-17 | 5.2 App Store fee | Apple fee 15% or 30% changes new or recalculated sold records only | Pending | `apple_fee_rate` exists in the workspace schema, but the App Store report parser and fee application are not configured. |
+| AF-17 | 5.2 App Store fee | Apple fee 15% or 30% changes new or recalculated sold records only | Pass | The dashboard settings persist `apple_fee_rate`. `$99.99` sold entries were stored with `$15.00` at 15% and `$30.00` at 30%; a received `$50 / $5 fee` entry kept its `$5.00` fee after the rate changed. |
 | AF-18 | 5.3 CSV | Import 10 valid rows; dashboard total matches the file | Pass | CSV import was built and exercised with valid and invalid rows. |
 | AF-19 | 5.3 CSV | Re-import by `external_ref` or equivalent key does not duplicate | Pass | Export then re-import is deduplicated by `external_ref` or the equivalent key. |
 | AF-20 | 5.3 CSV | Invalid rows do not abort the batch; failed rows can be downloaded | Pass | Failed rows return line number, reason, and source values. |
@@ -125,11 +125,10 @@ All product calculations use USD and allow a tolerance of `$0.01`.
 
 These are real PRD gaps, not accepted excuses. They are listed here so the next implementation pass does not mistake a passing adjacent test for full coverage.
 
-1. `apple_fee_rate` is present in the workspace schema, but App Store report parsing and automatic 15% / 30% fee application are not implemented.
-2. The App Store Connect key is encrypted and validated, but the report parser/sync remains intentionally unavailable. The UI must continue to say so.
-3. The weekly summary uses browser-local dismissal state. This is a UI preference, not ledger persistence; anonymous ledger data still stays in memory only.
-4. Marketing copy and SEO metadata should be rechecked against `docs/GigLedger-website-optimization.md` after every deployment.
-5. The legal pages still need the operating entity, contact details, retention period, processors, and final deletion workflow before general launch.
+1. The App Store Connect key is encrypted and validated, but the report parser/sync remains intentionally unavailable. The UI must continue to say so.
+2. The weekly summary uses browser-local dismissal state. This is a UI preference, not ledger persistence; anonymous ledger data still stays in memory only.
+3. Marketing copy and SEO metadata should be rechecked against `docs/GigLedger-website-optimization.md` after every deployment.
+4. The legal pages still need the operating entity, contact details, retention period, processors, and final deletion workflow before general launch.
 
 ## Manual Regression Checklist
 
@@ -148,9 +147,10 @@ These are real PRD gaps, not accepted excuses. They are listed here so the next 
 13. Reconnect an App Store key, confirm the status says the key is saved, and confirm sync says reports are not configured.
 14. Disconnect App Store and Stripe; confirm imported history remains.
 15. Select the App Store subscription template; confirm Open and Manage link to Apple's pages.
-16. Delete the test account; confirm the user, workspace, ledger, projects, reviews, and integrations are gone.
-17. Sign in again with the same Google account; confirm a new empty workspace is created.
-18. Repeat the visible checks in `zh-TW`; confirm no “Prototype” copy remains in the ledger UI.
+16. Set Apple fee to 15%, add a `$99.99` sold App Store entry, and confirm `$15.00` fee / `$84.99` net; switch to 30% and confirm a new sold entry uses `$30.00` while the old entry and received entries keep their original fees.
+17. Delete the test account; confirm the user, workspace, ledger, projects, reviews, and integrations are gone.
+18. Sign in again with the same Google account; confirm a new empty workspace is created.
+19. Repeat the visible checks in `zh-TW`; confirm no “Prototype” copy remains in the ledger UI.
 
 ## Deployment Gate
 

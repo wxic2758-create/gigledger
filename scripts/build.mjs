@@ -61,9 +61,9 @@ const nav = (t, current) => `
     <div class="shell header-inner">
       ${logo(current.folder)}
       <nav class="desktop-nav" aria-label="${esc(t.nav.aria)}">
-        <a href="#daily">${esc(t.nav.why)}</a>
-        <a href="#how">${esc(t.nav.how)}</a>
-        <a href="#faq">${esc(t.nav.faq)}</a>
+        <a href="/${current.folder}/#daily">${esc(t.nav.why)}</a>
+        <a href="/${current.folder}/#how">${esc(t.nav.how)}</a>
+        <a href="/${current.folder}/#faq">${esc(t.nav.faq)}</a>
       </nav>
       <div class="header-actions">
         ${languageSwitch(t, current)}
@@ -74,9 +74,9 @@ const nav = (t, current) => `
       </div>
     </div>
     <nav class="mobile-nav" id="mobileNav" aria-label="${esc(t.nav.aria)}">
-      <a href="#daily">${esc(t.nav.why)}</a>
-      <a href="#how">${esc(t.nav.how)}</a>
-      <a href="#faq">${esc(t.nav.faq)}</a>
+      <a href="/${current.folder}/#daily">${esc(t.nav.why)}</a>
+      <a href="/${current.folder}/#how">${esc(t.nav.how)}</a>
+      <a href="/${current.folder}/#faq">${esc(t.nav.faq)}</a>
       <a href="/${current.folder}/app">${esc(t.nav.cta)}</a>
       ${languageSwitch(t, current)}
     </nav>
@@ -307,7 +307,7 @@ const startSection = (t) => `
             <a class="button button-orange" href="/${t.locale}/app">${esc(t.start.calculate)} <span aria-hidden="true">→</span></a>
             <a class="button button-ghost" href="/api/auth/google?locale=${t.locale}">${esc(t.start.signIn)}</a>
           </div>
-          <p class="form-note">${esc(t.start.note)} · <a href="/${t.locale}/privacy.html">${esc(t.start.privacy)}</a></p>
+          <p class="form-note">${esc(t.start.note)} · <a href="/${t.locale}/privacy">${esc(t.start.privacy)}</a></p>
         </div>
       </div>
     </section>`;
@@ -324,14 +324,14 @@ const footer = (t) => `
       <div class="footer-links">
         <div>
           <p class="footer-heading">${esc(t.footer.product)}</p>
-          <a href="#daily">${esc(t.footer.why)}</a>
-          <a href="#how">${esc(t.footer.how)}</a>
-          <a href="#faq">${esc(t.footer.faq)}</a>
+          <a href="/${t.locale}/#daily">${esc(t.footer.why)}</a>
+          <a href="/${t.locale}/#how">${esc(t.footer.how)}</a>
+          <a href="/${t.locale}/#faq">${esc(t.footer.faq)}</a>
         </div>
         <div>
           <p class="footer-heading">${esc(t.footer.legal)}</p>
-          <a href="/${t.locale}/privacy.html">${esc(t.footer.privacy)}</a>
-          <a href="/${t.locale}/tax-disclaimer.html">${esc(t.footer.disclaimer)}</a>
+          <a href="/${t.locale}/privacy">${esc(t.footer.privacy)}</a>
+          <a href="/${t.locale}/tax-disclaimer">${esc(t.footer.disclaimer)}</a>
         </div>
       </div>
     </div>
@@ -345,6 +345,7 @@ const legalPage = ({ locale, t, type }) => {
   const isPrivacy = type === "privacy";
   const title = isPrivacy ? t.legal.privacyTitle : t.legal.disclaimerTitle;
   const body = isPrivacy ? t.legal.privacyBody : t.legal.disclaimerBody;
+  const description = isPrivacy ? t.legal.privacyDescription : t.legal.disclaimerDescription;
   const draft = isPrivacy ? `<p class="legal-draft">${esc(t.legal.privacyDraft)}</p>` : "";
   return `<!doctype html>
 <html lang="${locale.htmlLang}" dir="${locale.dir}">
@@ -352,12 +353,12 @@ const legalPage = ({ locale, t, type }) => {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${esc(title)} — GigLedger</title>
-  <meta name="description" content="${esc(isPrivacy ? t.meta.description : t.legal.disclaimerBody[0])}">
+  <meta name="description" content="${esc(description)}">
   <link rel="icon" href="/assets/favicon-32.png" sizes="32x32">
-  <link rel="canonical" href="${siteUrl}/${locale.folder}/${isPrivacy ? "privacy.html" : "tax-disclaimer.html"}">
-  <link rel="alternate" hreflang="en" href="${siteUrl}/en/${isPrivacy ? "privacy.html" : "tax-disclaimer.html"}">
-  <link rel="alternate" hreflang="zh-Hant-TW" href="${siteUrl}/zh-TW/${isPrivacy ? "privacy.html" : "tax-disclaimer.html"}">
-  <link rel="alternate" hreflang="x-default" href="${siteUrl}/en/${isPrivacy ? "privacy.html" : "tax-disclaimer.html"}">
+  <link rel="canonical" href="${siteUrl}/${locale.folder}/${isPrivacy ? "privacy" : "tax-disclaimer"}">
+  <link rel="alternate" hreflang="en" href="${siteUrl}/en/${isPrivacy ? "privacy" : "tax-disclaimer"}">
+  <link rel="alternate" hreflang="zh-Hant-TW" href="${siteUrl}/zh-TW/${isPrivacy ? "privacy" : "tax-disclaimer"}">
+  <link rel="alternate" hreflang="x-default" href="${siteUrl}/en/${isPrivacy ? "privacy" : "tax-disclaimer"}">
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
@@ -706,12 +707,14 @@ const appPage = ({ locale, t, mode = "app" }) => {
         </div>
         <form class="app-form app-settings-form" data-proto-form="settings" novalidate>
           <label><span>${esc(t.app.taxRateLabel)}</span><input name="taxReserveRate" type="number" min="0" max="100" step="0.1" placeholder="${esc(t.app.taxRatePlaceholder)}"></label>
+          <label><span>${esc(t.app.appleFeeLabel)}</span><select name="appleFeeRate"><option value="">${esc(t.app.appleFeeUnset)}</option><option value="15">15%</option><option value="30">30%</option></select></label>
           <label><span>${esc(t.app.cashLabel)}</span><input name="cashOnHand" type="number" min="0" step="0.01"></label>
-          <p class="app-note">${esc(t.app.taxReference)}</p>
+          <p class="app-note">${esc(t.app.taxReference)} ${esc(t.app.appleFeeNote)}</p>
         </form>
         <form class="app-form" data-proto-form="income" novalidate>
           <label><span>${esc(t.app.fields.date)}</span><input name="date" type="date" value="${new Date().toISOString().slice(0, 10)}" required></label>
           <label><span>${esc(t.app.fields.source)}</span><select name="source">${["upwork","fiverr","stripe","app_store","direct","paypal","other"].map(sourceOption).join("")}</select></label>
+          <label data-income-recognition-field hidden><span>${esc(t.app.fields.recognition)}</span><select name="recognition"><option value="received">${esc(t.app.income.recognitionReceived)}</option><option value="sold">${esc(t.app.income.recognitionSold)}</option></select></label>
           <label><span>${esc(t.app.fields.client)}</span><input name="client"></label>
           <label><span>${esc(t.app.fields.project)}</span><select name="project" data-project-options></select></label>
           <label><span>${esc(t.app.fields.amount)}</span><input name="amount" type="number" min="0" step="0.01" required></label>
@@ -761,7 +764,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
       <a href="/${t.alternatePath}app">${esc(t.nav.switchTo)}</a>
     </div>
   </footer>
-  <script src="/app-ledger.js?v=20261116-12" defer></script>
+  <script src="/app-ledger.js?v=20261116-14" defer></script>
   <script src="/app.js" defer></script>
 </body>
 </html>`;
@@ -858,12 +861,16 @@ await writeFile(
 /zh-TW/thanks.html /zh-TW/ 308
 /en/app.html /en/app 308
 /zh-TW/app.html /zh-TW/app 308
+/en/privacy.html /en/privacy 308
+/zh-TW/privacy.html /zh-TW/privacy 308
+/en/tax-disclaimer.html /en/tax-disclaimer 308
+/zh-TW/tax-disclaimer.html /zh-TW/tax-disclaimer 308
 `,
 );
 
 const sitemapUrls = [];
 for (const locale of locales) {
-  for (const file of ["", "privacy.html", "tax-disclaimer.html"]) {
+  for (const file of ["", "privacy", "tax-disclaimer"]) {
     sitemapUrls.push(`${siteUrl}/${locale.folder}/${file}`);
   }
 }
@@ -873,7 +880,7 @@ await writeFile(
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
 ${locales
   .flatMap((locale) =>
-    ["", "privacy.html", "tax-disclaimer.html"].map(
+    ["", "privacy", "tax-disclaimer"].map(
       (file) => `  <url>
     <loc>${siteUrl}/${locale.folder}/${file}</loc>
     <xhtml:link rel="alternate" hreflang="en" href="${siteUrl}/en/${file}"/>

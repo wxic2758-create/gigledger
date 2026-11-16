@@ -52,6 +52,23 @@ export const normalizeDraft = async (input) => {
   const normalizedFixed = [];
   const normalizedIncome = [];
   const normalizedProjects = [];
+  const rawAppleFeeRate = data.appleFeeRate ?? data.apple_fee_rate;
+  const appleFeeRateProvided = Object.prototype.hasOwnProperty.call(data, "appleFeeRate")
+    || Object.prototype.hasOwnProperty.call(data, "apple_fee_rate");
+  let appleFeeRate = null;
+  let normalizedAppleFeeRateProvided = false;
+  if (appleFeeRateProvided && (rawAppleFeeRate === null || rawAppleFeeRate === "")) {
+    normalizedAppleFeeRateProvided = true;
+  } else if (appleFeeRateProvided) {
+    const rate = Number(rawAppleFeeRate);
+    if (rate === 15 || rate === 30) {
+      appleFeeRate = rate / 100;
+      normalizedAppleFeeRateProvided = true;
+    } else if (rate === 0.15 || rate === 0.3) {
+      appleFeeRate = rate;
+      normalizedAppleFeeRateProvided = true;
+    }
+  }
 
   for (const item of fixedCosts) {
     const amount = Number(item?.amount);
@@ -92,7 +109,6 @@ export const normalizeDraft = async (input) => {
 
   for (const item of income) {
     const amount = Number(item?.amount);
-    const platformFee = Number(item?.platformFee ?? 0);
     const source = incomeSources.includes(item?.source) ? item.source : null;
     const occurredOn = date(item?.date);
     const clientName = text(item?.client, 120);
@@ -102,6 +118,10 @@ export const normalizeDraft = async (input) => {
     const recognition = item?.recognition === "sold" ? "sold" : "received";
     const payoutStatus = text(item?.payoutStatus || item?.payout_status, 80);
     const integrationId = text(item?.integrationId || item?.integration_id, 80);
+    const suppliedPlatformFee = Number(item?.platformFee ?? 0);
+    const platformFee = source === "app_store" && recognition === "sold" && appleFeeRate !== null
+      ? Math.round(amount * appleFeeRate * 100) / 100
+      : suppliedPlatformFee;
     if (!source || !occurredOn || !finite(amount) || !finite(platformFee) || platformFee > amount) continue;
     normalizedIncome.push({
       externalRef: externalRef || await hash(`${occurredOn}|${source}|${clientName || ""}|${amount}|${platformFee}`),
@@ -171,6 +191,8 @@ export const normalizeDraft = async (input) => {
     income: normalizedIncome,
     expenses: normalizedExpenses,
     taxReserveRate,
+    appleFeeRate,
+    appleFeeRateProvided: normalizedAppleFeeRateProvided,
     cashOnHand,
   };
 };
@@ -350,12 +372,15 @@ export const saveWorkspaceDraft = async (env, workspaceId, draft) => {
   statements.push(db.prepare(
     `UPDATE workspaces
      SET tax_reserve_rate = COALESCE(?, tax_reserve_rate),
+         apple_fee_rate = CASE WHEN ? = 1 THEN ? ELSE apple_fee_rate END,
          cash_on_hand = COALESCE(?, cash_on_hand),
          cash_on_hand_as_of = CASE WHEN ? IS NULL THEN cash_on_hand_as_of ELSE ? END,
          updated_at = ?
      WHERE id = ?`,
   ).bind(
     draft.taxReserveRate,
+    draft.appleFeeRateProvided ? 1 : 0,
+    draft.appleFeeRate,
     draft.cashOnHand,
     draft.cashOnHand,
     draft.cashOnHand === null ? null : timestamp,
@@ -540,7 +565,7 @@ export const loadWorkspace = async (db, workspaceId) => {
   ).bind(workspaceId).all();
   const projectsById = new Map((projectRows.results || []).map((item) => [item.id, item.name]));
   const workspace = await db.prepare(
-    "SELECT id, name, base_currency, tax_reserve_rate, cash_on_hand, cash_on_hand_as_of, plan FROM workspaces WHERE id = ?",
+    "SELECT id, name, base_currency, tax_reserve_rate, apple_fee_rate, cash_on_hand, cash_on_hand_as_of, plan FROM workspaces WHERE id = ?",
   ).bind(workspaceId).first();
   if (!workspace) return null;
 
@@ -606,6 +631,7 @@ export const loadWorkspace = async (db, workspaceId) => {
       name: workspace.name,
       baseCurrency: workspace.base_currency,
       taxReserveRate: workspace.tax_reserve_rate,
+      appleFeeRate: workspace.apple_fee_rate,
       cashOnHand: workspace.cash_on_hand,
       cashOnHandAsOf: workspace.cash_on_hand_as_of,
       plan: planFeatures(workspace.plan).plan,
