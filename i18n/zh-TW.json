@@ -418,7 +418,8 @@
       "addProjectShare": "加入專案分攤",
       "allocationTotal": "已分配 {total}%",
       "allocationInvalid": "專案分攤比例合計必須剛好 100%。",
-      "removeProjectShare": "移除"
+      "removeProjectShare": "移除",
+      "software": "AI / 軟體訂閱"
     },
     "cycles": {
       "daily": "每天",
@@ -618,7 +619,7 @@
     },
     "weeklySummary": {
       "title": "本週摘要",
-      "body": "上週淨收入 {income}，可覆蓋每日底線 {days} 天。",
+      "body": "上週淨收入 {income}，可覆蓋每日底線 {days} 天。AI / 軟體占每月固定成本 {share}%。",
       "bodyNoFloor": "上週淨收入 {income}。加入固定成本後，才能對照每日底線。",
       "bodyNoIncome": "上週沒有收入紀錄。你的每日底線仍是 {daily}。",
       "dismiss": "本週不再顯示"

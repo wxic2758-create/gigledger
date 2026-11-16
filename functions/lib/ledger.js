@@ -98,6 +98,10 @@ export const normalizeDraft = async (input) => {
       startDate,
       endDate,
       isSubscription: Boolean(item?.isSubscription || item?.is_subscription || templateKey),
+      isSoftware: item?.isSoftware === undefined && item?.is_software === undefined
+        ? true
+        : item?.isSoftware === true || item?.is_software === true || item?.isSoftware === 1 || item?.is_software === 1
+          || item?.isSoftware === "1" || item?.is_software === "1",
       templateKey,
       productUrl,
       manageUrl,
@@ -234,7 +238,7 @@ export const saveFixedCostRevision = async (env, workspaceId, payload) => {
   }
 
   const fixedCost = await db.prepare(
-    "SELECT id, start_date, is_subscription, template_key FROM fixed_costs WHERE id = ? AND workspace_id = ?",
+    "SELECT id, start_date, is_subscription, is_software, template_key FROM fixed_costs WHERE id = ? AND workspace_id = ?",
   ).bind(fixedCostId, workspaceId).first();
   if (!fixedCost) {
     const error = new Error("fixed_cost_not_found");
@@ -282,6 +286,9 @@ export const saveFixedCostRevision = async (env, workspaceId, payload) => {
   const productUrl = text(payload?.productUrl, 500);
   const manageUrl = text(payload?.manageUrl, 500);
   const templateKey = text(payload?.templateKey, 80) || fixedCost.template_key || null;
+  const isSoftware = payload?.isSoftware === undefined
+    ? fixedCost.is_software === 1
+    : payload.isSoftware === true || payload.isSoftware === 1 || payload.isSoftware === "1";
   const existingVersion = await db.prepare(
     "SELECT id FROM fixed_cost_versions WHERE fixed_cost_id = ? AND effective_from = ?",
   ).bind(fixedCostId, effectiveFrom).first();
@@ -337,7 +344,7 @@ export const saveFixedCostRevision = async (env, workspaceId, payload) => {
          cycle = CASE WHEN ? THEN ? ELSE cycle END,
          business_use = CASE WHEN ? THEN ? ELSE business_use END,
          allocation_json = CASE WHEN ? THEN ? ELSE allocation_json END,
-         is_subscription = ?, template_key = ?, product_url = ?, manage_url = ?,
+         is_subscription = ?, is_software = ?, template_key = ?, product_url = ?, manage_url = ?,
          next_billing_date = ?, end_date = ?, updated_at = ?
      WHERE id = ? AND workspace_id = ?`,
   ).bind(
@@ -351,6 +358,7 @@ export const saveFixedCostRevision = async (env, workspaceId, payload) => {
     appliesNow ? 1 : 0,
     allocationJson,
     isSubscription ? 1 : 0,
+    isSoftware ? 1 : 0,
     templateKey,
     productUrl,
     manageUrl,
@@ -448,9 +456,9 @@ export const saveWorkspaceDraft = async (env, workspaceId, draft) => {
     statements.push(db.prepare(
       `INSERT INTO fixed_costs
         (id, workspace_id, external_ref, name, amount, cycle, business_use, source, project_id, allocation_json,
-         is_subscription, template_key, product_url, manage_url, next_billing_date, start_date, end_date,
+         is_subscription, is_software, template_key, product_url, manage_url, next_billing_date, start_date, end_date,
          created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'manual', NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'manual', NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(workspace_id, external_ref) DO NOTHING`,
     ).bind(
       fixedCostId,
@@ -462,6 +470,7 @@ export const saveWorkspaceDraft = async (env, workspaceId, draft) => {
       item.businessUse,
       projectJson,
       item.isSubscription ? 1 : 0,
+      item.isSoftware ? 1 : 0,
       item.templateKey,
       item.productUrl,
       item.manageUrl,
@@ -570,7 +579,7 @@ export const loadWorkspace = async (db, workspaceId) => {
   if (!workspace) return null;
 
   const fixedCosts = await db.prepare(
-    `SELECT id, name, amount, cycle, business_use, source, project_id, allocation_json, is_subscription, template_key,
+    `SELECT id, name, amount, cycle, business_use, source, project_id, allocation_json, is_subscription, is_software, template_key,
             product_url, manage_url, next_billing_date, start_date, end_date,
             created_at, updated_at
      FROM fixed_costs WHERE workspace_id = ? ORDER BY created_at DESC`,
@@ -657,6 +666,7 @@ export const loadWorkspace = async (db, workspaceId) => {
       businessUse: item.business_use,
       source: item.source,
       isSubscription: Boolean(item.is_subscription),
+      isSoftware: Boolean(item.is_software),
       templateKey: item.template_key,
       productUrl: item.product_url,
       manageUrl: item.manage_url,

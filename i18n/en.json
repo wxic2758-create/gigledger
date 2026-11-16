@@ -418,7 +418,8 @@
       "addProjectShare": "Add project share",
       "allocationTotal": "Allocated {total}%",
       "allocationInvalid": "Project shares must total exactly 100%.",
-      "removeProjectShare": "Remove"
+      "removeProjectShare": "Remove",
+      "software": "AI / software subscription"
     },
     "cycles": {
       "daily": "Daily",
@@ -618,7 +619,7 @@
     },
     "weeklySummary": {
       "title": "This week",
-      "body": "Last week net income {income}; that covers {days} days at your Daily Floor.",
+      "body": "Last week net income {income}; that covers {days} days at your Daily Floor. AI/software is {share}% of monthly fixed costs.",
       "bodyNoFloor": "Last week net income {income}. Add a fixed cost to compare it with a Daily Floor.",
       "bodyNoIncome": "Last week no income was recorded. Your Daily Floor remains {daily}.",
       "dismiss": "Dismiss this week"

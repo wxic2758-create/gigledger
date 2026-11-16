@@ -209,7 +209,7 @@
         : netBurn <= 0 ? null : Math.floor(savings / netBurn),
       cashNotBurning: netBurn !== null && netBurn <= 0,
       subscriptionSummary: subscriptionSummary(),
-      aiMonthlyCosts: state.fixedCosts.filter((item) => item.isSubscription && active(item)).reduce(
+      aiMonthlyCosts: state.fixedCosts.filter((item) => item.isSubscription && item.isSoftware && active(item)).reduce(
         (sum, item) => sum + (Number(versionValue(item, "amount", item.amount)) || 0)
           * (Number(cycles.find((cycle) => cycle.value === versionValue(item, "cycle", item.cycle))?.multiplier) || 0) / 12
           * (Number(versionValue(item, "businessUse", item.businessUse)) || 0) / 100, 0,
@@ -351,6 +351,7 @@
       ? messages.weeklySummary.body
         .replace("{income}", money(weekIncome))
         .replace("{days}", String(Math.floor(weekIncome / result.dailyFloor)))
+        .replace("{share}", String(Math.round((result.aiMonthlyCosts / Math.max(result.monthlyFixedCosts, 1)) * 100)))
       : weekIncome > 0
         ? messages.weeklySummary.bodyNoFloor.replace("{income}", money(weekIncome))
         : messages.weeklySummary.bodyNoIncome.replace("{daily}", dayMoney(result.dailyFloor));
@@ -806,6 +807,7 @@
         fixedForm.elements.productUrl.value = item.productUrl || "";
         fixedForm.elements.manageUrl.value = item.manageUrl || "";
         fixedForm.elements.isSubscription.checked = Boolean(item.isSubscription);
+        fixedForm.elements.isSoftware.checked = item.isSoftware !== false;
         fixedForm.elements.effectiveFrom.value = item.startDate || today();
         fixedForm.elements.effectiveFrom.min = item.startDate || today();
         resetAllocation();
@@ -815,6 +817,7 @@
         fixedForm.elements.startDate.value = today();
         fixedForm.elements.businessUse.value = "100";
         fixedForm.elements.cycle.value = "monthly";
+        fixedForm.elements.isSoftware.checked = true;
         resetAllocation();
       }
       const subscriptionFields = fixedForm.querySelector("[data-subscription-fields]");
@@ -863,6 +866,7 @@
               multiplier: selected?.multiplier || 12,
               businessUse: Number(data.get("businessUse")) || 0,
               isSubscription: data.get("isSubscription") === "on",
+              isSoftware: data.get("isSoftware") === "on",
               productUrl: String(data.get("productUrl") || "") || null,
               manageUrl: String(data.get("manageUrl") || "") || null,
               nextBillingDate: String(data.get("nextBillingDate") || "") || null,
@@ -893,6 +897,7 @@
                 effectiveFrom,
                 endDate: String(data.get("endDate") || "") || null,
                 isSubscription: data.get("isSubscription") === "on",
+                isSoftware: data.get("isSoftware") === "on",
                 productUrl: String(data.get("productUrl") || "") || null,
                 manageUrl: String(data.get("manageUrl") || "") || null,
                 nextBillingDate: String(data.get("nextBillingDate") || "") || null,
@@ -941,6 +946,7 @@
         startDate,
         endDate: String(data.get("endDate") || "") || null,
         isSubscription: data.get("isSubscription") === "on",
+        isSoftware: data.get("isSoftware") === "on",
         productUrl: String(data.get("productUrl") || "") || null,
         manageUrl: String(data.get("manageUrl") || "") || null,
         nextBillingDate: String(data.get("nextBillingDate") || "") || null,
@@ -951,6 +957,7 @@
       fixedForm.elements.startDate.value = today();
       fixedForm.elements.businessUse.value = "100";
       fixedForm.elements.cycle.value = "monthly";
+      fixedForm.elements.isSoftware.checked = true;
       resetAllocation();
       const subscriptionFields = document.querySelector("[data-subscription-fields]");
       if (subscriptionFields) subscriptionFields.hidden = true;
@@ -1693,6 +1700,7 @@
       multiplier: cycles.find((cycle) => cycle.value === (cycleValues.has(item.cycle) ? item.cycle : "monthly"))?.multiplier || 12,
       businessUse: Number(item.businessUse) || 0,
       isSubscription: Boolean(item.isSubscription),
+      isSoftware: item.isSoftware !== false,
       templateKey: item.templateKey || "",
       productUrl: item.productUrl || "",
       manageUrl: item.manageUrl || "",
@@ -1750,6 +1758,7 @@
         businessUse: 100,
         startDate: today(),
         isSubscription: true,
+        isSoftware: true,
         templateKey: key,
         productUrl: template?.productUrl || null,
         manageUrl: template?.manageUrl || null,
@@ -1763,7 +1772,7 @@
     const amount = Number(amountNode?.value || 0);
     return name && amount > 0 ? {
       name, amount, cycle: "monthly", multiplier: 12, businessUse: 100,
-      startDate: today(), isSubscription: false,
+      startDate: today(), isSubscription: false, isSoftware: false,
     } : null;
   };
 

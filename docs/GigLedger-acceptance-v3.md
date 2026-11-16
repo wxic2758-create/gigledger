@@ -80,11 +80,11 @@ All product calculations use USD and allow a tolerance of `$0.01`.
 | AF-30 | 5.5 links | Open product and Manage subscription links use configured URLs | Pass | Configured fixed-cost links render as external links; empty values are hidden. |
 | AF-31 | 5.5 custom links | Custom product and billing URLs open the entered targets | Pass | Verified with custom fixed-cost URLs. |
 | AF-32 | 5.5 App Store links | App Store subscription entries manage subscriptions at Apple | Pass | The bilingual App Store template now carries the official `apps.apple.com/account/subscriptions` management URL; ego-browser verified both Open and Manage links in en and zh-TW. |
-| AF-33 | 5.5 reminder | Three days before renewal, ask whether the subscription was used | Pass | The review UI appears when `next_billing_date` is within three days. |
-| AF-34 | 5.5 two months unused | Two consecutive `not_used` periods produce a red suggested-cancel state | Pass | Consecutive review periods are evaluated; one month alone does not flag. |
-| AF-35 | 5.5 reset | Choosing `often` clears the warning | Pass | The consecutive-unused calculation only looks at the latest two periods. |
+| AF-33 | 5.5 reminder | Three days before renewal, ask whether the subscription was used | Pass | Ego-browser verified a `2026-11-18` renewal on `2026-11-16`: the row showed “Next charge 2026-11-18: $20.00” and the dashboard summary named the same charge. |
+| AF-34 | 5.5 two months unused | Two consecutive `not_used` periods produce a red suggested-cancel state | Pass | With an October `not_used` fixture and a November `not_used` UI submission, the row showed “Suggested cancel” and the dashboard showed “1 subscription(s) marked not used for two months”. |
+| AF-35 | 5.5 reset | Choosing `often` clears the warning | Pass | Choosing “Often” in the UI removed the red badge immediately, marked “Often” active, and changed the dashboard summary back to “Nothing needs attention”. |
 | AF-36 | 5.5 no auto-detection claim | No claim that usage is detected automatically | Pass | Copy states the user reports usage manually. |
-| AF-37 | 5.5 plan gate | Reminders are Pro-only; free users can still record up to five subscriptions | Pass | Review controls are Pro-gated; the free subscription limit is enforced. |
+| AF-37 | 5.5 plan gate | Reminders are Pro-only; free users can still record up to five subscriptions | Pass | On the free plan, the subscription row and links stayed visible, but all three review controls were disabled with the Pro explanation and the review API returned `403 pro_required`. |
 | AF-38 | 5.6 runway | `$8,000` savings and `$30.25` floor -> `264` days | Pass | Verified against the numeric oracle. |
 | AF-39 | 5.6 runway | Average-income runway uses the last three complete months | Pass | Full-month buckets are used; incomplete months are excluded. |
 | AF-40 | 5.6 runway | No cash -> prompt to add cash, not a fake `0` days | Pass | The empty state renders the add-cash prompt. |
@@ -102,11 +102,11 @@ All product calculations use USD and allow a tolerance of `$0.01`.
 | AF-52 | 5.8 no anonymous writes | Anonymous calculation does not create D1 records | Pass | No writes occur until Google save completes. |
 | AF-53 | 5.8 locale switch | `en` and `zh-TW` keep ledger values and format numbers/dates | Pass | Both locales render the same stored values; currency and date formatting switch. |
 | AF-54 | 5.8 account deletion | Confirmation deletes user, workspace, ledger, subscriptions, keys, projects, and reviews | Pass | Production delete returned a 302, removed the old user/workspace and all dependent rows, and the same Google account then created a new empty workspace. |
-| AF-55 | 5.9 share card | AI spending card equals active software/subscription costs after business use | Pass | The AI/month card uses active subscriptions and business use. |
-| AF-56 | 5.9 share card | Daily Floor card equals the dashboard value | Pass | Both values come from the same calculation. |
-| AF-57 | 5.9 share card | PNG download, X intent, and copy text work | Pass | Download, X share intent, and clipboard actions are implemented. |
+| AF-55 | 5.9 share card | AI spending card equals active software/subscription costs after business use | Pass | Fixed costs now carry an explicit AI/software flag. With `$20` AI/software plus `$900` non-software subscription, the share card showed `$20.00` while fixed costs stayed `$920.00`; the form defaults new subscriptions to software and lets users opt out. |
+| AF-56 | 5.9 share card | Daily Floor card equals the dashboard value | Pass | With a `$20` AI subscription and `$900` rent, the share card showed `$30.25/day`, matching the dashboard. |
+| AF-57 | 5.9 share card | PNG download, X intent, and copy text work | Pass | Ego-browser produced a `image/png` blob and the copy action returned “My monthly AI spending is $20.00.” The X intent uses the same calculated amount. |
 | AF-58 | 5.9 share card | No fabricated user counts or ratings | Pass | No social proof data is generated. |
-| AF-59 | 5.9 weekly summary | Monday summary appears only when data exists | Pass | Empty ledgers hide the summary. |
+| AF-59 | 5.9 weekly summary | Monday summary appears only when data exists | Pass | Empty ledgers hide the summary. With `$1,240` last-week net income, a `$30.25` Daily Floor, and `$20` AI software, the summary read “Last week net income $1,240.00; that covers 40 days at your Daily Floor. AI/software is 2% of monthly fixed costs.” |
 | AF-60 | 7 hierarchy | Dashboard starts with Daily Floor and this-month comparison | Pass | Ego-browser verified a four-card primary row: Daily Floor, needed by today, this-month comparison, and cash runway. Desktop renders four columns; mobile keeps Daily Floor and runway full-width with no horizontal overflow. |
 | AF-61 | 7 hierarchy | Runway, profit breakdown, tax reserve, subscription summary, projects, details | Pass | Profit is a separate “Where the money went” breakdown with gross → fees → net → expenses → fixed costs → true profit; tax, subscription summary, projects, and details follow below. Verified in `en` and `zh-TW`. |
 | AF-62 | 6 onboarding CTA | Primary CTA opens the calculator; secondary CTA signs in with Google | Pass | Marketing hero links to `/en/app` and Google sign-in. |

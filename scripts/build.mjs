@@ -678,6 +678,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
             <p class="allocation-total" data-allocation-total></p>
           </div>
           <label class="app-checkbox"><input name="isSubscription" type="checkbox"> <span>${esc(t.app.fields.subscription)}</span></label>
+          <label class="app-checkbox"><input name="isSoftware" type="checkbox" checked> <span>${esc(t.app.fields.software)}</span></label>
           <label><span>${esc(t.app.fields.amount)}</span><input name="amount" type="number" min="0" step="0.01" required></label>
           <label><span>${esc(t.app.fields.cycle)}</span><select name="cycle">${["daily","weekly","biweekly","monthly","quarterly","yearly"].map(option).join("")}</select></label>
           <label><span>${esc(t.app.fields.businessUse)}</span><input name="businessUse" type="number" min="0" max="100" value="100" required></label>
@@ -781,7 +782,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
       <a href="/${t.alternatePath}app">${esc(t.nav.switchTo)}</a>
     </div>
   </footer>
-  <script src="/app-ledger.js?v=20261116-15" defer></script>
+  <script src="/app-ledger.js?v=20261116-16" defer></script>
   <script src="/app.js" defer></script>
 </body>
 </html>`;
