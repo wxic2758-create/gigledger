@@ -214,6 +214,63 @@ const featuresSection = (t) => `
       </div>
     </section>`;
 
+const productBlocksSection = (t) => {
+  const p = t.productBlocks;
+  const cards = [
+    { key: "ai", tone: "orange", value: "AI", body: p.ai.body },
+    { key: "runway", tone: "dark", value: "18", body: p.runway.body },
+    { key: "sync", tone: "light", value: "API", body: p.sync.body },
+    { key: "share", tone: "white", body: p.share.note },
+  ];
+  return `
+    <section class="product-blocks" id="decisions">
+      <div class="shell">
+        <div class="section-head">
+          <div>
+            <div class="section-index"><span>${esc(p.index)}</span><div></div><p>${esc(p.kicker)}</p></div>
+            <h2>${esc(p.title)}</h2>
+          </div>
+        </div>
+        <div class="decision-grid">
+          ${cards.map((card) => `
+          <article class="decision-card tone-${card.tone}">
+            ${card.key === "share" ? `
+            <div class="sample-card" aria-label="${esc(p.share.tag)}">
+              <div><span>${esc(p.share.ai)}</span><strong>${esc(p.share.aiValue)}</strong></div>
+              <div><span>${esc(p.share.daily)}</span><strong>${esc(p.share.dailyValue)}</strong></div>
+              <small>${esc(p.share.brand)}</small>
+            </div>
+            ` : `<div class="decision-visual" aria-hidden="true"><strong>${esc(card.value)}</strong><span>${esc(p[card.key].tag)}</span></div>`}
+            <h3>${esc(p[card.key].title)}</h3>
+            <p>${esc(card.body)}</p>
+          </article>`).join("")}
+        </div>
+        <div class="pricing-panel" id="pricing">
+          <div class="pricing-copy">
+            <p class="kicker">${esc(p.pricing.tag)}</p>
+            <h2>${esc(p.pricing.title)}</h2>
+            <div class="pricing-grid">
+              <div>
+                <h3>${esc(p.pricing.freeTitle)}</h3>
+                <ul>${p.pricing.free.map((item) => `<li>${esc(item)}</li>`).join("")}</ul>
+              </div>
+              <div>
+                <h3>${esc(p.pricing.proTitle)}</h3>
+                <ul>${p.pricing.pro.map((item) => `<li>${esc(item)}</li>`).join("")}</ul>
+              </div>
+            </div>
+            <strong>${esc(p.pricing.price)}</strong>
+            <div class="pricing-actions">
+              <a class="button button-orange" href="/${t.locale}/app">${esc(p.pricing.calculate)} <span aria-hidden="true">→</span></a>
+              <a class="button button-ghost" href="/api/auth/google?locale=${t.locale}">${esc(p.pricing.signIn)}</a>
+            </div>
+            <small>${esc(p.pricing.note)}</small>
+          </div>
+        </div>
+      </div>
+    </section>`;
+};
+
 const stepsSection = (t) => `
     <section class="steps-section" id="how">
       <div class="shell steps-grid">
@@ -873,6 +930,7 @@ const page = ({ locale, t }) => `<!doctype html>
   ${hero(t, locale)}
   ${dailySection(t)}
   ${featuresSection(t)}
+  ${productBlocksSection(t)}
   ${stepsSection(t)}
   ${audienceSection(t)}
   ${honestySection(t)}

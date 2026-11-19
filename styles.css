@@ -413,3 +413,68 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
 }
+
+.product-blocks { padding: 100px 0; background: var(--cream); border-top: 1px solid var(--line); }
+.decision-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.decision-card {
+  display: flex; flex-direction: column; min-height: 250px; padding: 24px;
+  background: var(--white); border: 1px solid var(--line); border-radius: var(--radius);
+}
+.decision-card.tone-orange { background: var(--orange); border-color: var(--orange); }
+.decision-card.tone-dark { background: var(--ink); border-color: var(--ink); color: var(--white); }
+.decision-card.tone-light { background: var(--paper-deep); }
+.decision-card h3 { margin-top: auto; padding-top: 42px; font-family: var(--display); font-size: 25px; line-height: 1.15; letter-spacing: -.035em; }
+.decision-card > p { margin-top: 12px; font-size: 14px; line-height: 1.65; color: var(--ink-soft); }
+.tone-orange h3, .tone-dark h3 { color: var(--white); }
+.tone-orange > p, .tone-dark > p { color: rgba(255,253,249,.72); }
+.decision-visual {
+  display: flex; align-items: center; justify-content: space-between; gap: 18px;
+  padding: 16px; border: 1px solid var(--line); border-radius: 14px;
+  background: rgba(255,253,249,.86);
+}
+.tone-orange .decision-visual, .tone-dark .decision-visual { border-color: rgba(255,253,249,.22); background: rgba(255,253,249,.09); }
+.decision-visual strong {
+  font-family: var(--display); font-size: clamp(24px, 3vw, 34px); line-height: 1;
+  letter-spacing: -.04em;
+}
+.decision-visual span {
+  max-width: 22ch; text-align: right; font-size: 10px; font-weight: 800; letter-spacing: .09em;
+  text-transform: uppercase; color: var(--orange-dark);
+}
+.tone-orange .decision-visual span, .tone-dark .decision-visual span { color: var(--yellow); }
+.tone-light .decision-visual span, .tone-white .decision-visual span { color: var(--ink-soft); }
+.sample-card { flex: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.sample-card > div { padding: 16px; background: var(--white); border: 1px solid var(--line); border-radius: 13px; box-shadow: 5px 6px 0 var(--yellow); }
+.sample-card span { display: block; font-size: 9px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--orange-dark); }
+.sample-card strong { display: block; margin-top: 8px; font-family: var(--display); font-size: clamp(20px, 2vw, 28px); letter-spacing: -.045em; }
+.sample-card small { grid-column: 1 / -1; margin-top: 5px; font-weight: 700; color: var(--ink-soft); }
+.pricing-panel {
+  margin-top: 18px; padding: clamp(26px, 4vw, 42px); color: var(--white);
+  background: var(--ink); border-radius: 24px; box-shadow: 14px 16px 0 var(--yellow);
+}
+.pricing-copy { max-width: 880px; }
+.pricing-copy .kicker { color: var(--yellow); }
+.pricing-copy h2 {
+  margin-top: 10px; max-width: 22ch; font-family: var(--display);
+  font-size: clamp(30px, 4vw, 46px); line-height: 1.08; letter-spacing: -.045em;
+}
+.pricing-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-top: 30px; }
+.pricing-grid > div { min-height: 180px; padding: 22px; background: rgba(255,253,249,.08); border: 1px solid rgba(255,253,249,.18); border-radius: 16px; }
+.pricing-grid h3 { margin: 0; font-family: var(--display); font-size: 24px; letter-spacing: -.03em; }
+.pricing-grid ul { padding-left: 18px; margin-top: 16px; }
+.pricing-grid li + li { margin-top: 8px; font-size: 14px; line-height: 1.5; color: rgba(255,253,249,.7); }
+.pricing-copy > strong { display: block; margin-top: 24px; font-size: 16px; color: var(--yellow); }
+.pricing-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 22px; }
+.pricing-copy > small { display: block; margin-top: 12px; font-size: 12px; color: rgba(255,253,249,.6); }
+@media (max-width: 900px) {
+  .decision-grid { grid-template-columns: 1fr; }
+  .pricing-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .product-blocks { padding: 78px 0; }
+  .decision-card { min-height: 0; }
+  .decision-visual { align-items: flex-start; flex-direction: column; }
+  .decision-visual span { max-width: none; text-align: left; }
+  .pricing-panel { box-shadow: 8px 9px 0 var(--yellow); }
+  .pricing-actions .button { width: 100%; }
+}

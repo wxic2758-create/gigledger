@@ -166,7 +166,7 @@
     ]
   },
   "steps": {
-    "index": "03",
+    "index": "04",
     "kicker": "運作方式",
     "title": "三個步驟，看清一個數字。",
     "items": [
@@ -201,7 +201,7 @@
       },
       {
         "label": "顧問與小型工作室",
-        "body": "專案收入、週期性成本，以及一份能分享出去的清楚月報。"
+        "body": "專案收入、週期成本，以及一份能直接交出去的清楚月度 CSV。"
       }
     ]
   },
@@ -701,5 +701,56 @@
     "signIn": "使用 Google 登入",
     "note": "未保存的試算只會留在目前頁面。",
     "privacy": "隱私說明"
+  },
+  "productBlocks": {
+    "index": "03",
+    "kicker": "它能幫你做的判斷",
+    "title": "圍繞四個真實決策而設計。",
+    "ai": {
+      "tag": "訂閱體檢",
+      "title": "看清 AI 工具的實際花費。",
+      "body": "從常見 AI 工具模板開始。扣費前記錄常用、偶爾或沒用；連續兩個月沒用會標紅提醒，每筆訂閱都能開啟產品或管理頁。我們不會宣稱自動追蹤使用情況。"
+    },
+    "runway": {
+      "tag": "現金跑道",
+      "title": "還能撐多少天？",
+      "body": "輸入手頭現金，對照每日底線，看停止接新案後還能撐多久。有近三個完整月份的收入時，也會提供三個月平均收入的讀數。"
+    },
+    "sync": {
+      "tag": "官方 API · App Store 報告即將推出",
+      "title": "Stripe 與 App Store 官方同步。即將推出。",
+      "body": "Pro 會支援官方 Stripe 同步與 App Store Connect API 金鑰保存。銷售報告與財務報告分開：已售出不等於已到帳。Upwork、PayPal 和 Fiverr 使用 CSV。不收銀行密碼，也不抓取帳號。"
+    },
+    "share": {
+      "tag": "示範",
+      "title": "值得分享出去的卡片。",
+      "ai": "AI spending / month",
+      "daily": "Daily floor",
+      "aiValue": "$20.00",
+      "dailyValue": "$29.59",
+      "brand": "GigLedger",
+      "note": "示範試算，非用戶數據。"
+    },
+    "pricing": {
+      "tag": "方案",
+      "title": "免費試算，需要更多再用 Pro。",
+      "freeTitle": "免費",
+      "proTitle": "Pro",
+      "free": [
+        "手動記錄收入、固定成本與支出",
+        "最多 5 個訂閱",
+        "每日底線與現金跑道"
+      ],
+      "pro": [
+        "訂閱數量不限",
+        "CSV 匯入與匯出",
+        "官方 Stripe 同步與 App Store 金鑰保存",
+        "訂閱體檢與提醒"
+      ],
+      "price": "封閉測試後公布價格",
+      "calculate": "三分鐘計算每日底線",
+      "signIn": "使用 Google 登入",
+      "note": "不使用Email等候名單。未保存的試算只留在目前頁面。"
+    }
   }
 }

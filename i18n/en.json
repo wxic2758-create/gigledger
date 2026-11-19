@@ -166,7 +166,7 @@
     ]
   },
   "steps": {
-    "index": "03",
+    "index": "04",
     "kicker": "How it works",
     "title": "Three steps to a clearer number.",
     "items": [
@@ -201,7 +201,7 @@
       },
       {
         "label": "Consultants and studios",
-        "body": "Project income, recurring costs, and a clean monthly view you can share."
+        "body": "Project income, recurring costs, and a clean monthly CSV you can hand over."
       }
     ]
   },
@@ -701,5 +701,56 @@
     "signIn": "Sign in with Google",
     "note": "Unsaved calculations stay on the current page only.",
     "privacy": "Privacy notice"
+  },
+  "productBlocks": {
+    "index": "03",
+    "kicker": "The decisions it supports",
+    "title": "Built around four real decisions.",
+    "ai": {
+      "tag": "Subscription review",
+      "title": "See what you actually spend on AI.",
+      "body": "Start with templates for common AI tools. Before a charge, record whether you used it often, sometimes, or not at all. Two unused months are flagged for review, and each subscription links to the product and management page. We don’t claim to track usage automatically."
+    },
+    "runway": {
+      "tag": "Cash runway",
+      "title": "How many days could you last?",
+      "body": "Add cash on hand and compare it with your Daily Floor to see how long you can last without new work. With three full months of income, GigLedger also shows a three-month average reading."
+    },
+    "sync": {
+      "tag": "Official APIs · Coming soon for App Store reports",
+      "title": "Official sync for Stripe and App Store. Coming soon.",
+      "body": "Pro is designed for official Stripe sync and App Store Connect API storage. Sales and finance reports stay separate: sold is not the same as received. Upwork, PayPal, and Fiverr use CSV. No bank passwords, no scraping."
+    },
+    "share": {
+      "tag": "Sample",
+      "title": "A card worth posting.",
+      "ai": "AI spending / month",
+      "daily": "Daily floor",
+      "aiValue": "$20.00",
+      "dailyValue": "$29.59",
+      "brand": "GigLedger",
+      "note": "Sample calculations, not user counts."
+    },
+    "pricing": {
+      "tag": "Pricing",
+      "title": "Free to calculate. Pro when you need more.",
+      "freeTitle": "Free",
+      "proTitle": "Pro",
+      "free": [
+        "Manual income, fixed costs, and expenses",
+        "Up to five subscriptions",
+        "Daily Floor and cash runway"
+      ],
+      "pro": [
+        "Unlimited subscriptions",
+        "CSV import and export",
+        "Official Stripe sync and App Store key storage",
+        "Subscription reviews and reminders"
+      ],
+      "price": "Pricing available after private beta",
+      "calculate": "Calculate your Daily Floor in 3 minutes",
+      "signIn": "Sign in with Google",
+      "note": "No email waitlist. Unsaved calculations stay on the current page."
+    }
   }
 }
