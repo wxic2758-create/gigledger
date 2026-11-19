@@ -1,0 +1,173 @@
+import assert from "node:assert/strict";
+import { readFileSync, readdirSync } from "node:fs";
+import { DatabaseSync } from "node:sqlite";
+import { test } from "node:test";
+import { onRequestPost as startGoogleSave } from "../functions/api/auth/google.js";
+import { onRequestGet as googleCallback } from "../functions/api/auth/google/callback.js";
+import { onRequestGet as getMe } from "../functions/api/me.js";
+import { onRequestDelete as removeEntry } from "../functions/api/workspace.js";
+import { onRequestGet as exportCsv, onRequestPost as importCsv } from "../functions/api/workspace/csv.js";
+import { loadWorkspace, normalizeDraft, saveWorkspaceDraft } from "../functions/lib/ledger.js";
+import { createSessionToken, sessionCookie } from "../functions/lib/session.js";
+
+const origin = "https://gigledger.xyz";
+
+function fixture(t) {
+  const sqlite = new DatabaseSync(":memory:");
+  t.after(() => sqlite.close());
+  sqlite.exec("PRAGMA foreign_keys = ON");
+  const migrations = new URL("../migrations/", import.meta.url);
+  for (const name of readdirSync(migrations).sort()) {
+    sqlite.exec(readFileSync(new URL(name, migrations), "utf8"));
+  }
+  const DB = {
+    prepare(sql) {
+      const statement = sqlite.prepare(sql);
+      return {
+        bind(...args) {
+          return {
+            first: () => statement.get(...args) ?? null,
+            all: () => ({ results: statement.all(...args) }),
+            run: () => ({ meta: statement.run(...args) }),
+          };
+        },
+      };
+    },
+    batch(statements) {
+      sqlite.exec("BEGIN");
+      try {
+        const result = statements.map((statement) => statement.run());
+        sqlite.exec("COMMIT");
+        return result;
+      } catch (error) {
+        sqlite.exec("ROLLBACK");
+        throw error;
+      }
+    },
+  };
+  const env = { DB, SESSION_SECRET: "fixture-session", GOOGLE_CLIENT_ID: "fixture-client", GOOGLE_CLIENT_SECRET: "fixture-secret" };
+  return { sqlite, env };
+}
+
+async function account(sqlite, env, name) {
+  const workspace = `workspace-${name}`;
+  sqlite.prepare(
+    "INSERT INTO users (id, google_sub, email, name, created_at, updated_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
+  ).run(name, name, `${name}@example.invalid`, name);
+  sqlite.prepare(
+    "INSERT INTO workspaces (id, owner_id, name, plan, created_at, updated_at) VALUES (?, ?, ?, 'pro', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
+  ).run(workspace, name, name);
+  const token = await createSessionToken(name, env.SESSION_SECRET);
+  return { workspace, cookie: sessionCookie(token).split(";")[0] };
+}
+
+test("fixed-cost deletion is scoped to the owner and removes that owner's child rows", async (t) => {
+  const { env, sqlite } = fixture(t);
+  const owner = await account(sqlite, env, "owner");
+  const other = await account(sqlite, env, "other");
+  await saveWorkspaceDraft(env, owner.workspace, await normalizeDraft({
+    fixedCosts: [{ name: "Fixture", amount: 10, cycle: "monthly", isSubscription: true }],
+  }));
+  const { id } = (await loadWorkspace(env.DB, owner.workspace)).fixedCosts[0];
+  sqlite.prepare(
+    "INSERT INTO subscription_reviews (id, fixed_cost_id, workspace_id, period, answer, created_at, updated_at) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
+  ).run("review", id, owner.workspace, "2026-11", "often");
+  const remove = (cookie) => removeEntry({
+    env,
+    request: new Request(`${origin}/api/workspace?type=fixed-cost&id=${id}`, { method: "DELETE", headers: { cookie } }),
+  });
+  assert.equal((await remove(other.cookie)).status, 404);
+  const [remaining] = (await loadWorkspace(env.DB, owner.workspace)).fixedCosts;
+  assert.equal(remaining.versions.length, 1);
+  assert.equal(remaining.reviews.length, 1);
+  assert.equal((await remove(owner.cookie)).status, 200);
+  assert.equal(sqlite.prepare("SELECT COUNT(*) AS total FROM fixed_cost_versions").get().total, 0);
+  assert.equal(sqlite.prepare("SELECT COUNT(*) AS total FROM subscription_reviews").get().total, 0);
+});
+
+test("Google save preserves the planning estimate and equal manual payments survive reload and retry", async (t) => {
+  const { env } = fixture(t);
+  t.mock.method(globalThis, "fetch", async (url) => {
+    if (url === "https://oauth2.googleapis.com/token") return Response.json({ access_token: "fixture-token" });
+    assert.equal(url, "https://openidconnect.googleapis.com/v1/userinfo");
+    return Response.json({ sub: "fixture-google-id", email: "user@example.invalid", name: "Fixture" });
+  });
+  const save = (payload, cookie = "") => startGoogleSave({
+    env,
+    request: new Request(`${origin}/api/auth/google?locale=zh-TW`, {
+      method: "POST",
+      headers: { cookie, "content-type": "application/json" },
+      body: JSON.stringify(payload),
+    }),
+  });
+  const start = await save({ monthlyIncomeEstimate: "400", fixedCosts: [{ name: "Rent", amount: 900, cycle: "monthly" }] });
+  assert.equal(start.status, 200);
+  const { authUrl } = await start.json();
+  const state = new URL(authUrl).searchParams.get("state");
+  const callback = await googleCallback({
+    env,
+    request: new Request(`${origin}/api/auth/google/callback?state=${state}&code=fixture-code`, {
+      headers: { cookie: start.headers.get("set-cookie").split(";")[0] },
+    }),
+  });
+  assert.equal(callback.status, 302);
+  assert.equal(callback.headers.get("location"), `${origin}/zh-TW/dashboard`);
+  const cookie = callback.headers.get("set-cookie").split(";")[0];
+  const reload = async () => {
+    const res = await getMe({ env, request: new Request(`${origin}/api/me`, { headers: { cookie } }) });
+    assert.equal(res.status, 200);
+    return (await res.json()).ledger;
+  };
+  const before = await reload();
+  assert.equal(before.workspace.monthlyIncomeEstimate, 400);
+  assert.equal(before.fixedCosts.length, 1);
+  assert.equal(before.income.length, 0);
+  const income = [1, 2].map((i) => ({
+    source: "direct", client: "Same client", date: "2026-11-19", amount: 50, externalRef: `manual:${i}`,
+  }));
+  for (let attempt = 0; attempt < 2; attempt += 1) assert.equal((await save({ income }, cookie)).status, 200);
+  const after = await reload();
+  assert.equal(after.income.length, 2);
+  assert.equal(after.income.reduce((sum, item) => sum + item.amount, 0), 100);
+  assert.equal(after.workspace.monthlyIncomeEstimate, 400);
+  assert.equal((await save({ monthlyIncomeEstimate: "0" }, cookie)).status, 200);
+  assert.equal((await reload()).workspace.monthlyIncomeEstimate, 0);
+  assert.equal((await save({ monthlyIncomeEstimate: "" }, cookie)).status, 200);
+  assert.equal((await reload()).workspace.monthlyIncomeEstimate, null);
+});
+
+test("CSV imports USD, reports foreign currency and invalid amounts, and deduplicates its export", async (t) => {
+  const { env, sqlite } = fixture(t);
+  const owner = await account(sqlite, env, "csv");
+  const upload = async (csv) => {
+    const body = new FormData();
+    body.set("file", new Blob([csv], { type: "text/csv" }), "test.csv");
+    const res = await importCsv({
+      env,
+      request: new Request(`${origin}/api/workspace/csv`, { method: "POST", headers: { cookie: owner.cookie }, body }),
+    });
+    assert.equal(res.status, 200);
+    return res.json();
+  };
+  const data = await upload([
+    "date,source,amount,currency,platform_fee",
+    "2026-11-19,direct,10000,JPY,0",
+    "2026-11-19,direct,50,usd,0",
+    "2026-11-19,direct,51,,",
+    "2026-11-19,direct,,USD,0",
+    "2026-11-19,direct,20,USD,invalid",
+  ].join("\n"));
+  assert.equal(data.imported, 2);
+  assert.equal(data.failed, 3);
+  assert.equal(data.failedRows[0].reason, "unsupported_currency");
+  assert.equal(data.failedRows[0].row.currency, "JPY");
+  assert.equal(data.failedRows[0].row.amount, "10000");
+  const exported = await exportCsv({
+    env,
+    request: new Request(`${origin}/api/workspace/csv?export=income`, { headers: { cookie: owner.cookie } }),
+  });
+  assert.equal(exported.status, 200);
+  assert.equal((await upload(await exported.text())).imported, 0);
+  const { income } = await loadWorkspace(env.DB, owner.workspace);
+  assert.equal(income.reduce((sum, item) => sum + item.amount, 0), 101);
+});

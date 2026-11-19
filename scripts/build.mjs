@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -513,7 +513,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
       </nav>
       <div class="header-actions">
         ${languageSwitch(t, locale, "app")}
-        <a class="button button-small button-orange" href="/${locale.folder}/${mode === "dashboard" ? "dashboard/?reload=1" : "app"}">${esc(mode === "dashboard" ? t.dashboard.refresh : t.app.signIn)}</a>
+        <a class="button button-small button-orange" href="${mode === "dashboard" ? `/${locale.folder}/dashboard/?reload=1` : `/api/auth/google?locale=${locale.code}`}">${esc(mode === "dashboard" ? t.dashboard.refresh : t.app.signIn)}</a>
         <button class="menu-button" type="button" aria-expanded="false" aria-controls="mobileNav" aria-label="${esc(t.nav.menuOpen)}">
           <span></span><span></span>
         </button>
@@ -573,12 +573,13 @@ const appPage = ({ locale, t, mode = "app" }) => {
           <article class="flow-primary"><span>${esc(t.app.metrics.daily)}</span><strong data-flow-daily>$0.00</strong></article>
           <article><span>${esc(t.app.flow.comparison)}</span><strong data-flow-comparison>$0.00</strong><small data-flow-gap hidden></small></article>
           <article><span>${esc(t.app.flow.runway)}</span><strong data-flow-runway>${esc(t.app.flow.unset)}</strong></article>
-          <article><span>${esc(t.app.metrics.tax)}</span><strong data-flow-tax-result>${esc(t.app.flow.unset)}</strong><small>${esc(t.app.taxNote)}</small></article>
+          <article><span>${esc(t.app.flow.estimatedTaxReserve)}</span><strong data-flow-tax-result>${esc(t.app.flow.unset)}</strong><small>${esc(t.app.taxNote)}</small></article>
         </div>
         <div class="flow-actions">
           <button class="button button-dark" type="button" data-flow-save>${esc(t.app.flow.save)}</button>
           <a class="button button-ghost" href="#fixed-costs" data-flow-continue>${esc(t.app.flow.continueFull)}</a>
         </div>
+        <p class="form-message" role="status" data-flow-save-message hidden></p>
       </div>
 
       <div class="flow-nav">
@@ -829,7 +830,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
           <label><span>${esc(t.app.fields.amount)}</span><input name="amount" type="number" min="0" step="0.01" required></label>
           <label><span>${esc(t.app.fields.cycle)}</span><select name="cycle">${["daily","weekly","biweekly","monthly","quarterly","yearly"].map(option).join("")}</select></label>
           <label><span>${esc(t.app.fields.businessUse)}</span><input name="businessUse" type="number" min="0" max="100" value="100" required></label>
-          <label><span>${esc(t.app.fields.startDate)}</span><input name="startDate" type="date" value="${new Date().toISOString().slice(0, 10)}" required></label>
+          <label><span>${esc(t.app.fields.startDate)}</span><input name="startDate" type="date" required></label>
           <label><span>${esc(t.app.fields.endDate)}</span><input name="endDate" type="date"></label>
           <label data-revision-date hidden><span>${esc(t.app.fixedRevision.effectiveFrom)}</span><input name="effectiveFrom" type="date"></label>
           <div class="subscription-fields" data-subscription-fields>
@@ -863,10 +864,12 @@ const appPage = ({ locale, t, mode = "app" }) => {
           <label><span>${esc(t.app.taxRateLabel)}</span><input name="taxReserveRate" type="number" min="0" max="100" step="0.1" placeholder="${esc(t.app.taxRatePlaceholder)}"></label>
           <label><span>${esc(t.app.appleFeeLabel)}</span><select name="appleFeeRate"><option value="">${esc(t.app.appleFeeUnset)}</option><option value="15">15%</option><option value="30">30%</option></select></label>
           <label><span>${esc(t.app.cashLabel)}</span><input name="cashOnHand" type="number" min="0" step="0.01"></label>
+          <label><span>${esc(t.app.monthlyIncomeEstimateLabel)}</span><input name="monthlyIncomeEstimate" type="number" min="0" step="0.01"></label>
+          <p class="app-note">${esc(t.app.monthlyIncomeEstimateNote)}</p>
           <p class="app-note">${esc(t.app.taxReference)} ${esc(t.app.appleFeeNote)}</p>
         </form>
         <form class="app-form" data-proto-form="income" novalidate>
-          <label><span>${esc(t.app.fields.date)}</span><input name="date" type="date" value="${new Date().toISOString().slice(0, 10)}" required></label>
+          <label><span>${esc(t.app.fields.date)}</span><input name="date" type="date" required></label>
           <label><span>${esc(t.app.fields.source)}</span><select name="source">${["upwork","fiverr","stripe","app_store","direct","paypal","other"].map(sourceOption).join("")}</select></label>
           <label data-income-recognition-field hidden><span>${esc(t.app.fields.recognition)}</span><select name="recognition"><option value="received">${esc(t.app.income.recognitionReceived)}</option><option value="sold">${esc(t.app.income.recognitionSold)}</option></select></label>
           <label><span>${esc(t.app.fields.client)}</span><input name="client"></label>
@@ -893,7 +896,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
       </div>
       <div class="app-grid">
         <form class="app-form" data-proto-form="expense" novalidate>
-          <label><span>${esc(t.app.fields.date)}</span><input name="date" type="date" value="${new Date().toISOString().slice(0, 10)}" required></label>
+          <label><span>${esc(t.app.fields.date)}</span><input name="date" type="date" required></label>
           <label><span>${esc(t.app.fields.category)}</span><input name="category" required></label>
           <label><span>${esc(t.app.fields.merchant)}</span><input name="merchant"></label>
           <label><span>${esc(t.app.fields.project)}</span><select name="project" data-project-options></select></label>
@@ -918,7 +921,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
       <a href="/${t.alternatePath}app">${esc(t.nav.switchTo)}</a>
     </div>
   </footer>
-  <script src="/app-ledger.js?v=20261116-27" defer></script>
+  <script src="/app-ledger.js?v=20261119-02" defer></script>
   <script src="/app.js" defer></script>
 </body>
 </html>`;
@@ -1048,6 +1051,26 @@ ${locales
   .join("\n")}
 </urlset>
 `,
+);
+
+const dist = join(root, "dist");
+const publicFiles = [
+  "_redirects", "index.html", "robots.txt", "sitemap.xml",
+  "app.js", "app-ledger.js", "styles.css", "proto.css",
+  "assets/favicon-32.png", "assets/logo-mark-192.png", "assets/logo-mark-64.png", "assets/og.png",
+  ...locales.flatMap(({ folder }) =>
+    ["index.html", "privacy.html", "tax-disclaimer.html", "app/index.html", "dashboard/index.html"]
+      .map((name) => join(folder, name)),
+  ),
+];
+await rm(dist, { recursive: true, force: true });
+for (const name of publicFiles) {
+  const destination = join(dist, name);
+  await mkdir(dirname(destination), { recursive: true });
+  await copyFile(join(root, name), destination);
+}
+await writeFile(join(dist, "404.html"),
+  '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Page not found | GigLedger</title><link rel="stylesheet" href="/styles.css?v=20261119-01"></head><body><main class="shell"><h1>404</h1><p>Page not found. <span lang="zh-Hant-TW">找不到頁面。</span></p><p><a class="text-link" href="/en/">Home</a> · <a class="text-link" href="/zh-TW/" lang="zh-Hant-TW">回首頁</a></p></main></body></html>\n',
 );
 
 console.log(

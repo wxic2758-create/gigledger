@@ -180,6 +180,11 @@ export const normalizeDraft = async (input) => {
     if (finite(cash)) cashOnHand = cash;
   }
 
+  const estimate = data.monthlyIncomeEstimate;
+  const numericEstimate = Number(estimate);
+  const validEstimateAmount = ((typeof estimate === "string" && estimate.trim() !== "") || typeof estimate === "number")
+    && finite(numericEstimate);
+
   const projectNames = new Set([
     ...normalizedFixed.flatMap((item) => item.projects),
     ...normalizedIncome.flatMap((item) => item.projects),
@@ -200,6 +205,8 @@ export const normalizeDraft = async (input) => {
     appleFeeRate,
     appleFeeRateProvided: normalizedAppleFeeRateProvided,
     cashOnHand,
+    monthlyIncomeEstimate: validEstimateAmount ? numericEstimate : null,
+    monthlyIncomeEstimateProvided: validEstimateAmount || estimate === "",
   };
 };
 
@@ -394,6 +401,7 @@ export const saveWorkspaceDraft = async (env, workspaceId, draft) => {
          apple_fee_rate = CASE WHEN ? = 1 THEN ? ELSE apple_fee_rate END,
          cash_on_hand = COALESCE(?, cash_on_hand),
          cash_on_hand_as_of = CASE WHEN ? IS NULL THEN cash_on_hand_as_of ELSE ? END,
+         monthly_income_estimate = CASE WHEN ? = 1 THEN ? ELSE monthly_income_estimate END,
          updated_at = ?
      WHERE id = ?`,
   ).bind(
@@ -403,6 +411,8 @@ export const saveWorkspaceDraft = async (env, workspaceId, draft) => {
     cashOnHand,
     cashOnHand,
     cashOnHand === null ? null : timestamp,
+    data.monthlyIncomeEstimateProvided ? 1 : 0,
+    data.monthlyIncomeEstimate ?? null,
     timestamp,
     workspaceId,
   ));
@@ -585,7 +595,7 @@ export const loadWorkspace = async (db, workspaceId) => {
   ).bind(workspaceId).all();
   const projectsById = new Map((projectRows.results || []).map((item) => [item.id, item.name]));
   const workspace = await db.prepare(
-    "SELECT id, name, base_currency, tax_reserve_rate, apple_fee_rate, cash_on_hand, cash_on_hand_as_of, plan FROM workspaces WHERE id = ?",
+    "SELECT id, name, base_currency, tax_reserve_rate, apple_fee_rate, cash_on_hand, cash_on_hand_as_of, monthly_income_estimate, plan FROM workspaces WHERE id = ?",
   ).bind(workspaceId).first();
   if (!workspace) return null;
 
@@ -634,7 +644,7 @@ export const loadWorkspace = async (db, workspaceId) => {
      FROM income_entries WHERE workspace_id = ? ORDER BY occurred_on DESC, created_at DESC`,
   ).bind(workspaceId).all();
   const expenses = await db.prepare(
-    `SELECT id, occurred_on, category, merchant, amount, business_use, notes, source, project_id, created_at, updated_at
+    `SELECT id, external_ref, occurred_on, category, merchant, amount, business_use, notes, source, project_id, created_at, updated_at
      FROM expenses WHERE workspace_id = ? ORDER BY occurred_on DESC, created_at DESC`,
   ).bind(workspaceId).all();
 
@@ -654,6 +664,7 @@ export const loadWorkspace = async (db, workspaceId) => {
       appleFeeRate: workspace.apple_fee_rate,
       cashOnHand: workspace.cash_on_hand,
       cashOnHandAsOf: workspace.cash_on_hand_as_of,
+      monthlyIncomeEstimate: workspace.monthly_income_estimate,
       plan: planFeatures(workspace.plan).plan,
       features: planFeatures(workspace.plan),
     },
@@ -707,6 +718,7 @@ export const loadWorkspace = async (db, workspaceId) => {
     })),
     expenses: (expenses.results || []).map((item) => ({
       id: item.id,
+      externalRef: item.external_ref,
       date: item.occurred_on,
       category: item.category,
       merchant: item.merchant,

@@ -54,7 +54,7 @@ export const onRequestPost = async ({ env, request }) => {
   if (features.subscriptionLimit !== null && existingCount.count + subscriptionCount > features.subscriptionLimit) {
     return json({ error: "subscription_limit", limit: features.subscriptionLimit }, 403);
   }
-  if (!draft.fixedCosts.length && !draft.income.length && !draft.expenses.length) {
+  if (!draft.fixedCosts.length && !draft.income.length && !draft.expenses.length && !draft.monthlyIncomeEstimateProvided) {
     return json({ error: "empty_draft" }, 400);
   }
   await saveWorkspaceDraft(env, workspace.id, draft);
@@ -155,9 +155,16 @@ export const onRequestDelete = async ({ env, request }) => {
   const workspace = await env.DB.prepare("SELECT id FROM workspaces WHERE owner_id = ?").bind(userId).first();
   if (!workspace) return json({ error: "workspace_not_found" }, 404);
   if (type === "fixed-cost") {
-    await env.DB.prepare("DELETE FROM subscription_reviews WHERE fixed_cost_id = ?").bind(id).run();
-    await env.DB.prepare("DELETE FROM fixed_cost_versions WHERE fixed_cost_id = ?").bind(id).run();
-    await env.DB.prepare("DELETE FROM fixed_costs WHERE id = ? AND workspace_id = ?").bind(id, workspace.id).run();
+    const results = await env.DB.batch([
+      env.DB.prepare(
+        "DELETE FROM subscription_reviews WHERE fixed_cost_id IN (SELECT id FROM fixed_costs WHERE id = ? AND workspace_id = ?)",
+      ).bind(id, workspace.id),
+      env.DB.prepare(
+        "DELETE FROM fixed_cost_versions WHERE fixed_cost_id IN (SELECT id FROM fixed_costs WHERE id = ? AND workspace_id = ?)",
+      ).bind(id, workspace.id),
+      env.DB.prepare("DELETE FROM fixed_costs WHERE id = ? AND workspace_id = ?").bind(id, workspace.id),
+    ]);
+    if (!results[2].meta.changes) return json({ error: "fixed_cost_not_found" }, 404);
   } else if (type === "income") {
     await env.DB.prepare("DELETE FROM income_entries WHERE id = ? AND workspace_id = ?").bind(id, workspace.id).run();
   } else {

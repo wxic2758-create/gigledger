@@ -1,9 +1,10 @@
 (() => {
   const root = document.documentElement;
-  const locale = root.dataset.locale === "zh-TW" ? "zh-TW" : "en";
+  const locale = root.lang === "zh-Hant-TW" ? "zh-TW" : "en";
   const messages = JSON.parse(document.getElementById("proto-messages").textContent);
   const dashboardMode = Boolean(document.querySelector("[data-dashboard]"));
-  const state = { projects: [], fixedCosts: [], income: [], expenses: [], taxReserveRate: "", appleFeeRate: "", cashOnHand: "", features: { plan: "free", subscriptionLimit: 5, csv: false, sync: false, appStoreSync: false, subscriptionReview: false } };
+  const state = { projects: [], fixedCosts: [], income: [], expenses: [], taxReserveRate: "", appleFeeRate: "", cashOnHand: "", monthlyIncomeEstimate: "", features: { plan: "free", subscriptionLimit: 5, csv: false, sync: false, appStoreSync: false, subscriptionReview: false } };
+  let monthlyIncomeEstimateChanged = false;
   let editingFixedCostId = null;
   let stripeIntegration = null;
   let appStoreIntegration = null;
@@ -1091,12 +1092,14 @@
     });
     incomeForm.addEventListener("submit", (event) => {
       event.preventDefault();
+      if (!incomeForm.reportValidity()) return;
       const data = new FormData(incomeForm);
       const source = String(data.get("source") || "");
       const amount = Number(data.get("amount")) || 0;
       const suppliedFee = Number(data.get("platformFee")) || 0;
       const recognition = source === "app_store" && data.get("recognition") === "sold" ? "sold" : "received";
       state.income.push({
+        externalRef: `manual:${crypto.randomUUID()}`,
         date: String(data.get("date") || today()),
         source,
         client: String(data.get("client") || ""),
@@ -1119,6 +1122,7 @@
   if (expenseForm) {
     expenseForm.addEventListener("submit", (event) => {
       event.preventDefault();
+      if (!expenseForm.reportValidity()) return;
       const data = new FormData(expenseForm);
       const expenseDate = String(data.get("date") || today());
       const expenseMonth = expenseDate.slice(0, 7);
@@ -1139,11 +1143,12 @@
         return;
       }
       state.expenses.push({
+        externalRef: `manual:${crypto.randomUUID()}`,
         date: expenseDate,
         category: String(data.get("category") || ""),
         merchant: String(data.get("merchant") || ""),
         amount,
-        businessUse: Number(data.get("businessUse")) || 100,
+        businessUse: Number(data.get("businessUse")),
         notes: String(data.get("notes") || ""),
         projects: [String(data.get("project") || "").trim()].filter(Boolean),
       });
@@ -1154,33 +1159,27 @@
     });
   }
 
-  const showMessage = (message) => {
-    const node = document.querySelector("[data-save-message]");
-    if (!node) return;
-    node.textContent = message;
-    node.hidden = false;
-  };
-
-  const saveDraft = async () => {
-    const button = document.querySelector("[data-save-google]");
-    if (!button) return;
+  const saveDraft = async (event) => {
+    const button = event.currentTarget;
+    const status = document.querySelector(button.hasAttribute("data-flow-save") ? "[data-flow-save-message]" : "[data-save-message]");
+    if (settingsForm && !settingsForm.elements.monthlyIncomeEstimate.reportValidity()) return;
     const original = button.textContent;
     button.disabled = true;
     button.textContent = messages.saving;
-    document.querySelector("[data-save-message]").hidden = true;
+    status.hidden = true;
     try {
-      const response = await fetch("/api/auth/google", {
+      const response = await fetch(`/api/auth/google?locale=${locale}`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          projects: state.projects.filter((project) => !project.archived),
-          fixedCosts: state.fixedCosts.map(({ versions, reviews, id, ...item }) => item),
-          income: state.income,
-          expenses: state.expenses,
+          projects: state.projects.filter((project) => !project.id && !project.archived),
+          fixedCosts: state.fixedCosts.filter((item) => !item.id),
+          income: state.income.filter((item) => !item.id),
+          expenses: state.expenses.filter((item) => !item.id),
           taxReserveRate: state.taxReserveRate,
           appleFeeRate: state.appleFeeRate,
           cashOnHand: state.cashOnHand,
-          locale,
+          ...(monthlyIncomeEstimateChanged ? { monthlyIncomeEstimate: state.monthlyIncomeEstimate } : {}),
         }),
       });
       const data = await response.json().catch(() => ({}));
@@ -1194,9 +1193,10 @@
       button.disabled = false;
       button.textContent = original;
       const [code, limit] = String(error?.message || "").split(":");
-      showMessage(code === "subscription_limit"
+      status.textContent = code === "subscription_limit"
         ? messages.plan.limitReached.replace("{limit}", limit || "5")
-        : messages.saveFailed);
+        : messages.saveFailed;
+      status.hidden = false;
     }
   };
 
@@ -1292,16 +1292,16 @@
     node.classList.toggle("is-error", isError);
   };
   const csvFailedCsv = (rows) => {
-    const headers = ["line_number", "reason", "date", "source", "amount", "platform_fee", "client", "project", "external_ref", "notes"];
+    const headers = ["line_number", "reason", "date", "source", "amount", "currency", "platform_fee", "client", "project", "external_ref", "notes"];
     const escape = (value) => {
       const raw = value === null || value === undefined ? "" : String(value);
       return /[",\n\r]/.test(raw) ? `"${raw.replaceAll("\"", "\"\"")}"` : raw;
     };
-    const line = (row) => headers.map((header) => {
-      if (header === "project") return escape(row.projects?.[0] || row.project || "");
-      return escape(row[header]);
-    }).join(",");
-    return [headers.join(","), ...rows.map(line)].join("\n");
+    const formatRow = ({ line_number, reason, row }) => {
+      const values = { ...row, line_number, reason, platform_fee: row.platformFee, external_ref: row.externalRef, project: row.projects?.[0] };
+      return headers.map((header) => escape(values[header])).join(",");
+    };
+    return [headers.join(","), ...rows.map(formatRow)].join("\n");
   };
   document.querySelector("[data-csv-import]")?.addEventListener("change", async (event) => {
     const input = event.target;
@@ -1329,7 +1329,9 @@
       const response = await fetch("/api/workspace/csv", { method: "POST", body, credentials: "same-origin" });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data?.error || "import_failed");
-      csvMessage(status, messages.csv.result.replaceAll("{imported}", String(data.imported || 0)).replaceAll("{failed}", String(data.failed || 0)));
+      const result = messages.csv.result.replaceAll("{imported}", String(data.imported || 0)).replaceAll("{failed}", String(data.failed || 0));
+      const unsupportedCurrency = data.failedRows?.some(({ reason }) => reason === "unsupported_currency");
+      csvMessage(status, unsupportedCurrency ? `${result} ${messages.csv.usdOnly}` : result);
       if (data.failedRows?.length) {
         const blob = new Blob([`\uFEFF${csvFailedCsv(data.failedRows)}\n`], { type: "text/csv;charset=utf-8" });
         if (failedLink.dataset.url) URL.revokeObjectURL(failedLink.dataset.url);
@@ -1395,10 +1397,14 @@
     }
   });
   const settingsForm = document.querySelector('[data-proto-form="settings"]');
-  settingsForm?.addEventListener("input", () => {
+  settingsForm?.addEventListener("input", (event) => {
     state.taxReserveRate = String(settingsForm.elements.taxReserveRate.value || "");
     state.appleFeeRate = String(settingsForm.elements.appleFeeRate.value || "");
     state.cashOnHand = String(settingsForm.elements.cashOnHand.value || "");
+    if (event.target === settingsForm.elements.monthlyIncomeEstimate) {
+      state.monthlyIncomeEstimate = event.target.value;
+      monthlyIncomeEstimateChanged = true;
+    }
     renderMetrics();
   });
 
@@ -1781,6 +1787,10 @@
     state.cashOnHand = ledger.workspace?.cashOnHand === null
       || ledger.workspace?.cashOnHand === undefined
       ? "" : String(ledger.workspace.cashOnHand);
+    if (settingsForm && !monthlyIncomeEstimateChanged) {
+      state.monthlyIncomeEstimate = String(ledger.workspace?.monthlyIncomeEstimate ?? "");
+      settingsForm.elements.monthlyIncomeEstimate.value = state.monthlyIncomeEstimate;
+    }
     const cycleValues = new Set(cycles.map((cycle) => cycle.value));
     state.fixedCosts = (ledger.fixedCosts || []).map((item) => ({
       name: item.name,
@@ -1820,7 +1830,7 @@
       category: item.category,
       merchant: item.merchant || "",
       amount: Number(item.amount) || 0,
-      businessUse: Number(item.businessUse) || 100,
+      businessUse: Number(item.businessUse ?? 100),
       notes: item.notes || "",
       projects: item.projects || (item.project ? [item.project] : []),
       id: item.id,
@@ -1832,6 +1842,9 @@
   const flowBack = document.querySelector("[data-flow-back]");
   const flowNext = document.querySelector("[data-flow-next]");
   const flowSave = document.querySelector("[data-flow-save]");
+  const flowIncome = document.querySelector("[data-flow-income]");
+  const flowCash = document.querySelector("[data-flow-cash]");
+  const flowTax = document.querySelector("[data-flow-tax]");
   let flowStep = 1;
 
   const selectedTemplates = () => [...document.querySelectorAll("[data-template-key]:checked")]
@@ -1873,46 +1886,44 @@
     const runwayNode = document.querySelector("[data-flow-runway]");
     const taxNode = document.querySelector("[data-flow-tax-result]");
     if (dailyNode) dailyNode.textContent = dayMoney(result.dailyFloor);
-    const monthlyIncome = Number(document.querySelector("[data-flow-income]")?.value || 0);
-    if (comparisonNode) comparisonNode.textContent = dayMoney(monthlyIncome / 12);
+    const monthlyIncome = flowIncome.value === "" ? null : flowIncome.valueAsNumber;
+    const dailyIncome = monthlyIncome === null ? null : monthlyIncome * 12 / 365;
+    if (comparisonNode) comparisonNode.textContent = dailyIncome === null ? messages.flow.unset : dayMoney(dailyIncome);
     if (gapNode) {
-      const gap = monthlyIncome / 12 - result.dailyFloor;
-      if (monthlyIncome > 0 && gap < 0) {
+      const gap = dailyIncome - result.dailyFloor;
+      if (dailyIncome !== null && gap < 0) {
         gapNode.textContent = `${messages.flow.behind} ${dayMoney(Math.abs(gap))}`;
         gapNode.hidden = false;
-      } else if (monthlyIncome > 0 && gap > 0) {
+      } else if (dailyIncome !== null && gap > 0) {
         gapNode.textContent = `${messages.flow.ahead} ${dayMoney(gap)}`;
         gapNode.hidden = false;
       } else {
         gapNode.hidden = true;
       }
     }
-    const cash = Number(document.querySelector("[data-flow-cash]")?.value || 0);
+    const cash = flowCash.valueAsNumber;
     if (runwayNode) {
-      runwayNode.textContent = cash > 0 && result.dailyFloor > 0
+      runwayNode.textContent = Number.isFinite(cash) && result.dailyFloor > 0
         ? `${Math.floor(cash / result.dailyFloor)} ${messages.flow.days}`
         : messages.flow.unset;
     }
-    if (taxNode) taxNode.textContent = result.taxReserve === null
+    if (taxNode) taxNode.textContent = monthlyIncome === null || flowTax.value === ""
       ? messages.flow.unset
-      : money(result.taxReserve);
+      : money(monthlyIncome * flowTax.valueAsNumber / 100);
   };
 
   const applyFlowToLedger = () => {
     const templateCosts = selectedTemplates();
     const otherCost = otherFixedCost();
     state.fixedCosts = [...templateCosts, ...(otherCost ? [otherCost] : [])];
-    const monthlyIncome = Number(document.querySelector("[data-flow-income]")?.value || 0);
-    state.income = monthlyIncome > 0 ? [{
-      date: today(), source: "direct", client: "Rough monthly income", amount: monthlyIncome, platformFee: 0,
-    }] : [];
-    state.expenses = [];
-    state.taxReserveRate = String(document.querySelector("[data-flow-tax]")?.value || "");
-    state.cashOnHand = String(document.querySelector("[data-flow-cash]")?.value || "");
-    const settingsForm = document.querySelector('[data-proto-form="settings"]');
+    state.monthlyIncomeEstimate = flowIncome.value;
+    monthlyIncomeEstimateChanged = flowIncome.value !== "";
+    state.taxReserveRate = flowTax.value;
+    state.cashOnHand = flowCash.value;
     if (settingsForm) {
       settingsForm.elements.cashOnHand.value = state.cashOnHand;
       settingsForm.elements.appleFeeRate.value = state.appleFeeRate;
+      settingsForm.elements.monthlyIncomeEstimate.value = state.monthlyIncomeEstimate;
     }
     refreshTaxInputs();
     render();
@@ -1935,10 +1946,8 @@
   };
 
   flowBack?.addEventListener("click", () => showFlowStep(flowStep - 1));
-  ["[data-flow-income]", "[data-flow-cash]", "[data-flow-tax]"].forEach((selector) => {
-    document.querySelector(selector)?.addEventListener("input", renderFlowResults);
-  });
   flowNext?.addEventListener("click", () => {
+    if (flowStep === 2 && ![flowIncome, flowCash, flowTax].every((input) => input.reportValidity())) return;
     if (flowStep === 1) {
       const warning = document.querySelector("[data-skip-warning]");
       if (warning) warning.hidden = Boolean(selectedTemplates().length || otherFixedCost());
@@ -1980,6 +1989,9 @@
   });
 
   flowSection?.classList.add("ready");
+  [fixedForm?.elements.startDate, incomeForm?.elements.date, expenseForm?.elements.date].forEach((input) => {
+    if (input) input.value = today();
+  });
   showFlowStep(1);
 
   loadDashboard().finally(() => {

@@ -29,10 +29,12 @@ Requires Node.js 18 or newer.
 node scripts/build.mjs
 ```
 
+Run the ledger regression tests with `node --test` on Node.js 22.13 or newer.
+
 ## Preview
 
 ```bash
-python3 -m http.server 4174
+python3 -m http.server 4174 --directory dist
 ```
 
 Open:
@@ -47,10 +49,12 @@ Open:
 Cloudflare Pages hosts the site and Pages Functions API; Cloudflare D1 stores accounts and ledger data.
 
 - Build command: `node scripts/build.mjs`
-- Output directory: `.` (this folder)
+- Output directory: `dist/` (generated from the public-file allowlist)
 - Domain: `gigledger.xyz`
 - D1 binding: `DB` in `wrangler.toml`
 - Required secrets: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `SESSION_SECRET`
+
+Apply pending D1 migrations before deploying a build that uses them. Run `wrangler pages deploy dist --project-name=gigledger --branch=main` from the project root so Wrangler includes Pages Functions.
 
 ## Current Scope
 

@@ -60,7 +60,7 @@ const mapIncome = (item) => ({
   notes: "",
 });
 
-const equivalentRef = (item) => `${item.date}|${item.source}|${Number(item.amount) || 0}|${Number(item.platformFee) || 0}`;
+const equivalentRef = (item) => `${item.occurredOn ?? item.date}|${item.source}|${Number(item.amount) || 0}|${Number(item.platformFee) || 0}`;
 const dedupeKey = (item) => item.externalRef
   ? `ref:${item.externalRef}`
   : `equivalent:${equivalentRef(item)}`;
@@ -116,6 +116,7 @@ const importCsv = async ({ env, request }) => {
   const dateIndex = headers.indexOf("date");
   const sourceIndex = headers.indexOf("source");
   const amountIndex = headers.indexOf("amount");
+  const currencyIndex = headers.indexOf("currency");
   const feeIndex = headers.indexOf("platform_fee");
   const refIndex = headers.indexOf("external_ref");
   const clientIndex = headers.indexOf("client");
@@ -135,41 +136,45 @@ const importCsv = async ({ env, request }) => {
 
   for (const [rowIndex, line] of originalRows.entries()) {
     const cells = parseCsvLine(line);
-    const item = {
+    const row = {
       date: dateIndex >= 0 ? cells[dateIndex] : "",
       source: sourceIndex >= 0 ? cells[sourceIndex] : "",
-      amount: Number(cells[amountIndex]),
-      platformFee: feeIndex >= 0 ? Number(cells[feeIndex] || 0) || 0 : 0,
+      amount: cells[amountIndex] ?? "",
+      currency: (cells[currencyIndex] || "USD").toUpperCase(),
+      platformFee: cells[feeIndex] || "",
       client: clientIndex >= 0 ? cells[clientIndex] : "",
       projects: projectIndex >= 0 && cells[projectIndex] ? [cells[projectIndex]] : [],
       externalRef: refIndex >= 0 ? cells[refIndex] : "",
       notes: notesIndex >= 0 ? cells[notesIndex] : "",
     };
-    const valid = Number.isFinite(item.amount) && item.amount >= 0
+    if (row.currency !== "USD") {
+      failed.push({ line_number: rowIndex + 2, row, reason: "unsupported_currency" });
+      continue;
+    }
+    const item = { ...row, amount: Number(row.amount), platformFee: Number(row.platformFee) };
+    const valid = row.amount !== "" && Number.isFinite(item.amount) && item.amount >= 0
       && Number.isFinite(item.platformFee) && item.platformFee >= 0
       && item.platformFee <= item.amount;
     if (!valid) {
-      failed.push({ line_number: rowIndex + 2, row: item, reason: "invalid_amount" });
+      failed.push({ line_number: rowIndex + 2, row, reason: "invalid_amount" });
       continue;
     }
     const normalized = await normalizeDraft({ income: [item] });
     if (!normalized.income.length) {
-      failed.push({ line_number: rowIndex + 2, row: item, reason: "invalid_entry" });
+      failed.push({ line_number: rowIndex + 2, row, reason: "invalid_entry" });
       continue;
     }
     const entry = normalized.income[0];
     const key = dedupeKey({ ...entry, externalRef: item.externalRef });
     if (seen.has(key)) {
-      failed.push({ line_number: rowIndex + 2, row: item, reason: "duplicate_in_file" });
+      failed.push({ line_number: rowIndex + 2, row, reason: "duplicate_in_file" });
       continue;
     }
     seen.add(key);
     if (existingKeys.has(key)) {
-      failed.push({ line_number: rowIndex + 2, row: item, reason: "duplicate_in_workspace" });
+      failed.push({ line_number: rowIndex + 2, row, reason: "duplicate_in_workspace" });
       continue;
     }
-    existingRefs.add(entry.externalRef);
-    existingEquivalent.add(equivalentRef(entry));
     existingKeys.add(`ref:${entry.externalRef}`);
     existingKeys.add(`equivalent:${equivalentRef(entry)}`);
     imported.push(entry);
