@@ -67,6 +67,8 @@ const nav = (t, current) => `
       ${logo(current.folder)}
       <nav class="desktop-nav" aria-label="${esc(t.nav.aria)}">
         <a href="/${current.folder}/#daily">${esc(t.nav.why)}</a>
+        <a href="/${current.folder}/#features">${esc(t.nav.features)}</a>
+        <a href="/${current.folder}/#pricing">${esc(t.nav.pricing)}</a>
         <a href="/${current.folder}/#how">${esc(t.nav.how)}</a>
         <a href="/${current.folder}/#faq">${esc(t.nav.faq)}</a>
       </nav>
@@ -80,6 +82,8 @@ const nav = (t, current) => `
     </div>
     <nav class="mobile-nav" id="mobileNav" aria-label="${esc(t.nav.aria)}">
       <a href="/${current.folder}/#daily">${esc(t.nav.why)}</a>
+      <a href="/${current.folder}/#features">${esc(t.nav.features)}</a>
+      <a href="/${current.folder}/#pricing">${esc(t.nav.pricing)}</a>
       <a href="/${current.folder}/#how">${esc(t.nav.how)}</a>
       <a href="/${current.folder}/#faq">${esc(t.nav.faq)}</a>
       <a href="/${current.folder}/app">${esc(t.nav.cta)}</a>
@@ -164,11 +168,35 @@ const hero = (t, current) => `
       </div>
     </section>`;
 
+const quickNav = (t) => {
+  const links = [
+    { href: "#daily", label: t.quickNav.start },
+    { href: "#features", label: t.quickNav.features },
+    { href: "#decisions", label: t.quickNav.decisions },
+    { href: "#pricing", label: t.quickNav.pricing },
+    { href: "#how", label: t.quickNav.how },
+    { href: "#faq", label: t.quickNav.faq },
+  ];
+  return `
+    <nav class="quick-nav" aria-label="${esc(t.quickNav.label)}">
+      <div class="shell quick-nav-inner">
+        <div class="quick-nav-copy">
+          <strong>${esc(t.quickNav.label)}</strong>
+          <small>${esc(t.quickNav.hint)}</small>
+        </div>
+        <div class="quick-nav-list">
+          ${links.map((link) => `<a href="${link.href}">${esc(link.label)}</a>`).join("")}
+          <a class="quick-cta" href="/${t.locale}/app">${esc(t.quickNav.primary)} <span aria-hidden="true">→</span></a>
+        </div>
+      </div>
+    </nav>`;
+};
+
 const dailySection = (t) => `
     <section class="daily-section" id="daily">
       <div class="shell daily-grid">
         <div class="section-copy">
-          <div class="section-index"><span>${esc(t.daily.index)}</span><div></div><p>${esc(t.daily.kicker)}</p></div>
+          <div class="section-index"><span>${esc(t.daily.index)}</span><div></div><p>${esc(t.daily.kicker)}</p><span class="section-name">${esc(t.sectionIndex.daily)}</span></div>
           <h2>${esc(t.daily.title)}</h2>
           <p>${esc(t.daily.body)}</p>
           <strong class="aside-note">${esc(t.daily.note)}</strong>
@@ -194,7 +222,7 @@ const featuresSection = (t) => `
       <div class="shell">
         <div class="section-head">
           <div>
-            <div class="section-index"><span>${esc(t.features.index)}</span><div></div><p>${esc(t.features.kicker)}</p></div>
+            <div class="section-index"><span>${esc(t.features.index)}</span><div></div><p>${esc(t.features.kicker)}</p><span class="section-name">${esc(t.sectionIndex.features)}</span></div>
             <h2>${esc(t.features.title)}</h2>
           </div>
         </div>
@@ -210,6 +238,18 @@ const featuresSection = (t) => `
             </article>`,
             )
             .join("")}
+        </div>
+        <div class="decision-strip" aria-label="${esc(t.productBlocks.title)}">
+          <a class="decision-strip-link" href="#decisions">
+            <span>${esc(t.quickNav.decisions)}</span>
+            <strong>${esc(t.productBlocks.ai.title)}</strong>
+            <em>${esc(t.quickNav.label)} →</em>
+          </a>
+          <a class="decision-strip-link" href="#pricing">
+            <span>${esc(t.quickNav.pricing)}</span>
+            <strong>${esc(t.productBlocks.pricing.title)}</strong>
+            <em>${esc(t.productBlocks.pricing.price)}</em>
+          </a>
         </div>
       </div>
     </section>`;
@@ -227,7 +267,7 @@ const productBlocksSection = (t) => {
       <div class="shell">
         <div class="section-head">
           <div>
-            <div class="section-index"><span>${esc(p.index)}</span><div></div><p>${esc(p.kicker)}</p></div>
+            <div class="section-index"><span>${esc(p.index)}</span><div></div><p>${esc(p.kicker)}</p><span class="section-name">${esc(t.sectionIndex.decisions)}</span></div>
             <h2>${esc(p.title)}</h2>
           </div>
         </div>
@@ -275,7 +315,7 @@ const stepsSection = (t) => `
     <section class="steps-section" id="how">
       <div class="shell steps-grid">
         <div class="steps-intro">
-          <div class="section-index light"><span>${esc(t.steps.index)}</span><div></div><p>${esc(t.steps.kicker)}</p></div>
+          <div class="section-index light"><span>${esc(t.steps.index)}</span><div></div><p>${esc(t.steps.kicker)}</p><span class="section-name">${esc(t.sectionIndex.how)}</span></div>
           <h2>${esc(t.steps.title)}</h2>
         </div>
         <ol class="steps-list">
@@ -421,7 +461,7 @@ const legalPage = ({ locale, t, type }) => {
   <link rel="alternate" hreflang="en" href="${siteUrl}/en/${isPrivacy ? "privacy" : "tax-disclaimer"}">
   <link rel="alternate" hreflang="zh-Hant-TW" href="${siteUrl}/zh-TW/${isPrivacy ? "privacy" : "tax-disclaimer"}">
   <link rel="alternate" hreflang="x-default" href="${siteUrl}/en/${isPrivacy ? "privacy" : "tax-disclaimer"}">
-  <link rel="stylesheet" href="/styles.css?v=20261116-18">
+  <link rel="stylesheet" href="/styles.css?v=20261119-01">
 </head>
 <body>
   <header class="site-header">
@@ -456,7 +496,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
   <title>${esc(title)} — GigLedger</title>
   <meta name="robots" content="noindex">
   <link rel="icon" href="/assets/favicon-32.png" sizes="32x32">
-  <link rel="stylesheet" href="/styles.css?v=20261116-18">
+  <link rel="stylesheet" href="/styles.css?v=20261119-01">
   <link rel="stylesheet" href="/proto.css?v=20261116-27">
 </head>
 <body class="${bodyClass}">
@@ -912,7 +952,7 @@ const page = ({ locale, t }) => `<!doctype html>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="preload" href="/assets/logo-mark-192.png" as="image">
-  <link rel="stylesheet" href="/styles.css?v=20261116-18">
+  <link rel="stylesheet" href="/styles.css?v=20261119-01">
   <script type="application/ld+json">
   ${JSON.stringify({
     "@context": "https://schema.org",
@@ -928,6 +968,7 @@ const page = ({ locale, t }) => `<!doctype html>
   <a class="skip-link" href="#main">${esc(t.skip)}</a>
   ${nav(t, locale)}
   ${hero(t, locale)}
+  ${quickNav(t)}
   ${dailySection(t)}
   ${featuresSection(t)}
   ${productBlocksSection(t)}

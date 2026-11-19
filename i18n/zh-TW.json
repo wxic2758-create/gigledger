@@ -21,7 +21,11 @@
     "switchTo": "English",
     "switchShort": "EN",
     "menuOpen": "開啟選單",
-    "menuClose": "關閉選單"
+    "menuClose": "關閉選單",
+    "features": "功能",
+    "pricing": "方案",
+    "jump": "快速前往",
+    "openCalculator": "打開計算機"
   },
   "hero": {
     "kicker": "為一人公司而做",
@@ -183,7 +187,7 @@
       {
         "number": "03",
         "title": "看清真正剩下多少",
-        "body": "儀表板分開呈現總收入、手續費、成本與實際利潤，再告訴你該預留多少稅款。"
+        "body": "儀表板會分開顯示總收入、手續費、成本、真實利潤與跑道，再顯示稅款預留。"
       }
     ]
   },
@@ -752,5 +756,22 @@
       "signIn": "使用 Google 登入",
       "note": "不使用Email等候名單。未保存的試算只留在目前頁面。"
     }
+  },
+  "quickNav": {
+    "label": "快速導覽",
+    "hint": "直接前往需要的內容，或先從計算機開始。",
+    "primary": "開始試算",
+    "start": "開始",
+    "features": "功能",
+    "decisions": "決策",
+    "pricing": "方案",
+    "how": "運作方式",
+    "faq": "常見問題"
+  },
+  "sectionIndex": {
+    "daily": "01 · 為什麼",
+    "features": "02 · 功能",
+    "decisions": "03 · 決策",
+    "how": "04 · 運作"
   }
 }

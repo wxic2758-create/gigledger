@@ -26,7 +26,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="preload" href="/assets/logo-mark-192.png" as="image">
-  <link rel="stylesheet" href="/styles.css?v=20261116-18">
+  <link rel="stylesheet" href="/styles.css?v=20261119-01">
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"WebSite","name":"GigLedger","url":"https://gigledger.xyz/","inLanguage":["zh-Hant-TW"],"description":"為一人公司而做的帳本。把固定成本與訂閱換算成每日底線，再看淨收入、實際利潤、預留稅款與現金跑道。"}
   </script>
@@ -43,6 +43,8 @@
   </a>
       <nav class="desktop-nav" aria-label="主要導覽">
         <a href="/zh-TW/#daily">為什麼選 GigLedger</a>
+        <a href="/zh-TW/#features">功能</a>
+        <a href="/zh-TW/#pricing">方案</a>
         <a href="/zh-TW/#how">運作方式</a>
         <a href="/zh-TW/#faq">常見問題</a>
       </nav>
@@ -60,6 +62,8 @@
     </div>
     <nav class="mobile-nav" id="mobileNav" aria-label="主要導覽">
       <a href="/zh-TW/#daily">為什麼選 GigLedger</a>
+      <a href="/zh-TW/#features">功能</a>
+      <a href="/zh-TW/#pricing">方案</a>
       <a href="/zh-TW/#how">運作方式</a>
       <a href="/zh-TW/#faq">常見問題</a>
       <a href="/zh-TW/app">開啟計算器</a>
@@ -171,10 +175,23 @@
       </div>
     </section>
   
+    <nav class="quick-nav" aria-label="快速導覽">
+      <div class="shell quick-nav-inner">
+        <div class="quick-nav-copy">
+          <strong>快速導覽</strong>
+          <small>直接前往需要的內容，或先從計算機開始。</small>
+        </div>
+        <div class="quick-nav-list">
+          <a href="#daily">開始</a><a href="#features">功能</a><a href="#decisions">決策</a><a href="#pricing">方案</a><a href="#how">運作方式</a><a href="#faq">常見問題</a>
+          <a class="quick-cta" href="/zh-TW/app">開始試算 <span aria-hidden="true">→</span></a>
+        </div>
+      </div>
+    </nav>
+  
     <section class="daily-section" id="daily">
       <div class="shell daily-grid">
         <div class="section-copy">
-          <div class="section-index"><span>01</span><div></div><p>每日數字</p></div>
+          <div class="section-index"><span>01</span><div></div><p>每日數字</p><span class="section-name">01 · 為什麼</span></div>
           <h2>你的每日底線。</h2>
           <p>AI 工具、軟體、租金。不管你這個月有沒有出貨，這些成本都照樣在跑。GigLedger 把它們換算成一個能採取行動的數字：你的每日底線。</p>
           <strong class="aside-note">以下為四捨五入示意。精確範例：每月營業固定成本 $900，營業使用比例 100%。</strong>
@@ -197,7 +214,7 @@
       <div class="shell">
         <div class="section-head">
           <div>
-            <div class="section-index"><span>02</span><div></div><p>你會得到什麼</p></div>
+            <div class="section-index"><span>02</span><div></div><p>你會得到什麼</p><span class="section-name">02 · 功能</span></div>
             <h2>看清剩下多少，需要的都在這裡。</h2>
           </div>
         </div>
@@ -228,6 +245,18 @@
               <p>匯出清楚的月度 CSV，給自己或會計使用。</p>
             </article>
         </div>
+        <div class="decision-strip" aria-label="圍繞四個真實決策而設計。">
+          <a class="decision-strip-link" href="#decisions">
+            <span>決策</span>
+            <strong>看清 AI 工具的實際花費。</strong>
+            <em>快速導覽 →</em>
+          </a>
+          <a class="decision-strip-link" href="#pricing">
+            <span>方案</span>
+            <strong>免費試算，需要更多再用 Pro。</strong>
+            <em>封閉測試後公布價格</em>
+          </a>
+        </div>
       </div>
     </section>
   
@@ -235,7 +264,7 @@
       <div class="shell">
         <div class="section-head">
           <div>
-            <div class="section-index"><span>03</span><div></div><p>它能幫你做的判斷</p></div>
+            <div class="section-index"><span>03</span><div></div><p>它能幫你做的判斷</p><span class="section-name">03 · 決策</span></div>
             <h2>圍繞四個真實決策而設計。</h2>
           </div>
         </div>
@@ -296,7 +325,7 @@
     <section class="steps-section" id="how">
       <div class="shell steps-grid">
         <div class="steps-intro">
-          <div class="section-index light"><span>04</span><div></div><p>運作方式</p></div>
+          <div class="section-index light"><span>04</span><div></div><p>運作方式</p><span class="section-name">04 · 運作</span></div>
           <h2>三個步驟，看清一個數字。</h2>
         </div>
         <ol class="steps-list">
@@ -311,7 +340,7 @@
             </li>
             <li>
               <span class="step-number">03</span>
-              <div><h3>看清真正剩下多少</h3><p>儀表板分開呈現總收入、手續費、成本與實際利潤，再告訴你該預留多少稅款。</p></div>
+              <div><h3>看清真正剩下多少</h3><p>儀表板會分開顯示總收入、手續費、成本、真實利潤與跑道，再顯示稅款預留。</p></div>
             </li>
         </ol>
       </div>

@@ -37,6 +37,28 @@
     });
   }
 
+  const quickNav = document.querySelector(".quick-nav");
+  if (quickNav) {
+    const quickLinks = [...quickNav.querySelectorAll(".quick-nav-list a[href^='#']")];
+    const quickSections = quickLinks
+      .map((link) => document.querySelector(link.getAttribute("href")))
+      .filter(Boolean);
+
+    const setActiveQuickLink = () => {
+      const marker = window.innerHeight * 0.45;
+      let activeId = quickSections[0]?.id;
+      for (const section of quickSections) {
+        if (section.getBoundingClientRect().top <= marker) activeId = section.id;
+      }
+      quickLinks.forEach((link) => {
+        link.classList.toggle("is-active", link.getAttribute("href") === `#${activeId}`);
+      });
+    };
+    setActiveQuickLink();
+    window.addEventListener("scroll", setActiveQuickLink, { passive: true });
+    window.addEventListener("resize", setActiveQuickLink);
+  }
+
   document.querySelectorAll(".faq-list details").forEach((item) => {
     item.addEventListener("toggle", () => {
       if (!item.open) return;

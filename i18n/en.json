@@ -21,7 +21,11 @@
     "switchTo": "繁體中文",
     "switchShort": "繁中",
     "menuOpen": "Open menu",
-    "menuClose": "Close menu"
+    "menuClose": "Close menu",
+    "features": "Features",
+    "pricing": "Pricing",
+    "jump": "Jump to",
+    "openCalculator": "Open calculator"
   },
   "hero": {
     "kicker": "For one-person companies",
@@ -183,7 +187,7 @@
       {
         "number": "03",
         "title": "See what's actually left",
-        "body": "Your dashboard separates gross income, fees, costs, and true profit, then shows what to reserve for taxes."
+        "body": "Your dashboard separates gross income, fees, costs, true profit, and runway, then shows what to reserve for taxes."
       }
     ]
   },
@@ -752,5 +756,22 @@
       "signIn": "Sign in with Google",
       "note": "No email waitlist. Unsaved calculations stay on the current page."
     }
+  },
+  "quickNav": {
+    "label": "Quick navigation",
+    "hint": "Jump to what you need, or start with the calculator.",
+    "primary": "Start calculator",
+    "start": "Start",
+    "features": "Features",
+    "decisions": "Decisions",
+    "pricing": "Pricing",
+    "how": "How it works",
+    "faq": "FAQ"
+  },
+  "sectionIndex": {
+    "daily": "01 · Why",
+    "features": "02 · Features",
+    "decisions": "03 · Decisions",
+    "how": "04 · How"
   }
 }
