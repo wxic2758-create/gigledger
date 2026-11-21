@@ -5,7 +5,7 @@ import { test } from "node:test";
 import { onRequestPost as startGoogleSave } from "../functions/api/auth/google.js";
 import { onRequestGet as googleCallback } from "../functions/api/auth/google/callback.js";
 import { onRequestGet as getMe } from "../functions/api/me.js";
-import { onRequestDelete as removeEntry, onRequestPost as updateWorkspace } from "../functions/api/workspace.js";
+import { onRequestDelete as removeEntry, onRequestPost as updateWorkspace, onRequestPut as editEntry } from "../functions/api/workspace.js";
 import { onRequestGet as exportCsv, onRequestPost as importCsv } from "../functions/api/workspace/csv.js";
 import { loadWorkspace, normalizeDraft, saveWorkspaceDraft } from "../functions/lib/ledger.js";
 import { createSessionToken, sessionCookie } from "../functions/lib/session.js";
@@ -134,6 +134,70 @@ test("Google save preserves the planning estimate and equal manual payments surv
   assert.equal((await reload()).workspace.monthlyIncomeEstimate, 0);
   assert.equal((await save({ monthlyIncomeEstimate: "" }, cookie)).status, 200);
   assert.equal((await reload()).workspace.monthlyIncomeEstimate, null);
+});
+
+test("editing an expense preserves its identity, validates changes, and checks workspace ownership", async (t) => {
+  const { env, sqlite } = fixture(t);
+  const owner = await account(sqlite, env, "owner");
+  const other = await account(sqlite, env, "other");
+  await saveWorkspaceDraft(env, owner.workspace, await normalizeDraft({
+    expenses: [{ date: "2026-11-19", category: "Gear", amount: 80, externalRef: "manual:expense" }],
+    projects: ["Studio"],
+  }));
+  await saveWorkspaceDraft(env, other.workspace, await normalizeDraft({ projects: ["Other workspace"] }));
+  const [original] = (await loadWorkspace(env.DB, owner.workspace)).expenses;
+  const valid = {
+    id: original.id, date: "2026-10-10", category: "Equipment", merchant: "Store",
+    amount: 125.45, businessUse: 60, notes: "Corrected amount", project: "Studio",
+  };
+  const edit = (actor, changes) => editEntry({
+    env,
+    request: new Request(`${origin}/api/workspace`, {
+      method: "PUT",
+      headers: { cookie: actor.cookie, "content-type": "application/json" },
+      body: JSON.stringify({ expense: { ...valid, ...changes } }),
+    }),
+  });
+  assert.equal((await edit(other, { project: "" })).status, 404);
+  assert.equal((await edit(owner, { project: "Other workspace" })).status, 400);
+  assert.equal((await edit(owner, { date: "2026-02-30" })).status, 400);
+  assert.equal((await edit(owner, { amount: null })).status, 400);
+  assert.equal((await edit(owner, { businessUse: 101 })).status, 400);
+  assert.deepEqual((await loadWorkspace(env.DB, owner.workspace)).expenses, [original]);
+
+  for (let attempt = 0; attempt < 2; attempt++) assert.equal((await edit(owner, {})).status, 200);
+  const { expenses } = await loadWorkspace(env.DB, owner.workspace);
+  assert.equal(expenses.length, 1);
+  assert.deepEqual(expenses[0], { ...original, ...valid, updatedAt: expenses[0].updatedAt });
+  assert.equal((await edit(owner, { project: "", notes: "", businessUse: 0 })).status, 200);
+  const [cleared] = (await loadWorkspace(env.DB, owner.workspace)).expenses;
+  assert.equal(cleared.project, null);
+  assert.equal(cleared.notes, null);
+  assert.equal(cleared.businessUse, 0);
+});
+
+test("income CSV can export only received entries for a selected month", async (t) => {
+  const { env, sqlite } = fixture(t);
+  const owner = await account(sqlite, env, "owner");
+  await saveWorkspaceDraft(env, owner.workspace, await normalizeDraft({ income: [
+    { date: "2026-10-31", source: "direct", amount: 90, externalRef: "ref:october" },
+    { date: "2026-11-01", source: "direct", amount: 120, externalRef: "ref:november", platformFee: 12 },
+    { date: "2026-11-02", source: "app_store", amount: 99, externalRef: "ref:sold", recognition: "sold" },
+    { date: "2026-12-01", source: "direct", amount: 200, externalRef: "ref:december" },
+  ] }));
+  const download = (query = "") => exportCsv({
+    env,
+    request: new Request(`${origin}/api/workspace/csv?export=income${query}`, { headers: { cookie: owner.cookie } }),
+  });
+  const selected = await download("&month=2026-11");
+  assert.equal(selected.status, 200);
+  assert.match(selected.headers.get("content-disposition"), /gigledger-income-2026-11\.csv/);
+  assert.match(await selected.text(), /\n2026-11-01,direct,120,USD,12,,,ref:november,\n$/);
+  const all = await (await download()).text();
+  assert.equal(all.trimEnd().split("\n").length, 4);
+  assert.doesNotMatch(all, /ref:sold/);
+  assert.equal((await download("&month=2026-13")).status, 400);
+  assert.equal((await (await download("&month=2026-01")).text()).trimEnd().split("\n").length, 1);
 });
 
 test("CSV imports USD, reports foreign currency and invalid amounts, and deduplicates its export", async (t) => {

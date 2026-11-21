@@ -522,7 +522,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
   <meta name="robots" content="noindex">
   <link rel="icon" href="/assets/favicon-32.png" sizes="32x32">
   <link rel="stylesheet" href="/styles.css?v=20261121-03">
-  <link rel="stylesheet" href="/proto.css?v=20261121-03">
+  <link rel="stylesheet" href="/proto.css?v=20261121-04">
 </head>
 <body class="${bodyClass}">
   <script type="application/json" id="proto-messages">${JSON.stringify(mode === "dashboard" ? { ...t.app, dashboard: t.dashboard } : t.app).replaceAll("</", "<\\/")}</script>
@@ -754,11 +754,14 @@ const appPage = ({ locale, t, mode = "app" }) => {
           <p>${esc(t.app.dataSources.csvBody)}</p>
           <div class="csv-actions">
             <a class="button button-ghost" href="/api/workspace/csv?template=1" data-csv-pro>${esc(t.app.csv.template)}</a>
-            <a class="button button-ghost" href="/api/workspace/csv?export=income" data-csv-pro>${esc(t.app.csv.export)}</a>
             <label class="button button-dark csv-import-button" data-csv-pro>
               <input type="file" accept=".csv,text/csv" data-csv-import hidden>
               <span data-csv-import-label>${esc(t.app.csv.import)}</span>
             </label>
+            <div class="csv-monthly-export">
+              <label><span>${esc(t.app.csv.exportPeriod)}</span><select data-csv-export-period disabled></select></label>
+              <a class="button button-ghost" href="/api/workspace/csv?export=income" data-csv-export data-csv-pro>${esc(t.app.csv.export)}</a>
+            </div>
             <p class="form-message" data-csv-message role="status" aria-live="polite" hidden></p>
             <p class="form-message" data-csv-failed-message role="status" aria-live="polite" hidden><a href="#" download="gigledger-unimported.csv" data-csv-failed-download>${esc(t.app.csv.failedDownload)}</a></p>
           </div>
@@ -960,13 +963,13 @@ const appPage = ({ locale, t, mode = "app" }) => {
             <summary>${esc(w.moreFields)}</summary>
           <label><span>${esc(t.app.fields.merchant)}</span><input name="merchant"></label>
           <label><span>${esc(t.app.fields.project)}</span><select name="project" data-project-options></select></label>
-          <label><span>${esc(t.app.fields.businessUse)}</span><input name="businessUse" type="number" min="0" max="100" value="100" required></label>
+          <label><span>${esc(t.app.fields.businessUse)}</span><input name="businessUse" type="number" min="0" max="100" step="any" value="100" required></label>
           </details>
           <button class="button button-dark" type="submit">${esc(t.app.expenses.add)}</button>
           ${workspace ? `<div class="workspace-save-feedback"><p class="form-message" data-workspace-message role="status" hidden></p><button type="button" class="text-link" data-undo-entry hidden>${esc(w.undo)}</button></div>` : ""}
         </form>
         </dialog>
-        <div class="app-table-wrap">
+        <div class="app-table-wrap expense-table">
           <table>
             <thead><tr><th>${esc(t.app.table.date)}</th><th>${esc(t.app.table.category)}</th><th>${esc(t.app.table.merchant)}</th><th>${esc(t.app.table.project)}</th><th>${esc(t.app.table.amount)}</th><th>${esc(t.app.table.businessUse)}</th><th>${esc(t.app.table.businessAmount)}</th><th>${esc(t.app.table.actions)}</th></tr></thead>
             <tbody data-proto="expense-rows"></tbody>
@@ -982,7 +985,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
       <a href="/${t.alternatePath}${workspace ? "dashboard" : "app"}">${esc(t.nav.switchTo)}</a>
     </div>
   </footer>
-  <script src="/app-ledger.js?v=20261121-03" defer></script>
+  <script src="/app-ledger.js?v=20261121-04" defer></script>
   <script src="/app.js?v=20261121-03" defer></script>
 </body>
 </html>`;

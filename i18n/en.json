@@ -390,11 +390,16 @@
       "title": "One-time expenses",
       "body": "Use this for individual purchases such as outsourcing, ads, or equipment. These do not enter Daily Floor and should not duplicate a subscription already in fixed costs.",
       "add": "Add expense",
+      "edit": "Edit",
+      "editTitle": "Edit expense",
+      "saveChanges": "Save changes",
       "duplicateWarning": "\"{name}\" is already in fixed costs as a subscription. Save this one-time expense too? Choose Cancel to avoid double-counting."
     },
     "csv": {
       "title": "CSV import / export",
-      "export": "Export CSV",
+      "export": "Export income CSV",
+      "exportPeriod": "Export period",
+      "allDates": "All time",
       "import": "Import CSV",
       "importing": "Importing…",
       "template": "Download template",

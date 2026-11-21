@@ -390,11 +390,16 @@
       "title": "一次性支出",
       "body": "用於外包、廣告、設備等單次花費。這些項目不會進入每日底線，也不要重複記錄已存在固定成本中的訂閱。",
       "add": "加入支出",
+      "edit": "編輯",
+      "editTitle": "編輯支出",
+      "saveChanges": "儲存變更",
       "duplicateWarning": "「{name}」已列為固定成本中的訂閱。仍要儲存這筆一次性支出嗎？選「取消」可避免重複計入。"
     },
     "csv": {
       "title": "CSV 匯入 / 匯出",
-      "export": "匯出 CSV",
+      "export": "匯出收入 CSV",
+      "exportPeriod": "匯出期間",
+      "allDates": "所有期間",
       "import": "匯入 CSV",
       "importing": "匯入中…",
       "template": "下載範本",

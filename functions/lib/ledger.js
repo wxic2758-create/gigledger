@@ -23,6 +23,22 @@ const date = (value) => {
   return /^\d{4}-\d{2}-\d{2}$/.test(result) ? result : null;
 };
 
+const expenseFields = (item) => {
+  const amount = Number(item?.amount);
+  const businessUse = Number(item?.businessUse ?? 100);
+  const occurredOn = date(item?.date);
+  const category = text(item?.category, 80);
+  if (!category || !occurredOn || !finite(amount) || !finite(businessUse) || businessUse > 100) return null;
+  return {
+    occurredOn,
+    category,
+    merchant: text(item?.merchant, 120),
+    amount,
+    businessUse,
+    notes: text(item?.notes, 300),
+  };
+};
+
 const hash = async (value) => {
   const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
   return [...new Uint8Array(bytes)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
@@ -145,25 +161,16 @@ export const normalizeDraft = async (input) => {
   const expensesData = Array.isArray(data.expenses) ? data.expenses.slice(0, 500) : [];
   const normalizedExpenses = [];
   for (const item of expensesData) {
-    const amount = Number(item?.amount);
-    const businessUse = Number(item?.businessUse ?? 100);
-    const occurredOn = date(item?.date);
-    const category = text(item?.category, 80);
-    const merchant = text(item?.merchant, 120);
-    const notes = text(item?.notes, 300);
+    const fields = expenseFields(item);
+    if (!fields) continue;
+    const { occurredOn, category, merchant, amount, businessUse } = fields;
     const externalRef = text(item?.externalRef, 160);
     const expenseProjects = Array.isArray(item?.projects)
       ? item.projects
       : (item?.project ? [item.project] : []);
-    if (!category || !occurredOn || !finite(amount) || !finite(businessUse) || businessUse > 100) continue;
     normalizedExpenses.push({
+      ...fields,
       externalRef: externalRef || await hash(`${occurredOn}|${category}|${merchant || ""}|${amount}|${businessUse}`),
-      occurredOn,
-      category,
-      merchant,
-      amount,
-      businessUse,
-      notes,
       projects: expenseProjects,
     });
   }
@@ -587,6 +594,36 @@ export const saveWorkspaceDraft = async (env, workspaceId, draft) => {
   }
   for (const item of income) await updateProject("income_entries", item);
   for (const item of expenses) await updateProject("expenses", item);
+};
+
+export const updateExpense = async (db, workspaceId, payload) => {
+  const id = typeof payload?.id === "string" && payload.id.trim();
+  if (!id || !finite(payload.amount) || !finite(payload.businessUse) || typeof payload.date !== "string"
+    || !["category", "merchant", "notes", "project"].every((key) => typeof payload[key] === "string")) {
+    return { error: "invalid_expense", status: 400 };
+  }
+  const fields = expenseFields(payload);
+  if (!fields) return { error: "invalid_expense", status: 400 };
+  const { occurredOn, category, merchant, amount, businessUse, notes } = fields;
+  const parsed = new Date(`${occurredOn}T00:00:00Z`);
+  if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== occurredOn) {
+    return { error: "invalid_expense", status: 400 };
+  }
+  const projectName = payload.project.trim();
+  const project = projectName ? await db.prepare(
+    "SELECT id FROM projects WHERE workspace_id = ? AND name = ?",
+  ).bind(workspaceId, projectName).first() : null;
+  if (projectName && !project) return { error: "project_not_found", status: 400 };
+
+  const result = await db.prepare(
+    `UPDATE expenses
+     SET occurred_on = ?, category = ?, merchant = ?, amount = ?, business_use = ?, notes = ?, project_id = ?, updated_at = ?
+     WHERE id = ? AND workspace_id = ?`,
+  ).bind(
+    occurredOn, category, merchant, amount, businessUse, notes, project?.id ?? null,
+    new Date().toISOString(), id, workspaceId,
+  ).run();
+  return result.meta.changes ? {} : { error: "expense_not_found", status: 404 };
 };
 
 export const loadWorkspace = async (db, workspaceId) => {

@@ -77,9 +77,15 @@ export const onRequestGet = async ({ env, request }) => {
   if (url.searchParams.get("export") !== "income") {
     return json({ error: "unsupported_export" }, 400);
   }
+  const month = url.searchParams.get("month");
+  if (month !== null && !/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) {
+    return json({ error: "invalid_month" }, 400);
+  }
   const ledger = await loadWorkspace(env.DB, workspace.id);
-  const rows = (ledger.income || []).map(mapIncome);
-  return csvResponse(rows, `gigledger-income-${new Date().toISOString().slice(0, 10)}.csv`);
+  const rows = ledger.income
+    .filter((item) => item.recognition !== "sold" && (!month || item.date.startsWith(`${month}-`)))
+    .map(mapIncome);
+  return csvResponse(rows, `gigledger-income-${month ?? new Date().toISOString().slice(0, 10)}.csv`);
 };
 
 export const onRequestPost = async ({ env, request }) => {

@@ -6,6 +6,7 @@
   const state = { projects: [], fixedCosts: [], income: [], expenses: [], taxReserveRate: "", appleFeeRate: "", cashOnHand: "", monthlyIncomeEstimate: "", features: { plan: "free", subscriptionLimit: 5, csv: false, sync: false, appStoreSync: false, subscriptionReview: false } };
   let monthlyIncomeEstimateChanged = false;
   let editingFixedCostId = null;
+  let editingExpense = null;
   let stripeIntegration = null;
   let appStoreIntegration = null;
   let integrationsLoaded = false;
@@ -769,12 +770,26 @@
       const businessAmount = (Number(item.amount) || 0) * (Number(item.businessUse) || 0) / 100;
       const dateCell = document.createElement("td"); dateCell.textContent = item.date;
       const category = document.createElement("td"); category.textContent = item.category;
+      const compactDate = document.createElement("small");
+      compactDate.className = "expense-compact-date";
+      compactDate.textContent = item.date;
+      category.append(compactDate);
       const merchant = document.createElement("td"); merchant.textContent = item.merchant || "";
       const amount = document.createElement("td"); amount.textContent = money(Number(item.amount));
       const use = document.createElement("td"); use.textContent = `${Number(item.businessUse)}%`;
       const business = document.createElement("td"); business.textContent = money(businessAmount);
       const project = projectCell(item);
-      row.append(dateCell, category, merchant, project, amount, use, business, deleteButton("expense", item.id, index));
+      const actions = deleteButton("expense", item.id, index);
+      const controls = document.createElement("div");
+      controls.className = "entry-controls";
+      const edit = document.createElement("button");
+      edit.type = "button";
+      edit.className = "entry-edit";
+      edit.dataset.editExpense = String(index);
+      edit.textContent = messages.expenses.edit;
+      controls.append(edit, ...actions.childNodes);
+      actions.append(controls);
+      row.append(dateCell, category, merchant, project, amount, use, business, actions);
       tbody.appendChild(row);
     });
   };
@@ -787,7 +802,10 @@
       unassigned.value = "";
       unassigned.textContent = messages.projects.unassigned;
       node.appendChild(unassigned);
-      projectNames().forEach((name) => {
+      const names = projectNames();
+      const assigned = node.form?.id === "expense-entry" && editingExpense?.projects?.[0];
+      if (assigned && !names.includes(assigned)) names.push(assigned);
+      names.forEach((name) => {
         const item = document.createElement("option");
         item.value = name;
         item.textContent = name;
@@ -1245,10 +1263,49 @@
   }
 
   const expenseForm = document.querySelector("[data-proto-form='expense']");
+  const expenseDialog = expenseForm?.closest("dialog");
+  const setExpenseEdit = (item) => {
+    editingExpense = item;
+    const options = expenseForm.querySelector("details");
+    const button = expenseForm.querySelector("button[type='submit']");
+    const title = expenseDialog.querySelector("h3");
+    title.textContent = item ? messages.expenses.editTitle : messages.expenses.add;
+    button.textContent = item ? messages.expenses.saveChanges : messages.expenses.add;
+    showWorkspaceMessage(expenseForm, "");
+    const undo = expenseForm.querySelector("[data-undo-entry]");
+    if (undo) {
+      undo.hidden = true;
+      delete undo.dataset.undoEntry;
+    }
+    expenseForm.reset();
+    renderProjectOptions();
+    expenseForm.elements.date.value = item?.date || today();
+    options.open = false;
+    if (!item) return;
+    expenseForm.elements.amount.value = item.amount;
+    expenseForm.elements.category.value = item.category;
+    expenseForm.elements.merchant.value = item.merchant;
+    expenseForm.elements.businessUse.value = item.businessUse;
+    expenseForm.elements.notes.value = item.notes;
+    expenseForm.elements.project.value = item.projects?.[0] || "";
+  };
   if (expenseForm) {
+    document.querySelector("[data-proto='expense-rows']").addEventListener("click", (event) => {
+      const edit = event.target.closest("[data-edit-expense]");
+      if (!edit) return;
+      const item = state.expenses[Number(edit.dataset.editExpense)];
+      if (!item) return;
+      setExpenseEdit(item);
+      window.location.hash = "expense-entry";
+    });
     expenseForm.addEventListener("submit", async (event) => {
       event.preventDefault();
-      if (!expenseForm.reportValidity()) return;
+      if (!expenseForm.checkValidity()) {
+        const invalidOptions = expenseForm.querySelector("details:has(:invalid)");
+        if (invalidOptions) invalidOptions.open = true;
+        expenseForm.reportValidity();
+        return;
+      }
       const data = new FormData(expenseForm);
       const expenseDate = String(data.get("date") || today());
       const expenseMonth = expenseDate.slice(0, 7);
@@ -1269,16 +1326,32 @@
         return;
       }
       const entry = {
-        externalRef: `manual:${crypto.randomUUID()}`,
         date: expenseDate,
         category: String(data.get("category") || "").trim() || messages.workspace.uncategorized,
         merchant: String(data.get("merchant") || ""),
         amount,
         businessUse: Number(data.get("businessUse")),
         notes: String(data.get("notes") || ""),
-        projects: [String(data.get("project") || "").trim()].filter(Boolean),
+        project: String(data.get("project") || "").trim(),
       };
-      if (!await addRecord(expenseForm, "expenses", entry)) return;
+      if (editingExpense) {
+        const currentEdit = editingExpense;
+        if (dashboardMode) {
+          const saved = await submitWorkspaceForm(expenseForm, () => updateWorkspace("/api/workspace", {
+            method: "PUT", headers: { "content-type": "application/json" },
+            body: JSON.stringify({ expense: { ...entry, id: currentEdit.id } }),
+          }));
+          if (!saved || editingExpense !== currentEdit) return;
+        } else {
+          Object.assign(currentEdit, entry, { projects: [entry.project].filter(Boolean) });
+          render();
+        }
+        expenseDialog.querySelector("[data-close-entry]").click();
+        return;
+      }
+      if (!await addRecord(expenseForm, "expenses", {
+        ...entry, externalRef: `manual:${crypto.randomUUID()}`, projects: [entry.project].filter(Boolean),
+      })) return;
       expenseForm.reset();
       expenseForm.elements.date.value = today();
       expenseForm.elements.businessUse.value = "100";
@@ -1391,7 +1464,31 @@
 
   document.querySelector("[data-save-google]")?.addEventListener("click", saveDraft);
 
+  const csvExportPeriod = document.querySelector("[data-csv-export-period]");
+  const csvExportLink = document.querySelector("[data-csv-export]");
+  const updateCsvExportLink = () => {
+    const month = csvExportPeriod.value;
+    csvExportLink.href = `/api/workspace/csv?export=income${month ? `&month=${month}` : ""}`;
+  };
+  csvExportPeriod?.addEventListener("change", updateCsvExportLink);
+  const renderCsvExportPeriods = () => {
+    if (!csvExportPeriod) return;
+    const previousChoice = csvExportPeriod.options.length ? csvExportPeriod.value : monthKey();
+    const months = new Set([monthKey(), previousMonthKey()]);
+    state.income.forEach(({ date, recognition }) => {
+      if (recognition !== "sold" && /^\d{4}-(0[1-9]|1[0-2])-\d{2}$/.test(date)) months.add(date.slice(0, 7));
+    });
+    const format = new Intl.DateTimeFormat(locale, { year: "numeric", month: "short", timeZone: "UTC" });
+    csvExportPeriod.replaceChildren(
+      ...[...months].sort().reverse().map((month) => new Option(format.format(new Date(`${month}-01T00:00:00Z`)), month)),
+      new Option(messages.csv.allDates, ""),
+    );
+    csvExportPeriod.value = !previousChoice || months.has(previousChoice) ? previousChoice : monthKey();
+    csvExportPeriod.disabled = !state.features.csv;
+    updateCsvExportLink();
+  };
   const renderPlanLimits = () => {
+    renderCsvExportPeriods();
     const csvNodes = [...document.querySelectorAll("[data-csv-pro]")];
     csvNodes.forEach((node) => {
       node.classList.toggle("is-pro-locked", !state.features.csv);
@@ -2162,14 +2259,22 @@
   for (const dialog of entryDialogs) {
     const id = dialog.dataset.entryDialog;
     const dismiss = () => {
+      if (dialog === expenseDialog && editingExpense && expenseForm.getAttribute("aria-busy") === "true") return;
       const wasEntry = window.location.hash === `#${id}`;
       if (wasEntry) history.replaceState(history.state, "", `#${ledgerSections[id]}`);
       if (dialog.open) dialog.close();
+      if (dialog === expenseDialog && editingExpense) setExpenseEdit(null);
       if (wasEntry) document.querySelector(`.entry-link-button[href="#${id}"]`)?.focus({ preventScroll: true });
     };
     dialog.querySelector("[data-close-entry]").addEventListener("click", dismiss);
+    if (dialog === expenseDialog) {
+      dialog.addEventListener("cancel", (event) => {
+        if (editingExpense && expenseForm.getAttribute("aria-busy") === "true") event.preventDefault();
+      });
+    }
     dialog.addEventListener("close", () => {
       if (id === "fixed-cost-entry" && editingFixedCostId) fixedForm.querySelector("[data-fixed-cancel]").click();
+      if (dialog === expenseDialog && editingExpense && !dialog.open) setExpenseEdit(null);
       if (window.location.hash === `#${id}`) dismiss();
     });
   }
