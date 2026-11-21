@@ -25,7 +25,11 @@
     "features": "功能",
     "pricing": "方案",
     "jump": "快速前往",
-    "openCalculator": "打開計算機"
+    "openCalculator": "打開計算機",
+    "home": "首頁",
+    "daily": "每日底線",
+    "examples": "使用範例",
+    "about": "適合誰使用與資料處理方式"
   },
   "hero": {
     "kicker": "為一人公司而做",
@@ -40,7 +44,7 @@
       "僅供預估，非稅務建議"
     ],
     "sampleLabel": "範例資料",
-    "visualAria": "GigLedger 儀表板預覽，包含範例收入、固定成本、實際利潤、預留稅款與現金跑道。"
+    "visualAria": "總覽範例，顯示每日底線、本月實際利潤與現金可支撐天數。"
   },
   "dashboard": {
     "title": "儀表板",
@@ -746,7 +750,11 @@
       "retry": "再試一次",
       "saving": "儲存中…",
       "runwayDays": "{days} 天",
-      "runwayWithHistory": "按近 {months} 個完整月份的收入估計，可支撐 {days} 天"
+      "runwayWithHistory": "按近 {months} 個完整月份的收入估計，可支撐 {days} 天",
+      "calculator": "試算",
+      "closeEntry": "關閉",
+      "transfers": "CSV",
+      "connections": "平台連結"
     }
   },
   "start": {
@@ -834,6 +842,10 @@
     "pricing": {
       "title": "使用方案",
       "description": "比較封閉測試期間的 GigLedger 計算器、手動帳本與 Pro 功能。"
+    },
+    "faq": {
+      "title": "常見問題",
+      "description": "了解帳本、帳號資料、訂閱與平台連結的常見問題。"
     }
   }
 }

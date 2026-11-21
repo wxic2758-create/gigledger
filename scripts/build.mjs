@@ -63,86 +63,37 @@ const languageSwitch = (t, current, suffix = "") => {
 
 const nav = (t, current, route) => {
   const links = [
+    ["", t.nav.home],
     ["product", t.nav.features],
     ["pricing", t.nav.pricing],
-    ["#faq", t.nav.faq],
+    ["faq", t.nav.faq],
   ];
   const navLinks = links.map(([path, label]) => {
-    const href = path.startsWith("#") ? `/${current.folder}/${path}` : `/${current.folder}/${path}/`;
+    const href = `/${current.folder}/${path ? path + "/" : ""}`;
     return `<a href="${href}"${route === path ? ' aria-current="page"' : ""}>${esc(label)}</a>`;
   }).join("");
   return `
-  <header class="site-header">
+  <header class="site-header public-header">
     <div class="shell header-inner">
       ${logo(current.folder)}
-      <nav class="desktop-nav" aria-label="${esc(t.nav.aria)}">${navLinks}</nav>
       <div class="header-actions">
         ${languageSwitch(t, current, route ? route + "/" : "")}
         <a class="button button-small button-orange" href="/${current.folder}/app">${esc(t.nav.cta)}</a>
-        <button class="menu-button" type="button" aria-expanded="false" aria-controls="mobileNav" aria-label="${esc(t.nav.menuOpen)}">
-          <span></span><span></span>
-        </button>
       </div>
     </div>
-    <nav class="mobile-nav" id="mobileNav" aria-label="${esc(t.nav.aria)}">
-      ${navLinks}
-      <a href="/${current.folder}/app">${esc(t.nav.cta)}</a>
-      ${languageSwitch(t, current, route ? route + "/" : "")}
-    </nav>
+    <nav class="public-nav shell" aria-label="${esc(t.nav.aria)}">${navLinks}</nav>
   </header>`;
 };
 
 const dashboard = (t) => `
-  <div class="dashboard" role="img" aria-label="${esc(t.hero.visualAria)}">
-    <div class="dash-head">
-      <div class="dash-brand">
-        <img src="/assets/logo-mark-64.png" alt="" width="24" height="24">
-        <span>gigledger</span>
-      </div>
-      <span class="sample-badge">${esc(t.hero.sampleLabel)}</span>
-    </div>
-    <div class="dash-month">${esc(t.dashboard.month)}</div>
-    <div class="dash-rows">
-      ${t.dashboard.rows
-        .map(
-          (row) => `
-        <div class="dash-row tone-${row.tone}">
-          <span>${esc(row.label)}</span>
-          <strong>${esc(row.value)}</strong>
-        </div>`,
-        )
-        .join("")}
-    </div>
-    <div class="dash-split">
-      <div class="dash-metric">
-        <span>${esc(t.dashboard.dailyLabel)}</span>
-        <strong>${esc(t.dashboard.dailyValue)}<em>${esc(t.dashboard.dailyUnit)}</em></strong>
-      </div>
-      <div class="dash-metric">
-        <span>${esc(t.dashboard.taxLabel)}</span>
-        <strong>${esc(t.dashboard.taxValue)}</strong>
-        <small>${esc(t.dashboard.taxNote)}</small>
-      </div>
-    </div>
-    <div class="dash-chart">
-      <div class="chart-top">
-        <span>${esc(t.dashboard.chartLabel)}</span>
-        <span class="chart-key" aria-hidden="true"></span>
-      </div>
-      <div class="bars">
-        ${t.dashboard.chart
-          .map(
-            (bar) => `
-          <div class="bar-wrap">
-            <div class="bar" style="--h:${Number(bar.height) || 0}%"></div>
-            <span>${esc(bar.month)}</span>
-          </div>`,
-          )
-          .join("")}
-      </div>
-    </div>
-    <div class="dash-note">${esc(t.dashboard.annotation)}</div>
-  </div>`;
+  <section class="home-snapshot" aria-label="${esc(t.hero.visualAria)}">
+    <div class="home-snapshot-head"><strong>${esc(t.app.workspace.overview)}</strong><span>${esc(t.hero.sampleLabel)}</span></div>
+    <dl>
+      <div><dt>${esc(t.app.workspace.dailyFloor)}</dt><dd>${esc(t.dashboard.dailyValue)} <small>${esc(t.dashboard.dailyUnit)}</small></dd></div>
+      <div><dt>${esc(t.app.workspace.currentProfit)}</dt><dd>${esc(t.dashboard.rows.find((item) => item.tone === "accent").value)}</dd></div>
+      <div><dt>${esc(t.app.workspace.runway)}</dt><dd>${esc(t.app.workspace.runwayDays.replace("{days}", "270"))}</dd></div>
+    </dl>
+  </section>`;
 
 const hero = (t, current) => `
   <main id="main">
@@ -156,24 +107,10 @@ const hero = (t, current) => `
             <a class="button button-orange" href="/${current.folder}/app">${esc(t.hero.primaryCta)} <span aria-hidden="true">→</span></a>
             <a class="button button-ghost" href="/api/auth/google?locale=${current.code}">${esc(t.hero.secondaryCta)}</a>
           </div>
-          <ul class="trust-list">
-            ${t.hero.trust
-              .map(
-                (item) => `
-              <li><span class="check" aria-hidden="true">✓</span>${esc(item)}</li>`,
-              )
-              .join("")}
-          </ul>
+          <p class="hero-trust">${esc(t.hero.trust[1])}</p>
         </div>
         <div class="hero-visual">${dashboard(t)}</div>
       </div>
-    </section>`;
-
-const productLinks = (t) => `
-    <section class="home-product-links shell" id="decisions" aria-label="${esc(t.footer.product)}">
-      <a id="features" href="/${t.locale}/product/"><strong>${esc(t.nav.features)}</strong><span aria-hidden="true">→</span></a>
-      <a id="pricing" href="/${t.locale}/pricing/"><strong>${esc(t.nav.pricing)}</strong><span aria-hidden="true">→</span></a>
-      <a id="how" href="/${t.locale}/product/#how"><strong>${esc(t.nav.how)}</strong><span aria-hidden="true">→</span></a>
     </section>`;
 
 const dailySection = (t) => `
@@ -358,7 +295,7 @@ const faqSection = (t) => `
     <section class="faq-section" id="faq">
       <div class="shell faq-grid">
         <div class="faq-intro">
-          <h2>${esc(t.faq.title)}</h2>
+          <h1>${esc(t.faq.title)}</h1>
           <p>${esc(t.faq.body)}</p>
         </div>
         <div class="faq-list">
@@ -375,50 +312,15 @@ const faqSection = (t) => `
       </div>
     </section>`;
 
-const startSection = (t) => `
-    <section class="waitlist-section" id="start">
-      <div class="shell waitlist-grid">
-        <div>
-          <p class="kicker">${esc(t.start.kicker)}</p>
-          <h2>${esc(t.start.title)}</h2>
-          <p>${esc(t.start.body)}</p>
-        </div>
-        <div class="waitlist-panel">
-          <div class="start-actions">
-            <a class="button button-orange" href="/${t.locale}/app">${esc(t.start.calculate)} <span aria-hidden="true">→</span></a>
-            <a class="button button-ghost" href="/api/auth/google?locale=${t.locale}">${esc(t.start.signIn)}</a>
-          </div>
-          <p class="form-note">${esc(t.start.note)} · <a href="/${t.locale}/privacy">${esc(t.start.privacy)}</a></p>
-        </div>
-      </div>
-    </section>`;
-
-const footer = (t, route) => `
+const footer = (t) => `
   </main>
-  <footer class="site-footer">
-    <div class="shell footer-top">
-      <div>
-        ${logo(t.locale)}
-        <p class="footer-tagline">${esc(t.footer.tagline)}</p>
-        <p class="footer-status">${esc(t.footer.status)}</p>
-      </div>
-      <div class="footer-links">
-        <div>
-          <p class="footer-heading">${esc(t.footer.product)}</p>
-          <a href="/${t.locale}/product/">${esc(t.nav.features)}</a>
-          <a href="/${t.locale}/pricing/">${esc(t.nav.pricing)}</a>
-          <a href="/${t.locale}/#faq">${esc(t.footer.faq)}</a>
-        </div>
-        <div>
-          <p class="footer-heading">${esc(t.footer.legal)}</p>
-          <a href="/${t.locale}/privacy">${esc(t.footer.privacy)}</a>
-          <a href="/${t.locale}/tax-disclaimer">${esc(t.footer.disclaimer)}</a>
-        </div>
-      </div>
-    </div>
-    <div class="shell footer-bottom">
+  <footer class="site-footer public-footer">
+    <div class="shell public-footer-row">
       <p>${esc(t.footer.copyright.replace("{year}", String(new Date().getFullYear())))}</p>
-      <a href="/${t.alternatePath}${route ? route + "/" : ""}">${esc(t.nav.switchTo)}</a>
+      <nav aria-label="${esc(t.footer.legal)}">
+        <a href="/${t.locale}/privacy">${esc(t.footer.privacy)}</a>
+        <a href="/${t.locale}/tax-disclaimer">${esc(t.footer.disclaimer)}</a>
+      </nav>
     </div>
   </footer>`;
 
@@ -440,7 +342,7 @@ const legalPage = ({ locale, t, type }) => {
   <link rel="alternate" hreflang="en" href="${siteUrl}/en/${isPrivacy ? "privacy" : "tax-disclaimer"}">
   <link rel="alternate" hreflang="zh-Hant-TW" href="${siteUrl}/zh-TW/${isPrivacy ? "privacy" : "tax-disclaimer"}">
   <link rel="alternate" hreflang="x-default" href="${siteUrl}/en/${isPrivacy ? "privacy" : "tax-disclaimer"}">
-  <link rel="stylesheet" href="/styles.css?v=20261119-01">
+  <link rel="stylesheet" href="/styles.css?v=20261121-02">
 </head>
 <body>
   <header class="site-header">
@@ -467,6 +369,16 @@ const appPage = ({ locale, t, mode = "app" }) => {
     <nav class="workspace-nav shell" aria-label="${esc(label)}">
       ${links.map(([href, text]) => `<a href="#${href}" ${attribute}="${href}"${href === "dashboard" ? ' aria-current="page"' : ""}>${esc(text)}</a>`).join("")}
     </nav>`;
+  const entryDialog = (id, label) => workspace ? `
+    <dialog class="entry-dialog" data-entry-dialog="${id}" aria-labelledby="${id}-title">
+      <div class="entry-dialog-head">
+        <h3 id="${id}-title">${esc(label)}</h3>
+        <button class="button button-ghost" type="button" data-close-entry>${esc(w.closeEntry)}</button>
+      </div>` : "";
+  const endEntryDialog = workspace ? "</dialog>" : "";
+  const entryLink = (id, label) => workspace
+    ? `<a class="button button-dark entry-link-button" href="#${id}" aria-haspopup="dialog">+ ${esc(label)}</a>`
+    : "";
   const addMenu = `
     <details class="workspace-add" data-add-menu>
       <summary class="button button-dark">+ ${esc(w.addEntry)}</summary>
@@ -491,26 +403,22 @@ const appPage = ({ locale, t, mode = "app" }) => {
   <title>${esc(title)} — GigLedger</title>
   <meta name="robots" content="noindex">
   <link rel="icon" href="/assets/favicon-32.png" sizes="32x32">
-  <link rel="stylesheet" href="/styles.css?v=20261119-01">
-  <link rel="stylesheet" href="/proto.css?v=20261121-01">
+  <link rel="stylesheet" href="/styles.css?v=20261121-02">
+  <link rel="stylesheet" href="/proto.css?v=20261121-02">
 </head>
 <body class="${bodyClass}">
   <script type="application/json" id="proto-messages">${JSON.stringify(mode === "dashboard" ? { ...t.app, dashboard: t.dashboard } : t.app).replaceAll("</", "<\\/")}</script>
   <header class="site-header">
     <div class="shell header-inner">
       ${logo(locale.folder)}
-      ${isGuest ? `
-      <nav class="desktop-nav app-nav" aria-label="${esc(t.app.navAria)}">
-        <a href="#onboarding">${esc(t.app.flow.title)}</a>
-        <a href="#fixed-costs">${esc(t.app.nav.fixed)}</a>
-        <a href="#income">${esc(t.app.nav.income)}</a>
-      </nav>` : ""}
       <div class="header-actions">
         ${languageSwitch(t, locale, workspace ? "dashboard" : "app")}
         ${isGuest ? `<a class="button button-small button-orange" href="/api/auth/google?locale=${locale.code}">${esc(t.app.signIn)}</a>` : ""}
       </div>
     </div>
-    ${workspace ? workspaceNav([["dashboard", w.overview], ["ledger", w.ledger], ["settings", w.settings]], "data-workspace-nav", w.navigation) : ""}
+    ${workspace
+      ? workspaceNav([["dashboard", w.overview], ["ledger", w.ledger], ["settings", w.settings]], "data-workspace-nav", w.navigation)
+      : workspaceNav([["onboarding", w.calculator], ["dashboard", w.ledger]], "data-guest-nav", w.navigation)}
   </header>
   <main id="main"${workspace ? ' class="workspace-pending"' : ""}>
     ${workspace ? `
@@ -677,15 +585,16 @@ ${workspace ? `
       </details>
     </section>
 ` : `
-    <section class="app-hero shell" id="dashboard">
-      <div class="app-badge">${esc(t.app.badge)}</div>
-      <h1>${esc(heading)}</h1>
-      <p>${esc(subheading)}</p>
-      <div class="account-actions">
+    ${workspaceNav([["dashboard", w.overview], ["income", t.app.nav.income], ["expenses", t.app.expenses.title], ["fixed-costs", w.fixed], ["projects", t.app.projects.title]], "data-guest-ledger-nav", w.ledgerNavigation)}
+      <div class="shell account-actions guest-actions" data-guest-actions hidden>
         <button class="button button-dark" type="button" data-save-google>${esc(t.app.saveGoogle)}</button>
         <span class="account-note">${esc(t.app.saveNote)}</span>
         <p class="form-message account-message" role="status" aria-live="polite" data-save-message hidden></p>
       </div>
+    <section class="app-hero shell" id="dashboard" data-guest-panel hidden>
+      <div class="app-badge">${esc(t.app.badge)}</div>
+      <h1>${esc(heading)}</h1>
+      <p>${esc(subheading)}</p>
       <div class="dashboard-primary">
         <article class="dashboard-primary-card"><span>${esc(t.app.metrics.daily)}</span><strong data-proto="metric-daily">$0.00</strong><small>${esc(t.app.metrics.dailyNote)}</small></article>
         <article class="dashboard-primary-card"><span>${esc(t.app.metrics.required)}</span><strong data-proto="metric-required">$0.00</strong><small>${esc(t.app.metrics.comparisonNote)}</small></article>
@@ -721,7 +630,7 @@ ${workspace ? `
     `}
 
     ${isGuest ? `
-    <section class="app-steps shell" id="how-it-works">
+    <section class="app-steps shell" id="how-it-works" data-guest-panel hidden>
       <p class="app-steps-kicker">${esc(t.app.onboarding.kicker)}</p>
       <ol>
         ${t.app.onboarding.steps
@@ -740,8 +649,9 @@ ${workspace ? `
 
     ${workspace ? `
     <div data-workspace-view="settings" id="settings" hidden>
-      <section class="app-section shell workspace-settings">
-        <div class="workspace-heading"><h1>${esc(w.settings)}</h1></div>
+      <div class="shell workspace-heading ledger-heading"><h1>${esc(w.settings)}</h1></div>
+      ${workspaceNav([["planning", w.planning], ["csv", w.transfers], ["sources", w.connections], ["account", w.account]], "data-settings-nav", w.settings)}
+      <section class="app-section shell workspace-settings" id="planning" data-settings-panel>
         <h2>${esc(w.planning)}</h2>
         <form class="app-form app-settings-form" data-proto-form="settings">
           <label><span>${esc(t.app.taxRateLabel)}</span><input name="taxReserveRate" type="number" min="0" max="100" step="0.1" placeholder="${esc(t.app.taxRatePlaceholder)}"></label>
@@ -754,15 +664,9 @@ ${workspace ? `
           <p class="form-message" data-workspace-message role="status" hidden></p>
         </form>
       </section>
-    <section class="app-section shell" id="sources">
-      <div class="app-section-head">
-        <p class="app-steps-kicker">${esc(t.app.dataSources.title)}</p>
-        <h2>${esc(t.app.dataSources.heading)}</h2>
-        <p>${esc(t.app.dataSources.subheading)}</p>
-      </div>
-      <div class="sources-grid">
-        <article class="source-card">
-          <h3>${esc(t.app.csv.title)}</h3>
+      <section class="app-section shell" id="csv" data-settings-panel hidden>
+        <article class="source-card settings-transfer">
+          <h2>${esc(t.app.csv.title)}</h2>
           <p>${esc(t.app.dataSources.csvBody)}</p>
           <div class="csv-actions">
             <a class="button button-ghost" href="/api/workspace/csv?template=1" data-csv-pro>${esc(t.app.csv.template)}</a>
@@ -775,6 +679,8 @@ ${workspace ? `
             <p class="form-message" data-csv-failed-message role="status" aria-live="polite" hidden><a href="#" download="gigledger-unimported.csv" data-csv-failed-download>${esc(t.app.csv.failedDownload)}</a></p>
           </div>
         </article>
+      </section>
+      <section class="app-section shell" id="sources" data-settings-panel hidden>
         <section class="plan-panel source-sync" data-integration-panel aria-labelledby="integration-title">
           <div class="plan-panel-head">
             <div>
@@ -816,9 +722,8 @@ ${workspace ? `
             </div>
           </div>
         </section>
-      </div>
-    </section>
-      <section class="app-section shell workspace-account">
+      </section>
+      <section class="app-section shell workspace-account" id="account" data-settings-panel hidden>
         <h2>${esc(w.account)}</h2>
         <div class="workspace-account-actions">
           <a class="button button-ghost" href="/api/workspace/export">${esc(t.app.export)}</a>
@@ -829,21 +734,24 @@ ${workspace ? `
       </section>
     </div>
     <div data-workspace-view="ledger" id="ledger" hidden>
-      <div class="shell workspace-heading ledger-heading"><h1>${esc(w.ledger)}</h1>${addMenu}</div>
+      <div class="shell workspace-heading ledger-heading"><h1>${esc(w.ledger)}</h1></div>
       ${workspaceNav([["income", t.app.income.title], ["expenses", t.app.expenses.title], ["fixed-costs", w.fixed], ["projects", t.app.projects.title]], "data-ledger-nav", w.ledgerNavigation)}
     </div>
     ` : ""}
 
-    <section class="app-section shell" id="projects" ${workspace ? 'data-ledger-panel hidden' : ""}>
+    <section class="app-section shell" id="projects" ${workspace ? "data-ledger-panel" : "data-guest-panel"} hidden>
       <div class="app-section-head">
         <h2>${esc(t.app.projects.title)}</h2>
         <p>${esc(t.app.projects.body)}</p>
+        ${entryLink("project-entry", t.app.projects.add)}
       </div>
-      <div class="app-grid">
-        <form class="app-form" data-project-form novalidate>
+      <div class="app-grid${workspace ? " ledger-list" : ""}">
+        ${entryDialog("project-entry", t.app.projects.add)}
+        <form class="app-form" data-project-form id="project-entry" novalidate>
           <label><span>${esc(t.app.projects.name)}</span><input data-project-name required></label>
           <button class="button button-dark" type="submit">${esc(t.app.projects.add)}</button>
         </form>
+        ${endEntryDialog}
         <div class="app-table-wrap">
           <table>
             <thead><tr><th>${esc(t.app.projects.name)}</th><th>${esc(t.app.projects.income)}</th><th>${esc(t.app.projects.costs)}</th><th>${esc(t.app.projects.profit)}</th><th>${esc(t.app.projects.actions)}</th></tr></thead>
@@ -853,12 +761,14 @@ ${workspace ? `
       </div>
     </section>
 
-    <section class="app-section shell" id="fixed-costs" ${workspace ? 'data-ledger-panel hidden' : ""}>
+    <section class="app-section shell" id="fixed-costs" ${workspace ? "data-ledger-panel" : "data-guest-panel"} hidden>
       <div class="app-section-head">
         <h2>${esc(t.app.fixed.title)}</h2>
         <p>${esc(t.app.fixed.body)}</p>
+        ${entryLink("fixed-cost-entry", t.app.fixed.add)}
       </div>
-      <div class="app-grid">
+      <div class="app-grid${workspace ? " ledger-list" : ""}">
+        ${entryDialog("fixed-cost-entry", t.app.fixed.add)}
         <form class="app-form" data-proto-form="fixed" id="fixed-cost-entry" novalidate>
           <label><span>${esc(t.app.fields.name)}</span><input name="name" required></label>
           <label><span>${esc(t.app.fields.amount)}</span><input name="amount" type="number" min="0" step="0.01" required></label>
@@ -891,6 +801,7 @@ ${workspace ? `
             <button class="button button-ghost" type="button" data-fixed-cancel hidden>${esc(t.app.fixedRevision.cancel)}</button>
           </div>
         </form>
+        ${endEntryDialog}
         <div class="app-table-wrap">
           <table>
             <thead><tr><th>${esc(t.app.table.name)}</th><th>${esc(t.app.table.type)}</th><th>${esc(t.app.table.cycle)}</th><th>${esc(t.app.table.amount)}</th><th>${esc(t.app.table.businessUse)}</th><th>${esc(t.app.table.project)}</th><th>${esc(t.app.table.effective)}</th><th>${esc(t.app.table.links)}</th><th>${esc(t.app.table.daily)}</th><th>${esc(t.app.table.review)}</th><th>${esc(t.app.table.actions)}</th></tr></thead>
@@ -900,12 +811,13 @@ ${workspace ? `
       </div>
     </section>
 
-    <section class="app-section shell" id="income" ${workspace ? 'data-ledger-panel hidden' : ""}>
+    <section class="app-section shell" id="income" ${workspace ? "data-ledger-panel" : "data-guest-panel"} hidden>
       <div class="app-section-head">
         <h2>${esc(t.app.income.title)}</h2>
         <p>${esc(t.app.income.body)}</p>
+        ${entryLink("income-entry", t.app.income.add)}
       </div>
-      <div class="app-grid">
+      <div class="app-grid${workspace ? " ledger-list" : ""}">
         ${isGuest ? `
         <form class="app-form app-settings-form" data-proto-form="settings" novalidate>
           <label><span>${esc(t.app.taxRateLabel)}</span><input name="taxReserveRate" type="number" min="0" max="100" step="0.1" placeholder="${esc(t.app.taxRatePlaceholder)}"></label>
@@ -916,6 +828,7 @@ ${workspace ? `
           <p class="app-note">${esc(t.app.taxReference)} ${esc(t.app.appleFeeNote)}</p>
         </form>
         ` : ""}
+        ${entryDialog("income-entry", t.app.income.add)}
         <form class="app-form" data-proto-form="income" id="income-entry" novalidate>
           <label><span>${esc(t.app.fields.amount)}</span><input name="amount" type="number" min="0" step="0.01" required></label>
           <label><span>${esc(t.app.fields.date)}</span><input name="date" type="date" required></label>
@@ -931,6 +844,7 @@ ${workspace ? `
           <button class="button button-dark" type="submit">${esc(t.app.income.add)}</button>
           ${workspace ? `<div class="workspace-save-feedback"><p class="form-message" data-workspace-message role="status" hidden></p><button type="button" class="text-link" data-undo-entry hidden>${esc(w.undo)}</button></div>` : ""}
         </form>
+        ${endEntryDialog}
         <div class="app-table-wrap">
           <table>
             <thead><tr><th>${esc(t.app.table.date)}</th><th>${esc(t.app.table.source)}</th><th>${esc(t.app.table.recognition)}</th><th>${esc(t.app.table.project)}</th><th>${esc(t.app.table.amount)}</th><th>${esc(t.app.table.fee)}</th><th>${esc(t.app.table.net)}</th><th>${esc(t.app.table.actions)}</th></tr></thead>
@@ -941,12 +855,14 @@ ${workspace ? `
       <p class="app-note">${esc(t.app.disclaimer)}</p>
     </section>
 
-    <section class="app-section shell" id="expenses" ${workspace ? 'data-ledger-panel hidden' : ""}>
+    <section class="app-section shell" id="expenses" ${workspace ? "data-ledger-panel" : "data-guest-panel"} hidden>
       <div class="app-section-head">
         <h2>${esc(t.app.expenses.title)}</h2>
         <p>${esc(t.app.expenses.body)}</p>
+        ${entryLink("expense-entry", t.app.expenses.add)}
       </div>
-      <div class="app-grid">
+      <div class="app-grid${workspace ? " ledger-list" : ""}">
+        ${entryDialog("expense-entry", t.app.expenses.add)}
         <form class="app-form" data-proto-form="expense" id="expense-entry" novalidate>
           <label><span>${esc(t.app.fields.amount)}</span><input name="amount" type="number" min="0" step="0.01" required></label>
           <label><span>${esc(t.app.fields.date)}</span><input name="date" type="date" required></label>
@@ -961,6 +877,7 @@ ${workspace ? `
           <button class="button button-dark" type="submit">${esc(t.app.expenses.add)}</button>
           ${workspace ? `<div class="workspace-save-feedback"><p class="form-message" data-workspace-message role="status" hidden></p><button type="button" class="text-link" data-undo-entry hidden>${esc(w.undo)}</button></div>` : ""}
         </form>
+        ${endEntryDialog}
         <div class="app-table-wrap">
           <table>
             <thead><tr><th>${esc(t.app.table.date)}</th><th>${esc(t.app.table.category)}</th><th>${esc(t.app.table.merchant)}</th><th>${esc(t.app.table.project)}</th><th>${esc(t.app.table.amount)}</th><th>${esc(t.app.table.businessUse)}</th><th>${esc(t.app.table.businessAmount)}</th><th>${esc(t.app.table.actions)}</th></tr></thead>
@@ -977,8 +894,8 @@ ${workspace ? `
       <a href="/${t.alternatePath}${workspace ? "dashboard" : "app"}">${esc(t.nav.switchTo)}</a>
     </div>
   </footer>
-  <script src="/app-ledger.js?v=20261121-01" defer></script>
-  <script src="/app.js" defer></script>
+  <script src="/app-ledger.js?v=20261121-02" defer></script>
+  <script src="/app.js?v=20261121-02" defer></script>
 </body>
 </html>`;
 };
@@ -988,24 +905,29 @@ const page = ({ locale, t, route = "" }) => {
   const copy = route ? t.marketingPages[route] : t.meta;
   const title = route ? `${copy.title} — GigLedger` : copy.title;
   const content = route === "product" ? `
-    <main id="main">
+    <main id="main" data-product-view>
       <section class="shell product-intro">
         <h1>${esc(copy.title)}</h1>
         <p>${esc(copy.description)}</p>
-        <a class="button button-orange" href="/${locale.folder}/app">${esc(t.nav.cta)}</a>
       </section>
-      ${featuresSection(t)}
-      ${productBlocksSection(t)}
-      ${stepsSection(t)}
-      ${audienceSection(t)}
-      ${honestySection(t)}
-      ${startSection(t)}
-    ` : route === "pricing" ? `<main id="main">${pricingSection(t)}` : `
-      ${hero(t, locale)}
-      ${dailySection(t)}
-      ${productLinks(t)}
-      ${faqSection(t)}
-    `;
+      <nav class="public-nav product-nav shell" aria-label="${esc(t.nav.features)}">
+        ${[["features", t.nav.features], ["daily", t.nav.daily], ["decisions", t.nav.examples], ["how", t.nav.how]].map(([key, name]) =>
+          `<a href="#${key}" data-product-tab="${key}"${key === "features" ? ' aria-current="location"' : ""}>${esc(name)}</a>`).join("")}
+      </nav>
+      <div data-product-panel="features">${featuresSection(t)}</div>
+      <div data-product-panel="daily" hidden>${dailySection(t)}</div>
+      <div data-product-panel="decisions" hidden>${productBlocksSection(t)}</div>
+      <div data-product-panel="how" hidden>
+        ${stepsSection(t)}
+        <details class="shell product-notes">
+          <summary>${esc(t.nav.about)}</summary>
+          ${audienceSection(t)}
+          ${honestySection(t)}
+        </details>
+      </div>
+    ` : route === "pricing" ? `<main id="main">${pricingSection(t)}`
+      : route === "faq" ? `<main id="main">${faqSection(t)}`
+      : hero(t, locale);
   return `<!doctype html>
 <html lang="${locale.htmlLang}" dir="${locale.dir}">
 <head>
@@ -1034,7 +956,7 @@ const page = ({ locale, t, route = "" }) => {
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="preload" href="/assets/logo-mark-192.png" as="image">
-  <link rel="stylesheet" href="/styles.css?v=20261121-01">
+  <link rel="stylesheet" href="/styles.css?v=20261121-02">
   <script type="application/ld+json">
   ${JSON.stringify({
     "@context": "https://schema.org",
@@ -1050,8 +972,8 @@ const page = ({ locale, t, route = "" }) => {
   <a class="skip-link" href="#main">${esc(t.skip)}</a>
   ${nav(t, locale, route)}
   ${content}
-  ${footer(t, route)}
-  <script src="/app.js" defer></script>
+  ${footer(t)}
+  <script src="/app.js?v=20261121-02" defer></script>
 </body>
 </html>`;
 };
@@ -1061,7 +983,7 @@ for (const locale of locales) {
   const folder = join(root, locale.folder);
   await mkdir(folder, { recursive: true });
   await writeFile(join(folder, "index.html"), cleanHtml(page({ locale, t })));
-  for (const route of ["product", "pricing"]) {
+  for (const route of ["product", "pricing", "faq"]) {
     await mkdir(join(folder, route), { recursive: true });
     await writeFile(join(folder, route, "index.html"), cleanHtml(page({ locale, t, route })));
   }
@@ -1102,7 +1024,7 @@ await writeFile(
 `,
 );
 
-const indexablePages = ["", "product/", "pricing/", "privacy", "tax-disclaimer"];
+const indexablePages = ["", "product/", "pricing/", "faq/", "privacy", "tax-disclaimer"];
 await writeFile(
   join(root, "sitemap.xml"),
   `<?xml version="1.0" encoding="UTF-8"?>
@@ -1129,7 +1051,7 @@ const publicFiles = [
   "app.js", "app-ledger.js", "styles.css", "proto.css",
   "assets/favicon-32.png", "assets/logo-mark-192.png", "assets/logo-mark-64.png", "assets/og.png",
   ...locales.flatMap(({ folder }) =>
-    ["index.html", "privacy.html", "tax-disclaimer.html", "app/index.html", "dashboard/index.html", "product/index.html", "pricing/index.html"]
+    ["index.html", "privacy.html", "tax-disclaimer.html", "app/index.html", "dashboard/index.html", "product/index.html", "pricing/index.html", "faq/index.html"]
       .map((name) => join(folder, name)),
   ),
 ];
@@ -1140,9 +1062,9 @@ for (const name of publicFiles) {
   await copyFile(join(root, name), destination);
 }
 await writeFile(join(dist, "404.html"),
-  '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Page not found | GigLedger</title><link rel="stylesheet" href="/styles.css?v=20261119-01"></head><body><main class="shell"><h1>404</h1><p>Page not found. <span lang="zh-Hant-TW">找不到頁面。</span></p><p><a class="text-link" href="/en/">Home</a> · <a class="text-link" href="/zh-TW/" lang="zh-Hant-TW">回首頁</a></p></main></body></html>\n',
+  '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Page not found | GigLedger</title><link rel="stylesheet" href="/styles.css?v=20261121-02"></head><body><main class="shell"><h1>404</h1><p>Page not found. <span lang="zh-Hant-TW">找不到頁面。</span></p><p><a class="text-link" href="/en/">Home</a> · <a class="text-link" href="/zh-TW/" lang="zh-Hant-TW">回首頁</a></p></main></body></html>\n',
 );
 
 console.log(
-  `Built ${locales.length * 7} pages with ${Object.keys(messages).length} locales.`,
+  `Built ${locales.length * 8} pages with ${Object.keys(messages).length} locales.`,
 );

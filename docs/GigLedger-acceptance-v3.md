@@ -120,7 +120,7 @@ All product calculations use USD and allow a tolerance of `$0.01`.
 | AF-70 | 11 no hidden downgrade | Downgrading does not delete existing subscriptions | Pass | Downgrading from Pro to free preserved all five existing subscriptions; the limit only blocked new additions. |
 | AF-71 | 5.4 secrets | Credentials are never written to application logs | Partial | Production canary requests used a randomly generated string as both a fake Stripe key and the body of a fake `.p8`; both returned `400`, no canary plaintext appeared in the `integrations` table, and no application source logs request bodies or decrypted credentials. D1 was restored to its pre-canary Time Travel bookmark and the existing test integration row was confirmed unchanged. Deployment log capture could not be completed: Wrangler `pages deployment tail` failed with `ECONNRESET` / direct `ECONNREFUSED`, while the Cloudflare REST tail session opened but its WebSocket never established. This remains Partial until the deployment log is checked from a network or Cloudflare dashboard that can hold the tail connection. |
 | AF-72 | 5.4 App Store sync | App Store report sync either imports real data or states it is unavailable | Pass | The endpoint intentionally returns `501 app_store_report_sync_not_configured`; the UI tells the user no report data will be imported. |
-| AF-73 | 13 marketing | Website has AI subscription review, cash runway, sync Coming soon, sample share card, and Free/Pro blocks | Pass | A shorter home links to bilingual product and pricing pages. Product details explain AI subscriptions, runway, sync status, and share cards. Pricing remains TBD. |
+| AF-73 | 13 marketing | Website has AI subscription review, cash runway, sync Coming soon, sample share card, and Free/Pro blocks | Pass | The compact home links directly to bilingual product, pricing, and FAQ pages. Product details switch between feature, daily floor, example, and onboarding panels. Pricing remains TBD. |
 | AF-74 | 13 marketing | No ambiguous monthly-view reports copy; all CTAs are locale-aware | Pass | The site describes income CSV export. Pricing CTAs link to the localized calculator and Google sign-in. |
 
 ## Known Gaps To Track
@@ -160,7 +160,7 @@ These are real PRD gaps, not accepted excuses. They are listed here so the next 
 Before treating this matrix as release evidence:
 
 - `node --check` must pass for `app-ledger.js`, `functions/api/workspace.js`, `functions/lib/ledger.js`, and integration handlers.
-- `node scripts/build.mjs` must report `Built 14 pages with 2 locales.`
+- `node scripts/build.mjs` must report `Built 16 pages with 2 locales.`
 - `wrangler pages functions build` must complete without syntax errors.
 - `git diff --check` must be clean.
 - The production deployment must be exercised with `ego-browser`, not Chrome.

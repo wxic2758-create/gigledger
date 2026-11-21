@@ -19,6 +19,12 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://gigledger.xyz/en/pricing/"/>
   </url>
   <url>
+    <loc>https://gigledger.xyz/en/faq/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://gigledger.xyz/en/faq/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant-TW" href="https://gigledger.xyz/zh-TW/faq/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://gigledger.xyz/en/faq/"/>
+  </url>
+  <url>
     <loc>https://gigledger.xyz/en/privacy</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://gigledger.xyz/en/privacy"/>
     <xhtml:link rel="alternate" hreflang="zh-Hant-TW" href="https://gigledger.xyz/zh-TW/privacy"/>
@@ -47,6 +53,12 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://gigledger.xyz/en/pricing/"/>
     <xhtml:link rel="alternate" hreflang="zh-Hant-TW" href="https://gigledger.xyz/zh-TW/pricing/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://gigledger.xyz/en/pricing/"/>
+  </url>
+  <url>
+    <loc>https://gigledger.xyz/zh-TW/faq/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://gigledger.xyz/en/faq/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant-TW" href="https://gigledger.xyz/zh-TW/faq/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://gigledger.xyz/en/faq/"/>
   </url>
   <url>
     <loc>https://gigledger.xyz/zh-TW/privacy</loc>

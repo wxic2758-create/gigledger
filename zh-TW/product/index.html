@@ -17,7 +17,7 @@
   <meta property="og:image" content="https://gigledger.xyz/assets/og.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="GigLedger 儀表板預覽，包含範例收入、固定成本、實際利潤、預留稅款與現金跑道。">
+  <meta property="og:image:alt" content="總覽範例，顯示每日底線、本月實際利潤與現金可支撐天數。">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="https://gigledger.xyz/assets/og.png">
   <meta name="theme-color" content="#f7f1e7">
@@ -26,7 +26,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="preload" href="/assets/logo-mark-192.png" as="image">
-  <link rel="stylesheet" href="/styles.css?v=20261121-01">
+  <link rel="stylesheet" href="/styles.css?v=20261121-02">
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"WebSite","name":"GigLedger","url":"https://gigledger.xyz/","inLanguage":["zh-Hant-TW"],"description":"記錄收入與成本，看清每日底線，以及每個月實際留下多少。"}
   </script>
@@ -34,14 +34,13 @@
 <body class="locale-zh-tw site-detail">
   <a class="skip-link" href="#main">跳至主要內容</a>
 
-  <header class="site-header">
+  <header class="site-header public-header">
     <div class="shell header-inner">
 
   <a class="brand" href="/zh-TW/">
     <img class="brand-mark" src="/assets/logo-mark-192.png" alt="" width="42" height="42">
     <span class="brand-word"><b>Gig</b>Ledger</span>
   </a>
-      <nav class="desktop-nav" aria-label="主要導覽"><a href="/zh-TW/product/" aria-current="page">功能</a><a href="/zh-TW/pricing/">方案</a><a href="/zh-TW/#faq">常見問題</a></nav>
       <div class="header-actions">
 
     <a class="lang-switch" href="/en/product/" hreflang="en" lang="en">
@@ -49,29 +48,20 @@
       <span class="lang-short">EN</span>
     </a>
         <a class="button button-small button-orange" href="/zh-TW/app">開啟計算器</a>
-        <button class="menu-button" type="button" aria-expanded="false" aria-controls="mobileNav" aria-label="開啟選單">
-          <span></span><span></span>
-        </button>
       </div>
     </div>
-    <nav class="mobile-nav" id="mobileNav" aria-label="主要導覽">
-      <a href="/zh-TW/product/" aria-current="page">功能</a><a href="/zh-TW/pricing/">方案</a><a href="/zh-TW/#faq">常見問題</a>
-      <a href="/zh-TW/app">開啟計算器</a>
-
-    <a class="lang-switch" href="/en/product/" hreflang="en" lang="en">
-      <span class="lang-full">English</span>
-      <span class="lang-short">EN</span>
-    </a>
-    </nav>
+    <nav class="public-nav shell" aria-label="主要導覽"><a href="/zh-TW/">首頁</a><a href="/zh-TW/product/" aria-current="page">功能</a><a href="/zh-TW/pricing/">方案</a><a href="/zh-TW/faq/">常見問題</a></nav>
   </header>
 
-    <main id="main">
+    <main id="main" data-product-view>
       <section class="shell product-intro">
         <h1>GigLedger 運作方式</h1>
         <p>記錄收入與成本，看清每日底線，以及每個月實際留下多少。</p>
-        <a class="button button-orange" href="/zh-TW/app">開啟計算器</a>
       </section>
-
+      <nav class="public-nav product-nav shell" aria-label="功能">
+        <a href="#features" data-product-tab="features" aria-current="location">功能</a><a href="#daily" data-product-tab="daily">每日底線</a><a href="#decisions" data-product-tab="decisions">使用範例</a><a href="#how" data-product-tab="how">運作方式</a>
+      </nav>
+      <div data-product-panel="features">
     <section class="features-section" id="features">
       <div class="shell">
         <div class="section-head">
@@ -108,8 +98,30 @@
             </article>
         </div>
       </div>
-    </section>
+    </section></div>
+      <div data-product-panel="daily" hidden>
+    <section class="daily-section" id="daily">
+      <div class="shell daily-grid">
+        <div class="section-copy">
+          <div class="section-index"><span>01</span><div></div><p>每日數字</p><span class="section-name">01 · 為什麼</span></div>
+          <h2>你的每日底線。</h2>
+          <p>AI 工具、軟體、租金。不管你這個月有沒有出貨，這些成本都照樣在跑。GigLedger 把它們換算成一個能採取行動的數字：你的每日底線。</p>
+          <strong class="aside-note">以下為四捨五入示意。精確範例：每月營業固定成本 $900，營業使用比例 100%。</strong>
+        </div>
+        <div class="daily-card">
+          <p class="daily-kicker">每日數字</p>
+          <div class="big-number">$29.59<span>每天</span></div>
+          <p class="formula">每月固定成本 × 12 ÷ 365</p>
+          <div class="daily-list">
 
+              <div><span>共享空間</span><strong>約 $18 / 天</strong></div>
+              <div><span>軟體</span><strong>約 $7 / 天</strong></div>
+              <div><span>保險</span><strong>約 $5 / 天</strong></div>
+          </div>
+        </div>
+      </div>
+    </section></div>
+      <div data-product-panel="decisions" hidden>
     <section class="product-blocks" id="decisions">
       <div class="shell">
         <div class="section-head">
@@ -148,7 +160,8 @@
           </article>
         </div>
       </div>
-    </section>
+    </section></div>
+      <div data-product-panel="how" hidden>
 
     <section class="steps-section" id="how">
       <div class="shell steps-grid">
@@ -173,6 +186,8 @@
         </ol>
       </div>
     </section>
+        <details class="shell product-notes">
+          <summary>適合誰使用與資料處理方式</summary>
 
     <section class="audience-section">
       <div class="shell">
@@ -220,56 +235,20 @@
         </div>
       </div>
     </section>
-
-    <section class="waitlist-section" id="start">
-      <div class="shell waitlist-grid">
-        <div>
-          <p class="kicker">三分鐘開始</p>
-          <h2>下一張發票之前，先知道真正的數字。</h2>
-          <p>先不登入試算。數字有幫助時，再用 Google 登入並保存到你的帳本。</p>
-        </div>
-        <div class="waitlist-panel">
-          <div class="start-actions">
-            <a class="button button-orange" href="/zh-TW/app">計算每日底線 <span aria-hidden="true">→</span></a>
-            <a class="button button-ghost" href="/api/auth/google?locale=zh-TW">使用 Google 登入</a>
-          </div>
-          <p class="form-note">未保存的試算只會留在目前頁面。 · <a href="/zh-TW/privacy">隱私說明</a></p>
-        </div>
+        </details>
       </div>
-    </section>
 
 
   </main>
-  <footer class="site-footer">
-    <div class="shell footer-top">
-      <div>
-
-  <a class="brand" href="/zh-TW/">
-    <img class="brand-mark" src="/assets/logo-mark-192.png" alt="" width="42" height="42">
-    <span class="brand-word"><b>Gig</b>Ledger</span>
-  </a>
-        <p class="footer-tagline">一人公司的每日成本與真實利潤。</p>
-        <p class="footer-status">上線前預覽</p>
-      </div>
-      <div class="footer-links">
-        <div>
-          <p class="footer-heading">產品</p>
-          <a href="/zh-TW/product/">功能</a>
-          <a href="/zh-TW/pricing/">方案</a>
-          <a href="/zh-TW/#faq">常見問題</a>
-        </div>
-        <div>
-          <p class="footer-heading">法律</p>
-          <a href="/zh-TW/privacy">隱私</a>
-          <a href="/zh-TW/tax-disclaimer">稅務免責</a>
-        </div>
-      </div>
-    </div>
-    <div class="shell footer-bottom">
+  <footer class="site-footer public-footer">
+    <div class="shell public-footer-row">
       <p>© 2026 GigLedger. 保留所有權利。</p>
-      <a href="/en/product/">English</a>
+      <nav aria-label="法律">
+        <a href="/zh-TW/privacy">隱私</a>
+        <a href="/zh-TW/tax-disclaimer">稅務免責</a>
+      </nav>
     </div>
   </footer>
-  <script src="/app.js" defer></script>
+  <script src="/app.js?v=20261121-02" defer></script>
 </body>
 </html>

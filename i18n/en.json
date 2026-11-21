@@ -25,7 +25,11 @@
     "features": "Features",
     "pricing": "Pricing",
     "jump": "Jump to",
-    "openCalculator": "Open calculator"
+    "openCalculator": "Open calculator",
+    "home": "Home",
+    "daily": "Daily floor",
+    "examples": "Examples",
+    "about": "Who it is for and how data is handled"
   },
   "hero": {
     "kicker": "For one-person companies",
@@ -40,7 +44,7 @@
       "Estimates, not tax advice"
     ],
     "sampleLabel": "Sample data",
-    "visualAria": "GigLedger dashboard preview with sample income, fixed costs, true profit, tax reserve, and runway."
+    "visualAria": "Example overview showing the daily cost floor, monthly profit, and cash runway."
   },
   "dashboard": {
     "title": "Dashboard",
@@ -746,7 +750,11 @@
       "retry": "Try again",
       "saving": "Saving…",
       "runwayDays": "{days} days",
-      "runwayWithHistory": "{days} days based on {months} full month(s) of income"
+      "runwayWithHistory": "{days} days based on {months} full month(s) of income",
+      "calculator": "Calculator",
+      "closeEntry": "Close",
+      "transfers": "CSV",
+      "connections": "Connections"
     }
   },
   "start": {
@@ -834,6 +842,10 @@
     "pricing": {
       "title": "Plans",
       "description": "Compare the GigLedger calculator, manual ledger and Pro tools during private beta."
+    },
+    "faq": {
+      "title": "Frequently asked questions",
+      "description": "Find answers about the ledger, account data, subscriptions and integrations."
     }
   }
 }

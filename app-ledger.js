@@ -1005,11 +1005,13 @@
     const revisionMessage = fixedForm.querySelector("[data-fixed-edit-message]");
     const submitButton = fixedForm.querySelector("[data-fixed-submit]");
     const cancelButton = fixedForm.querySelector("[data-fixed-cancel]");
+    const dialogTitle = fixedForm.closest("dialog")?.querySelector("h3");
     const setRevisionMode = (item = null) => {
       editingFixedCostId = item?.id || null;
       revisionDate.hidden = !item;
       cancelButton.hidden = !item;
       submitButton.textContent = item ? messages.fixedRevision.save : messages.fixed.add;
+      if (dialogTitle) dialogTitle.textContent = item ? messages.fixedRevision.title : messages.fixed.add;
       revisionMessage.hidden = true;
       if (item) {
         fixedForm.elements.name.value = item.name;
@@ -1037,7 +1039,7 @@
       }
       const subscriptionFields = fixedForm.querySelector("[data-subscription-fields]");
       if (subscriptionFields) subscriptionFields.hidden = !fixedForm.elements.isSubscription.checked;
-      fixedForm.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (!dashboardMode) fixedForm.scrollIntoView({ behavior: "smooth", block: "start" });
     };
     fixedForm.elements.isSubscription?.addEventListener("change", () => {
       const subscriptionFields = fixedForm.querySelector("[data-subscription-fields]");
@@ -1184,7 +1186,9 @@
       const button = event.target.closest("[data-edit-fixed]");
       if (!button) return;
       const item = state.fixedCosts.find((cost) => cost.id === button.dataset.entryId);
-      if (item) setRevisionMode(item);
+      if (!item) return;
+      setRevisionMode(item);
+      if (dashboardMode) window.location.hash = "fixed-cost-entry";
     });
   }
 
@@ -1629,40 +1633,81 @@
     setTimeout(() => { button.textContent = original; }, 1800);
   });
 
+  const ledgerSections = {
+    ledger: "income", income: "income", "income-entry": "income",
+    expenses: "expenses", "expense-entry": "expenses", projects: "projects",
+    "project-entry": "projects", "fixed-costs": "fixed-costs", "fixed-cost-entry": "fixed-costs",
+  };
+  const syncActiveLinks = (selector, key, attribute, current = "location") => {
+    for (const link of document.querySelectorAll(selector)) {
+      if (link.dataset[attribute] === key) link.setAttribute("aria-current", current);
+      else link.removeAttribute("aria-current");
+    }
+  };
+  const focusHeading = (node) => {
+    if (node && !node.matches("input")) node.tabIndex = -1;
+    node?.focus({ preventScroll: true });
+  };
   const workspaceRoute = (moveFocus = true) => {
     const hash = window.location.hash.slice(1);
-    const ledgerSections = {
-      ledger: "income", income: "income", "income-entry": "income",
-      expenses: "expenses", "expense-entry": "expenses", projects: "projects",
-      "fixed-costs": "fixed-costs", "fixed-cost-entry": "fixed-costs",
-    };
     const ledgerSection = Object.hasOwn(ledgerSections, hash) ? ledgerSections[hash] : null;
-    const settings = ["settings", "sources", "cash-settings", "stripe-connect", "app-store-connect"].includes(hash);
-    const view = ledgerSection ? "ledger" : settings ? "settings" : "overview";
+    const settingsSections = {
+      settings: "planning", planning: "planning", "cash-settings": "planning",
+      csv: "csv", sources: "sources", "stripe-connect": "sources",
+      "app-store-connect": "sources", account: "account",
+    };
+    const settingsSection = Object.hasOwn(settingsSections, hash) ? settingsSections[hash] : null;
+    const view = ledgerSection ? "ledger" : settingsSection ? "settings" : "overview";
+    const dialogs = [...document.querySelectorAll("[data-entry-dialog]")];
+    for (const dialog of dialogs) {
+      if (dialog.open && dialog.dataset.entryDialog !== hash) dialog.close();
+    }
     document.querySelectorAll("[data-workspace-view]").forEach((node) => {
       node.hidden = node.dataset.workspaceView !== view;
     });
     document.querySelectorAll("[data-ledger-panel]").forEach((node) => {
       node.hidden = node.id !== ledgerSection;
     });
-    const currentPage = view === "overview" ? "dashboard" : view;
-    for (const link of document.querySelectorAll("[data-workspace-nav], [data-ledger-nav]")) {
-      const selected = link.dataset.workspaceNav ? currentPage === link.dataset.workspaceNav : ledgerSection === link.dataset.ledgerNav;
-      if (selected) link.setAttribute("aria-current", link.dataset.workspaceNav ? "page" : "location");
-      else link.removeAttribute("aria-current");
-    }
+    document.querySelectorAll("[data-settings-panel]").forEach((node) => {
+      node.hidden = node.id !== settingsSection;
+    });
+    syncActiveLinks("[data-workspace-nav]", view === "overview" ? "dashboard" : view, "workspaceNav", "page");
+    syncActiveLinks("[data-ledger-nav]", ledgerSection, "ledgerNav");
+    syncActiveLinks("[data-settings-nav]", settingsSection, "settingsNav");
     document.querySelectorAll("[data-add-menu][open]").forEach((node) => { node.open = false; });
-    if (!moveFocus || !workspaceReady) return;
-    const entry = ["income-entry", "expense-entry", "fixed-cost-entry"].includes(hash);
-    const anchor = entry || ["sources", "cash-settings", "stripe-connect", "app-store-connect"].includes(hash)
-      ? document.getElementById(hash) : document.querySelector(`[data-workspace-view="${view}"] h1`);
-    if (!anchor) return;
-    const focusTarget = entry ? anchor.querySelector("input[name='amount'], input[name='name']") : anchor;
-    if (focusTarget) {
-      if (!focusTarget.matches("input")) focusTarget.tabIndex = -1;
-      focusTarget.focus({ preventScroll: true });
+    if (!workspaceReady) return;
+    const entryDialog = dialogs.find((dialog) => dialog.dataset.entryDialog === hash);
+    if (entryDialog) {
+      if (!entryDialog.open) {
+        window.scrollTo({ top: 0, behavior: "instant" });
+        entryDialog.showModal();
+        entryDialog.querySelector(".app-form input")?.focus();
+      }
+      return;
     }
-    anchor.scrollIntoView({ block: "start", behavior: "instant" });
+    if (!moveFocus) return;
+    window.scrollTo({ top: 0, behavior: "instant" });
+    const target = hash === "cash-settings"
+      ? document.getElementById(hash)
+      : document.getElementById(ledgerSection || settingsSection)?.querySelector("h2")
+        || document.querySelector(`[data-workspace-view="${view}"] h1`);
+    focusHeading(target);
+  };
+
+  const guestRoute = (moveFocus = true) => {
+    const hash = window.location.hash.slice(1);
+    const panel = Object.hasOwn(ledgerSections, hash) ? ledgerSections[hash]
+      : ["dashboard", "how-it-works"].includes(hash) ? hash : null;
+    flowSection.hidden = Boolean(panel);
+    document.querySelector("[data-guest-ledger-nav]").closest("nav").hidden = !panel;
+    document.querySelector("[data-guest-actions]").hidden = !panel;
+    document.querySelectorAll("[data-guest-panel]").forEach((node) => { node.hidden = node.id !== panel; });
+    syncActiveLinks("[data-guest-nav]", panel ? "dashboard" : "onboarding", "guestNav", "page");
+    syncActiveLinks("[data-guest-ledger-nav]", panel, "guestLedgerNav");
+    if (moveFocus) {
+      window.scrollTo({ top: 0, behavior: "instant" });
+      focusHeading((panel ? document.getElementById(panel) : flowSection)?.querySelector("h1, h2"));
+    }
   };
 
   const loadDashboard = async () => {
@@ -2116,8 +2161,22 @@
   if (dashboardMode) {
     window.addEventListener("hashchange", () => workspaceRoute());
     document.addEventListener("click", (event) => {
-      const quickLink = event.target.closest("[data-add-menu] a");
+      const quickLink = event.target.closest("[data-add-menu] a, .entry-link-button");
       if (quickLink?.hash === window.location.hash) workspaceRoute();
+    });
+    document.querySelectorAll("[data-entry-dialog]").forEach((dialog) => {
+      const id = dialog.dataset.entryDialog;
+      const dismiss = () => {
+        const wasEntry = window.location.hash === `#${id}`;
+        if (wasEntry) history.replaceState(history.state, "", `#${ledgerSections[id]}`);
+        if (dialog.open) dialog.close();
+        if (wasEntry) document.querySelector(`.entry-link-button[href="#${id}"]`)?.focus({ preventScroll: true });
+      };
+      dialog.querySelector("[data-close-entry]").addEventListener("click", dismiss);
+      dialog.addEventListener("close", () => {
+        if (id === "fixed-cost-entry" && editingFixedCostId) fixedForm.querySelector("[data-fixed-cancel]").click();
+        if (window.location.hash === `#${id}`) dismiss();
+      });
     });
     document.querySelector("[data-workspace-retry]").addEventListener("click", loadDashboard);
     document.querySelectorAll("[data-workspace-period]").forEach((button) => {
@@ -2129,6 +2188,9 @@
         renderMetrics();
       });
     });
+  } else {
+    window.addEventListener("hashchange", () => guestRoute());
+    guestRoute(Boolean(window.location.hash));
   }
 
   loadDashboard().finally(() => {

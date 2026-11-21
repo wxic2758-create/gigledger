@@ -17,7 +17,7 @@
   <meta property="og:image" content="https://gigledger.xyz/assets/og.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="GigLedger dashboard preview with sample income, fixed costs, true profit, tax reserve, and runway.">
+  <meta property="og:image:alt" content="Example overview showing the daily cost floor, monthly profit, and cash runway.">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="https://gigledger.xyz/assets/og.png">
   <meta name="theme-color" content="#f7f1e7">
@@ -26,7 +26,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="preload" href="/assets/logo-mark-192.png" as="image">
-  <link rel="stylesheet" href="/styles.css?v=20261121-01">
+  <link rel="stylesheet" href="/styles.css?v=20261121-02">
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"WebSite","name":"GigLedger","url":"https://gigledger.xyz/","inLanguage":["en"],"description":"Track income and costs, see your daily cost floor, and understand what is left each month."}
   </script>
@@ -34,14 +34,13 @@
 <body class="locale-en site-detail">
   <a class="skip-link" href="#main">Skip to content</a>
 
-  <header class="site-header">
+  <header class="site-header public-header">
     <div class="shell header-inner">
 
   <a class="brand" href="/en/">
     <img class="brand-mark" src="/assets/logo-mark-192.png" alt="" width="42" height="42">
     <span class="brand-word"><b>Gig</b>Ledger</span>
   </a>
-      <nav class="desktop-nav" aria-label="Primary navigation"><a href="/en/product/" aria-current="page">Features</a><a href="/en/pricing/">Pricing</a><a href="/en/#faq">FAQ</a></nav>
       <div class="header-actions">
 
     <a class="lang-switch" href="/zh-TW/product/" hreflang="zh-Hant-TW" lang="zh-Hant-TW">
@@ -49,29 +48,20 @@
       <span class="lang-short">繁中</span>
     </a>
         <a class="button button-small button-orange" href="/en/app">Open calculator</a>
-        <button class="menu-button" type="button" aria-expanded="false" aria-controls="mobileNav" aria-label="Open menu">
-          <span></span><span></span>
-        </button>
       </div>
     </div>
-    <nav class="mobile-nav" id="mobileNav" aria-label="Primary navigation">
-      <a href="/en/product/" aria-current="page">Features</a><a href="/en/pricing/">Pricing</a><a href="/en/#faq">FAQ</a>
-      <a href="/en/app">Open calculator</a>
-
-    <a class="lang-switch" href="/zh-TW/product/" hreflang="zh-Hant-TW" lang="zh-Hant-TW">
-      <span class="lang-full">繁體中文</span>
-      <span class="lang-short">繁中</span>
-    </a>
-    </nav>
+    <nav class="public-nav shell" aria-label="Primary navigation"><a href="/en/">Home</a><a href="/en/product/" aria-current="page">Features</a><a href="/en/pricing/">Pricing</a><a href="/en/faq/">FAQ</a></nav>
   </header>
 
-    <main id="main">
+    <main id="main" data-product-view>
       <section class="shell product-intro">
         <h1>How GigLedger works</h1>
         <p>Track income and costs, see your daily cost floor, and understand what is left each month.</p>
-        <a class="button button-orange" href="/en/app">Open calculator</a>
       </section>
-
+      <nav class="public-nav product-nav shell" aria-label="Features">
+        <a href="#features" data-product-tab="features" aria-current="location">Features</a><a href="#daily" data-product-tab="daily">Daily floor</a><a href="#decisions" data-product-tab="decisions">Examples</a><a href="#how" data-product-tab="how">How it works</a>
+      </nav>
+      <div data-product-panel="features">
     <section class="features-section" id="features">
       <div class="shell">
         <div class="section-head">
@@ -108,8 +98,30 @@
             </article>
         </div>
       </div>
-    </section>
+    </section></div>
+      <div data-product-panel="daily" hidden>
+    <section class="daily-section" id="daily">
+      <div class="shell daily-grid">
+        <div class="section-copy">
+          <div class="section-index"><span>01</span><div></div><p>The daily number</p><span class="section-name">01 · Why</span></div>
+          <h2>Your daily floor.</h2>
+          <p>AI tools. Software. Rent. The costs that keep running whether you ship or not. GigLedger turns them into one number you can act on: your Daily Floor.</p>
+          <strong class="aside-note">Rounded illustration. Exact example: $900 in monthly business fixed costs at 100% business use.</strong>
+        </div>
+        <div class="daily-card">
+          <p class="daily-kicker">The daily number</p>
+          <div class="big-number">$29.59<span>per day</span></div>
+          <p class="formula">Monthly fixed costs × 12 ÷ 365</p>
+          <div class="daily-list">
 
+              <div><span>Coworking</span><strong>about $18 / day</strong></div>
+              <div><span>Software</span><strong>about $7 / day</strong></div>
+              <div><span>Insurance</span><strong>about $5 / day</strong></div>
+          </div>
+        </div>
+      </div>
+    </section></div>
+      <div data-product-panel="decisions" hidden>
     <section class="product-blocks" id="decisions">
       <div class="shell">
         <div class="section-head">
@@ -148,7 +160,8 @@
           </article>
         </div>
       </div>
-    </section>
+    </section></div>
+      <div data-product-panel="how" hidden>
 
     <section class="steps-section" id="how">
       <div class="shell steps-grid">
@@ -173,6 +186,8 @@
         </ol>
       </div>
     </section>
+        <details class="shell product-notes">
+          <summary>Who it is for and how data is handled</summary>
 
     <section class="audience-section">
       <div class="shell">
@@ -220,56 +235,20 @@
         </div>
       </div>
     </section>
-
-    <section class="waitlist-section" id="start">
-      <div class="shell waitlist-grid">
-        <div>
-          <p class="kicker">Start in three minutes</p>
-          <h2>Know your real number before the next invoice.</h2>
-          <p>Try the calculator without an account. When the result looks useful, sign in with Google to save it to your ledger.</p>
-        </div>
-        <div class="waitlist-panel">
-          <div class="start-actions">
-            <a class="button button-orange" href="/en/app">Calculate your Daily Floor <span aria-hidden="true">→</span></a>
-            <a class="button button-ghost" href="/api/auth/google?locale=en">Sign in with Google</a>
-          </div>
-          <p class="form-note">Unsaved calculations stay on the current page only. · <a href="/en/privacy">Privacy notice</a></p>
-        </div>
+        </details>
       </div>
-    </section>
 
 
   </main>
-  <footer class="site-footer">
-    <div class="shell footer-top">
-      <div>
-
-  <a class="brand" href="/en/">
-    <img class="brand-mark" src="/assets/logo-mark-192.png" alt="" width="42" height="42">
-    <span class="brand-word"><b>Gig</b>Ledger</span>
-  </a>
-        <p class="footer-tagline">Daily cost and real profit for a one-person company.</p>
-        <p class="footer-status">Pre-launch preview</p>
-      </div>
-      <div class="footer-links">
-        <div>
-          <p class="footer-heading">Product</p>
-          <a href="/en/product/">Features</a>
-          <a href="/en/pricing/">Pricing</a>
-          <a href="/en/#faq">FAQ</a>
-        </div>
-        <div>
-          <p class="footer-heading">Legal</p>
-          <a href="/en/privacy">Privacy</a>
-          <a href="/en/tax-disclaimer">Tax disclaimer</a>
-        </div>
-      </div>
-    </div>
-    <div class="shell footer-bottom">
+  <footer class="site-footer public-footer">
+    <div class="shell public-footer-row">
       <p>© 2026 GigLedger. All rights reserved.</p>
-      <a href="/zh-TW/product/">繁體中文</a>
+      <nav aria-label="Legal">
+        <a href="/en/privacy">Privacy</a>
+        <a href="/en/tax-disclaimer">Tax disclaimer</a>
+      </nav>
     </div>
   </footer>
-  <script src="/app.js" defer></script>
+  <script src="/app.js?v=20261121-02" defer></script>
 </body>
 </html>

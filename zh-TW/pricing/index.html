@@ -17,7 +17,7 @@
   <meta property="og:image" content="https://gigledger.xyz/assets/og.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="GigLedger 儀表板預覽，包含範例收入、固定成本、實際利潤、預留稅款與現金跑道。">
+  <meta property="og:image:alt" content="總覽範例，顯示每日底線、本月實際利潤與現金可支撐天數。">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="https://gigledger.xyz/assets/og.png">
   <meta name="theme-color" content="#f7f1e7">
@@ -26,7 +26,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="preload" href="/assets/logo-mark-192.png" as="image">
-  <link rel="stylesheet" href="/styles.css?v=20261121-01">
+  <link rel="stylesheet" href="/styles.css?v=20261121-02">
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"WebSite","name":"GigLedger","url":"https://gigledger.xyz/","inLanguage":["zh-Hant-TW"],"description":"比較封閉測試期間的 GigLedger 計算器、手動帳本與 Pro 功能。"}
   </script>
@@ -34,14 +34,13 @@
 <body class="locale-zh-tw site-detail">
   <a class="skip-link" href="#main">跳至主要內容</a>
 
-  <header class="site-header">
+  <header class="site-header public-header">
     <div class="shell header-inner">
 
   <a class="brand" href="/zh-TW/">
     <img class="brand-mark" src="/assets/logo-mark-192.png" alt="" width="42" height="42">
     <span class="brand-word"><b>Gig</b>Ledger</span>
   </a>
-      <nav class="desktop-nav" aria-label="主要導覽"><a href="/zh-TW/product/">功能</a><a href="/zh-TW/pricing/" aria-current="page">方案</a><a href="/zh-TW/#faq">常見問題</a></nav>
       <div class="header-actions">
 
     <a class="lang-switch" href="/en/pricing/" hreflang="en" lang="en">
@@ -49,20 +48,9 @@
       <span class="lang-short">EN</span>
     </a>
         <a class="button button-small button-orange" href="/zh-TW/app">開啟計算器</a>
-        <button class="menu-button" type="button" aria-expanded="false" aria-controls="mobileNav" aria-label="開啟選單">
-          <span></span><span></span>
-        </button>
       </div>
     </div>
-    <nav class="mobile-nav" id="mobileNav" aria-label="主要導覽">
-      <a href="/zh-TW/product/">功能</a><a href="/zh-TW/pricing/" aria-current="page">方案</a><a href="/zh-TW/#faq">常見問題</a>
-      <a href="/zh-TW/app">開啟計算器</a>
-
-    <a class="lang-switch" href="/en/pricing/" hreflang="en" lang="en">
-      <span class="lang-full">English</span>
-      <span class="lang-short">EN</span>
-    </a>
-    </nav>
+    <nav class="public-nav shell" aria-label="主要導覽"><a href="/zh-TW/">首頁</a><a href="/zh-TW/product/">功能</a><a href="/zh-TW/pricing/" aria-current="page">方案</a><a href="/zh-TW/faq/">常見問題</a></nav>
   </header>
   <main id="main">
     <section class="shell standalone-pricing">
@@ -91,36 +79,15 @@
     </section>
 
   </main>
-  <footer class="site-footer">
-    <div class="shell footer-top">
-      <div>
-
-  <a class="brand" href="/zh-TW/">
-    <img class="brand-mark" src="/assets/logo-mark-192.png" alt="" width="42" height="42">
-    <span class="brand-word"><b>Gig</b>Ledger</span>
-  </a>
-        <p class="footer-tagline">一人公司的每日成本與真實利潤。</p>
-        <p class="footer-status">上線前預覽</p>
-      </div>
-      <div class="footer-links">
-        <div>
-          <p class="footer-heading">產品</p>
-          <a href="/zh-TW/product/">功能</a>
-          <a href="/zh-TW/pricing/">方案</a>
-          <a href="/zh-TW/#faq">常見問題</a>
-        </div>
-        <div>
-          <p class="footer-heading">法律</p>
-          <a href="/zh-TW/privacy">隱私</a>
-          <a href="/zh-TW/tax-disclaimer">稅務免責</a>
-        </div>
-      </div>
-    </div>
-    <div class="shell footer-bottom">
+  <footer class="site-footer public-footer">
+    <div class="shell public-footer-row">
       <p>© 2026 GigLedger. 保留所有權利。</p>
-      <a href="/en/pricing/">English</a>
+      <nav aria-label="法律">
+        <a href="/zh-TW/privacy">隱私</a>
+        <a href="/zh-TW/tax-disclaimer">稅務免責</a>
+      </nav>
     </div>
   </footer>
-  <script src="/app.js" defer></script>
+  <script src="/app.js?v=20261121-02" defer></script>
 </body>
 </html>

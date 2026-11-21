@@ -561,3 +561,41 @@
 @media (max-width: 560px) {
   .app-proto:not(.dashboard-page) .header-actions .button { display: inline-flex; padding-inline: 12px; }
 }
+
+.app-proto [hidden] { display: none !important; }
+[data-workspace-view="settings"] > .workspace-nav { gap: 0 6px; }
+[data-settings-panel] { padding-block: 17px 38px; }
+.settings-transfer { max-width: 680px; }
+.settings-transfer .csv-actions { margin-top: 13px; }
+.app-grid.ledger-list { grid-template-columns: minmax(0,1fr); }
+.ledger-list .app-table-wrap { max-height: 60dvh; }
+.ledger-list thead { position: sticky; top: 0; background: var(--white); }
+.dashboard-page [data-ledger-panel] .app-section-head {
+  display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; column-gap: 12px;
+}
+.dashboard-page [data-ledger-panel] .app-section-head p { grid-column: 1; grid-row: 2; }
+.entry-link-button { grid-column: 2; grid-row: 1 / span 2; min-height: 42px; padding-inline: 13px; font-size: 13px; }
+.entry-dialog {
+  width: min(100% - 28px, 480px); max-height: 88dvh; padding: 0; overflow: auto;
+  border: 1px solid var(--line); border-radius: 16px; background: var(--white); color: var(--ink);
+  box-shadow: 0 24px 64px #2b1b1259;
+}
+.entry-dialog::backdrop { background: #2b1b1280; }
+.entry-dialog-head {
+  position: sticky; top: 0; z-index: 1; display: flex; justify-content: space-between;
+  align-items: center; gap: 8px; padding: 12px 15px; background: var(--white); border-bottom: 1px solid var(--line);
+}
+.entry-dialog-head h3 { font: 800 20px var(--display); }
+.entry-dialog-head .button { min-height: 38px; padding-inline: 11px; font-size: 13px; }
+.entry-dialog .app-form { border: 0; border-radius: 0; box-shadow: none; padding: 14px 16px 17px; }
+.guest-actions { margin-block: 10px 3px; }
+.app-proto:not(.dashboard-page) .app-hero { padding-top: 18px; }
+@media (max-width: 560px) {
+  .app-proto .header-inner { height: 56px; }
+  .app-proto:not(.dashboard-page) .app-flow { padding-top: 21px; }
+  .app-proto .workspace-nav { gap: 0 5px; }
+  .app-proto .workspace-nav a { font-size: 12px; padding-inline: 7px; }
+  .dashboard-page [data-ledger-panel] .app-section-head h2 { font-size: 20px; }
+  .dashboard-page [data-ledger-panel] .app-section-head p { grid-column: 1 / -1; }
+  .entry-link-button { grid-row: 1; }
+}

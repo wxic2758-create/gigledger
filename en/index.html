@@ -17,7 +17,7 @@
   <meta property="og:image" content="https://gigledger.xyz/assets/og.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="GigLedger dashboard preview with sample income, fixed costs, true profit, tax reserve, and runway.">
+  <meta property="og:image:alt" content="Example overview showing the daily cost floor, monthly profit, and cash runway.">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="https://gigledger.xyz/assets/og.png">
   <meta name="theme-color" content="#f7f1e7">
@@ -26,7 +26,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="preload" href="/assets/logo-mark-192.png" as="image">
-  <link rel="stylesheet" href="/styles.css?v=20261121-01">
+  <link rel="stylesheet" href="/styles.css?v=20261121-02">
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"WebSite","name":"GigLedger","url":"https://gigledger.xyz/","inLanguage":["en"],"description":"A ledger for one-person companies. Turn fixed costs and subscriptions into a Daily Floor, then see net income, true profit, tax reserve, and cash runway."}
   </script>
@@ -34,14 +34,13 @@
 <body class="locale-en site-short">
   <a class="skip-link" href="#main">Skip to content</a>
 
-  <header class="site-header">
+  <header class="site-header public-header">
     <div class="shell header-inner">
 
   <a class="brand" href="/en/">
     <img class="brand-mark" src="/assets/logo-mark-192.png" alt="" width="42" height="42">
     <span class="brand-word"><b>Gig</b>Ledger</span>
   </a>
-      <nav class="desktop-nav" aria-label="Primary navigation"><a href="/en/product/">Features</a><a href="/en/pricing/">Pricing</a><a href="/en/#faq">FAQ</a></nav>
       <div class="header-actions">
 
     <a class="lang-switch" href="/zh-TW/" hreflang="zh-Hant-TW" lang="zh-Hant-TW">
@@ -49,22 +48,10 @@
       <span class="lang-short">繁中</span>
     </a>
         <a class="button button-small button-orange" href="/en/app">Open calculator</a>
-        <button class="menu-button" type="button" aria-expanded="false" aria-controls="mobileNav" aria-label="Open menu">
-          <span></span><span></span>
-        </button>
       </div>
     </div>
-    <nav class="mobile-nav" id="mobileNav" aria-label="Primary navigation">
-      <a href="/en/product/">Features</a><a href="/en/pricing/">Pricing</a><a href="/en/#faq">FAQ</a>
-      <a href="/en/app">Open calculator</a>
-
-    <a class="lang-switch" href="/zh-TW/" hreflang="zh-Hant-TW" lang="zh-Hant-TW">
-      <span class="lang-full">繁體中文</span>
-      <span class="lang-short">繁中</span>
-    </a>
-    </nav>
+    <nav class="public-nav shell" aria-label="Primary navigation"><a href="/en/" aria-current="page">Home</a><a href="/en/product/">Features</a><a href="/en/pricing/">Pricing</a><a href="/en/faq/">FAQ</a></nav>
   </header>
-
 
   <main id="main">
     <section class="hero" id="start">
@@ -77,191 +64,30 @@
             <a class="button button-orange" href="/en/app">Calculate your Daily Floor <span aria-hidden="true">→</span></a>
             <a class="button button-ghost" href="/api/auth/google?locale=en">Sign in with Google</a>
           </div>
-          <ul class="trust-list">
-
-              <li><span class="check" aria-hidden="true">✓</span>Built for one-person companies</li>
-              <li><span class="check" aria-hidden="true">✓</span>Try the calculator without an account</li>
-              <li><span class="check" aria-hidden="true">✓</span>Estimates, not tax advice</li>
-          </ul>
+          <p class="hero-trust">Try the calculator without an account</p>
         </div>
         <div class="hero-visual">
-  <div class="dashboard" role="img" aria-label="GigLedger dashboard preview with sample income, fixed costs, true profit, tax reserve, and runway.">
-    <div class="dash-head">
-      <div class="dash-brand">
-        <img src="/assets/logo-mark-64.png" alt="" width="24" height="24">
-        <span>gigledger</span>
-      </div>
-      <span class="sample-badge">Sample data</span>
-    </div>
-    <div class="dash-month">This month</div>
-    <div class="dash-rows">
-
-        <div class="dash-row tone-default">
-          <span>Gross income</span>
-          <strong>$4,800</strong>
-        </div>
-        <div class="dash-row tone-muted">
-          <span>Platform fees</span>
-          <strong>−$480</strong>
-        </div>
-        <div class="dash-row tone-muted">
-          <span>Other expenses</span>
-          <strong>−$480</strong>
-        </div>
-        <div class="dash-row tone-muted">
-          <span>Fixed costs</span>
-          <strong>−$900</strong>
-        </div>
-        <div class="dash-row tone-accent">
-          <span>True profit</span>
-          <strong>$2,940</strong>
-        </div>
-    </div>
-    <div class="dash-split">
-      <div class="dash-metric">
-        <span>Daily floor</span>
-        <strong>$29.59<em>/ day</em></strong>
-      </div>
-      <div class="dash-metric">
-        <span>Tax reserve</span>
-        <strong>$735</strong>
-        <small>Estimate only</small>
-      </div>
-    </div>
-    <div class="dash-chart">
-      <div class="chart-top">
-        <span>Income over time</span>
-        <span class="chart-key" aria-hidden="true"></span>
-      </div>
-      <div class="bars">
-
-          <div class="bar-wrap">
-            <div class="bar" style="--h:42%"></div>
-            <span>Jan</span>
-          </div>
-          <div class="bar-wrap">
-            <div class="bar" style="--h:58%"></div>
-            <span>Feb</span>
-          </div>
-          <div class="bar-wrap">
-            <div class="bar" style="--h:48%"></div>
-            <span>Mar</span>
-          </div>
-          <div class="bar-wrap">
-            <div class="bar" style="--h:72%"></div>
-            <span>Apr</span>
-          </div>
-          <div class="bar-wrap">
-            <div class="bar" style="--h:64%"></div>
-            <span>May</span>
-          </div>
-          <div class="bar-wrap">
-            <div class="bar" style="--h:88%"></div>
-            <span>Jun</span>
-          </div>
-      </div>
-    </div>
-    <div class="dash-note">The number most tools miss.</div>
-  </div></div>
+  <section class="home-snapshot" aria-label="Example overview showing the daily cost floor, monthly profit, and cash runway.">
+    <div class="home-snapshot-head"><strong>Overview</strong><span>Sample data</span></div>
+    <dl>
+      <div><dt>Daily cost floor</dt><dd>$29.59 <small>/ day</small></dd></div>
+      <div><dt>This month&#39;s profit</dt><dd>$2,940</dd></div>
+      <div><dt>Cash runway</dt><dd>270 days</dd></div>
+    </dl>
+  </section></div>
       </div>
     </section>
-
-    <section class="daily-section" id="daily">
-      <div class="shell daily-grid">
-        <div class="section-copy">
-          <div class="section-index"><span>01</span><div></div><p>The daily number</p><span class="section-name">01 · Why</span></div>
-          <h2>Your daily floor.</h2>
-          <p>AI tools. Software. Rent. The costs that keep running whether you ship or not. GigLedger turns them into one number you can act on: your Daily Floor.</p>
-          <strong class="aside-note">Rounded illustration. Exact example: $900 in monthly business fixed costs at 100% business use.</strong>
-        </div>
-        <div class="daily-card">
-          <p class="daily-kicker">The daily number</p>
-          <div class="big-number">$29.59<span>per day</span></div>
-          <p class="formula">Monthly fixed costs × 12 ÷ 365</p>
-          <div class="daily-list">
-
-              <div><span>Coworking</span><strong>about $18 / day</strong></div>
-              <div><span>Software</span><strong>about $7 / day</strong></div>
-              <div><span>Insurance</span><strong>about $5 / day</strong></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="home-product-links shell" id="decisions" aria-label="Product">
-      <a id="features" href="/en/product/"><strong>Features</strong><span aria-hidden="true">→</span></a>
-      <a id="pricing" href="/en/pricing/"><strong>Pricing</strong><span aria-hidden="true">→</span></a>
-      <a id="how" href="/en/product/#how"><strong>How it works</strong><span aria-hidden="true">→</span></a>
-    </section>
-
-    <section class="faq-section" id="faq">
-      <div class="shell faq-grid">
-        <div class="faq-intro">
-          <h2>Questions, answered.</h2>
-          <p>The short version: we would rather be clear than overpromise.</p>
-        </div>
-        <div class="faq-list">
-
-            <details>
-              <summary>Does GigLedger file my taxes?<span aria-hidden="true">+</span></summary>
-              <p>No. GigLedger gives you an estimate and a reserve target. It does not file returns or provide tax advice.</p>
-            </details>
-            <details>
-              <summary>Does it connect to Stripe or the App Store?<span aria-hidden="true">+</span></summary>
-              <p>Pro supports official Stripe sync and USD CSV imports for sources such as Upwork, PayPal, and Fiverr. App Store report sync is coming soon.</p>
-            </details>
-            <details>
-              <summary>What counts as a fixed cost?<span aria-hidden="true">+</span></summary>
-              <p>Subscriptions, software, rent, insurance, and hosting that recur. One-time purchases belong in expenses; do not record a subscription again as an expense. GigLedger tracks business use, but does not decide whether an item is deductible.</p>
-            </details>
-            <details>
-              <summary>Can I use it outside the US?<span aria-hidden="true">+</span></summary>
-              <p>The ledger works worldwide. You choose your reserve rate. The 25%-30% reference comes from common US self-employment practice, not your local tax law.</p>
-            </details>
-            <details>
-              <summary>What happens to my data?<span aria-hidden="true">+</span></summary>
-              <p>After Sign in with Google, we store your Google email and name plus saved ledger data in Cloudflare D1. You can export and delete your account from the dashboard.</p>
-            </details>
-            <details>
-              <summary>Can I start now?<span aria-hidden="true">+</span></summary>
-              <p>Yes. Try the calculator without an account, then sign in with Google to save your ledger.</p>
-            </details>
-        </div>
-      </div>
-    </section>
-
 
   </main>
-  <footer class="site-footer">
-    <div class="shell footer-top">
-      <div>
-
-  <a class="brand" href="/en/">
-    <img class="brand-mark" src="/assets/logo-mark-192.png" alt="" width="42" height="42">
-    <span class="brand-word"><b>Gig</b>Ledger</span>
-  </a>
-        <p class="footer-tagline">Daily cost and real profit for a one-person company.</p>
-        <p class="footer-status">Pre-launch preview</p>
-      </div>
-      <div class="footer-links">
-        <div>
-          <p class="footer-heading">Product</p>
-          <a href="/en/product/">Features</a>
-          <a href="/en/pricing/">Pricing</a>
-          <a href="/en/#faq">FAQ</a>
-        </div>
-        <div>
-          <p class="footer-heading">Legal</p>
-          <a href="/en/privacy">Privacy</a>
-          <a href="/en/tax-disclaimer">Tax disclaimer</a>
-        </div>
-      </div>
-    </div>
-    <div class="shell footer-bottom">
+  <footer class="site-footer public-footer">
+    <div class="shell public-footer-row">
       <p>© 2026 GigLedger. All rights reserved.</p>
-      <a href="/zh-TW/">繁體中文</a>
+      <nav aria-label="Legal">
+        <a href="/en/privacy">Privacy</a>
+        <a href="/en/tax-disclaimer">Tax disclaimer</a>
+      </nav>
     </div>
   </footer>
-  <script src="/app.js" defer></script>
+  <script src="/app.js?v=20261121-02" defer></script>
 </body>
 </html>

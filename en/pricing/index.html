@@ -17,7 +17,7 @@
   <meta property="og:image" content="https://gigledger.xyz/assets/og.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="GigLedger dashboard preview with sample income, fixed costs, true profit, tax reserve, and runway.">
+  <meta property="og:image:alt" content="Example overview showing the daily cost floor, monthly profit, and cash runway.">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="https://gigledger.xyz/assets/og.png">
   <meta name="theme-color" content="#f7f1e7">
@@ -26,7 +26,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="preload" href="/assets/logo-mark-192.png" as="image">
-  <link rel="stylesheet" href="/styles.css?v=20261121-01">
+  <link rel="stylesheet" href="/styles.css?v=20261121-02">
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"WebSite","name":"GigLedger","url":"https://gigledger.xyz/","inLanguage":["en"],"description":"Compare the GigLedger calculator, manual ledger and Pro tools during private beta."}
   </script>
@@ -34,14 +34,13 @@
 <body class="locale-en site-detail">
   <a class="skip-link" href="#main">Skip to content</a>
 
-  <header class="site-header">
+  <header class="site-header public-header">
     <div class="shell header-inner">
 
   <a class="brand" href="/en/">
     <img class="brand-mark" src="/assets/logo-mark-192.png" alt="" width="42" height="42">
     <span class="brand-word"><b>Gig</b>Ledger</span>
   </a>
-      <nav class="desktop-nav" aria-label="Primary navigation"><a href="/en/product/">Features</a><a href="/en/pricing/" aria-current="page">Pricing</a><a href="/en/#faq">FAQ</a></nav>
       <div class="header-actions">
 
     <a class="lang-switch" href="/zh-TW/pricing/" hreflang="zh-Hant-TW" lang="zh-Hant-TW">
@@ -49,20 +48,9 @@
       <span class="lang-short">繁中</span>
     </a>
         <a class="button button-small button-orange" href="/en/app">Open calculator</a>
-        <button class="menu-button" type="button" aria-expanded="false" aria-controls="mobileNav" aria-label="Open menu">
-          <span></span><span></span>
-        </button>
       </div>
     </div>
-    <nav class="mobile-nav" id="mobileNav" aria-label="Primary navigation">
-      <a href="/en/product/">Features</a><a href="/en/pricing/" aria-current="page">Pricing</a><a href="/en/#faq">FAQ</a>
-      <a href="/en/app">Open calculator</a>
-
-    <a class="lang-switch" href="/zh-TW/pricing/" hreflang="zh-Hant-TW" lang="zh-Hant-TW">
-      <span class="lang-full">繁體中文</span>
-      <span class="lang-short">繁中</span>
-    </a>
-    </nav>
+    <nav class="public-nav shell" aria-label="Primary navigation"><a href="/en/">Home</a><a href="/en/product/">Features</a><a href="/en/pricing/" aria-current="page">Pricing</a><a href="/en/faq/">FAQ</a></nav>
   </header>
   <main id="main">
     <section class="shell standalone-pricing">
@@ -91,36 +79,15 @@
     </section>
 
   </main>
-  <footer class="site-footer">
-    <div class="shell footer-top">
-      <div>
-
-  <a class="brand" href="/en/">
-    <img class="brand-mark" src="/assets/logo-mark-192.png" alt="" width="42" height="42">
-    <span class="brand-word"><b>Gig</b>Ledger</span>
-  </a>
-        <p class="footer-tagline">Daily cost and real profit for a one-person company.</p>
-        <p class="footer-status">Pre-launch preview</p>
-      </div>
-      <div class="footer-links">
-        <div>
-          <p class="footer-heading">Product</p>
-          <a href="/en/product/">Features</a>
-          <a href="/en/pricing/">Pricing</a>
-          <a href="/en/#faq">FAQ</a>
-        </div>
-        <div>
-          <p class="footer-heading">Legal</p>
-          <a href="/en/privacy">Privacy</a>
-          <a href="/en/tax-disclaimer">Tax disclaimer</a>
-        </div>
-      </div>
-    </div>
-    <div class="shell footer-bottom">
+  <footer class="site-footer public-footer">
+    <div class="shell public-footer-row">
       <p>© 2026 GigLedger. All rights reserved.</p>
-      <a href="/zh-TW/pricing/">繁體中文</a>
+      <nav aria-label="Legal">
+        <a href="/en/privacy">Privacy</a>
+        <a href="/en/tax-disclaimer">Tax disclaimer</a>
+      </nav>
     </div>
   </footer>
-  <script src="/app.js" defer></script>
+  <script src="/app.js?v=20261121-02" defer></script>
 </body>
 </html>
