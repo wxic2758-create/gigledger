@@ -1,4 +1,42 @@
 (() => {
+  const menuButton = document.querySelector(".menu-button");
+  const mobileNav = document.querySelector(".mobile-nav");
+
+  if (menuButton && mobileNav) {
+    const closeMenu = () => {
+      mobileNav.classList.remove("open");
+      menuButton.setAttribute("aria-expanded", "false");
+      menuButton.setAttribute(
+        "aria-label",
+        document.documentElement.lang === "en" ? "Open menu" : "開啟選單",
+      );
+    };
+
+    menuButton.addEventListener("click", () => {
+      const open = menuButton.getAttribute("aria-expanded") !== "true";
+      menuButton.setAttribute("aria-expanded", String(open));
+      mobileNav.classList.toggle("open", open);
+      menuButton.setAttribute(
+        "aria-label",
+        open
+          ? document.documentElement.lang === "en"
+            ? "Close menu"
+            : "關閉選單"
+          : document.documentElement.lang === "en"
+            ? "Open menu"
+            : "開啟選單",
+      );
+    });
+
+    mobileNav.addEventListener("click", (event) => {
+      if (event.target.closest("a")) closeMenu();
+    });
+
+    window.addEventListener("resize", () => {
+      if (window.innerWidth > 1060) closeMenu();
+    });
+  }
+
   const product = document.querySelector("[data-product-view]");
   if (product) {
     const panels = [...product.querySelectorAll("[data-product-panel]")];
@@ -16,16 +54,6 @@
     window.addEventListener("hashchange", showPanel);
     showPanel();
   }
-  if (document.body.classList.contains("site-short")) {
-    const followOldLink = () => {
-      const hash = location.hash.slice(1);
-      if (hash === "faq" || hash === "pricing") location.replace(hash + "/");
-      else if (["features", "daily", "decisions", "how"].includes(hash)) location.replace("product/#" + hash);
-    };
-    window.addEventListener("hashchange", followOldLink);
-    followOldLink();
-  }
-
   document.querySelectorAll(".faq-list details").forEach((item) => {
     item.addEventListener("toggle", () => {
       if (!item.open) return;

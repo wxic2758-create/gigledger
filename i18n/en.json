@@ -44,7 +44,7 @@
       "Estimates, not tax advice"
     ],
     "sampleLabel": "Sample data",
-    "visualAria": "Example overview showing the daily cost floor, monthly profit, and cash runway."
+    "visualAria": "GigLedger dashboard preview with sample income, fixed costs, true profit, tax reserve, and runway."
   },
   "dashboard": {
     "title": "Dashboard",
@@ -754,7 +754,8 @@
       "calculator": "Calculator",
       "closeEntry": "Close",
       "transfers": "CSV",
-      "connections": "Connections"
+      "connections": "Connections",
+      "moreTemplates": "More subscription templates"
     }
   },
   "start": {

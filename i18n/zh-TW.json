@@ -44,7 +44,7 @@
       "僅供預估，非稅務建議"
     ],
     "sampleLabel": "範例資料",
-    "visualAria": "總覽範例，顯示每日底線、本月實際利潤與現金可支撐天數。"
+    "visualAria": "GigLedger 儀表板預覽，包含範例收入、固定成本、實際利潤、預留稅款與現金跑道。"
   },
   "dashboard": {
     "title": "儀表板",
@@ -754,7 +754,8 @@
       "calculator": "試算",
       "closeEntry": "關閉",
       "transfers": "CSV",
-      "connections": "平台連結"
+      "connections": "平台連結",
+      "moreTemplates": "更多訂閱範本"
     }
   },
   "start": {

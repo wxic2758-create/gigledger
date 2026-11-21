@@ -14,7 +14,7 @@
 
   const currency = new Intl.NumberFormat(locale === "zh-TW" ? "zh-TW" : "en-US", {
     style: "currency", currency: "USD", maximumFractionDigits: 2,
-    currencyDisplay: dashboardMode ? "narrowSymbol" : "symbol",
+    currencyDisplay: "narrowSymbol",
   });
   const money = (value) => currency.format(Number.isFinite(value) ? value : 0);
   const day = new Intl.NumberFormat(locale === "zh-TW" ? "zh-TW" : "en-US", {
@@ -305,8 +305,6 @@
           : comparison < 0
             ? messages.metrics.behind.replace("{amount}", money(-comparison))
             : messages.workspace.onTrack;
-      comparisonNode.closest(".dashboard-comparison")?.classList.toggle("is-behind", hasFloor && comparison < 0);
-      comparisonNode.closest(".dashboard-comparison")?.classList.toggle("is-ahead", hasFloor && comparison > 0);
       const pace = comparisonNode.closest("[data-current-pace]");
       if (pace) {
         pace.hidden = !hasFloor || reportPeriod !== "current";
@@ -315,24 +313,12 @@
     }
     const runwayNode = document.querySelector("[data-proto='metric-runway']");
     if (runwayNode) {
-      if (dashboardMode) {
-        runwayNode.textContent = result.noNewWorkRunway === null
-          ? "—"
-          : messages.workspace.runwayDays.replace("{days}", String(result.noNewWorkRunway));
-      } else if (result.savings === null || !Number.isFinite(result.savings) || result.savings < 0) {
-        runwayNode.textContent = messages.metrics.runwayUnset;
-      } else if (result.noNewWorkRunway === null) {
-        runwayNode.textContent = messages.metrics.runwayNeedFloor;
-      } else if (result.incomeAverage === null) {
-        runwayNode.textContent = messages.metrics.runwayZero.replace("{days}", String(result.noNewWorkRunway));
-      } else if (result.cashNotBurning) {
-        runwayNode.textContent = messages.metrics.runwayNotBurning;
-      } else {
-        runwayNode.textContent = messages.metrics.runwayAverage.replace("{days}", String(result.averageRunway));
-      }
+      runwayNode.textContent = result.noNewWorkRunway === null
+        ? "—"
+        : messages.workspace.runwayDays.replace("{days}", String(result.noNewWorkRunway));
     }
     const averageNode = document.querySelector("[data-proto='metric-runway-average']");
-    if (averageNode && dashboardMode) {
+    if (averageNode) {
       const context = result.noNewWorkRunway !== null
         ? messages.workspace.runwayNote
         : result.savings !== null ? messages.metrics.runwayNeedFloor : "";
@@ -345,26 +331,14 @@
             .replace("{months}", String(result.incomeAverage.monthCount));
       }
       averageNode.textContent = [context, average].filter(Boolean).join(" · ");
-    } else if (averageNode) {
-      if (result.savings === null || !Number.isFinite(result.savings) || result.savings <= 0) {
-        averageNode.textContent = "";
-      } else if (result.incomeAverage === null) {
-        averageNode.textContent = messages.metrics.runwayWaiting;
-      } else if (result.cashNotBurning) {
-        averageNode.textContent = messages.metrics.runwayZero.replace("{days}", String(result.noNewWorkRunway));
-      } else {
-        averageNode.textContent = `${messages.metrics.runwayZero.replace("{days}", String(result.noNewWorkRunway))} · ${messages.metrics.runwayBasedOn.replace("{months}", String(result.incomeAverage.monthCount))}`;
-      }
     }
     const shareAiNode = document.querySelector("[data-share-ai]");
     if (shareAiNode) shareAiNode.textContent = money(result.aiMonthlyCosts);
     const shareDailyNode = document.querySelector("[data-share-daily]");
     if (shareDailyNode) shareDailyNode.textContent = dayMoney(result.dailyFloor);
-    if (dashboardMode) {
-      document.querySelector("[data-floor-setup]").hidden = state.fixedCosts.length > 0;
-      document.querySelector("[data-cash-setup]").hidden = state.cashOnHand !== "";
-      renderWorkspaceChart(result);
-    }
+    document.querySelector("[data-floor-setup]").hidden = state.fixedCosts.length > 0;
+    document.querySelector("[data-cash-setup]").hidden = state.cashOnHand !== "";
+    renderWorkspaceChart(result);
     renderSubscriptionSummary(current.subscriptionSummary);
     renderAttentionQueue(current);
     renderWeeklySummary(current);
@@ -458,6 +432,11 @@
     });
     list.hidden = items.length === 0;
     empty.hidden = items.length > 0;
+    const count = document.querySelector("[data-attention-count]");
+    if (count) {
+      count.textContent = String(items.length);
+      count.hidden = items.length === 0;
+    }
   };
 
   const weekKey = () => {
@@ -979,6 +958,7 @@
   const addRecord = (form, key, record) => {
     if (!dashboardMode) {
       state[key].push(record);
+      form.closest("dialog")?.querySelector("[data-close-entry]")?.click();
       return Promise.resolve(true);
     }
     return submitWorkspaceForm(form, async () => {
@@ -1039,7 +1019,6 @@
       }
       const subscriptionFields = fixedForm.querySelector("[data-subscription-fields]");
       if (subscriptionFields) subscriptionFields.hidden = !fixedForm.elements.isSubscription.checked;
-      if (!dashboardMode) fixedForm.scrollIntoView({ behavior: "smooth", block: "start" });
     };
     fixedForm.elements.isSubscription?.addEventListener("change", () => {
       const subscriptionFields = fixedForm.querySelector("[data-subscription-fields]");
@@ -1310,7 +1289,15 @@
   const saveDraft = async (event) => {
     const button = event.currentTarget;
     const status = document.querySelector(button.hasAttribute("data-flow-save") ? "[data-flow-save-message]" : "[data-save-message]");
-    if (settingsForm && !settingsForm.elements.monthlyIncomeEstimate.reportValidity()) return;
+    const monthlyEstimate = settingsForm?.elements.monthlyIncomeEstimate;
+    if (monthlyEstimate && !monthlyEstimate.checkValidity()) {
+      if (!dashboardMode) {
+        window.location.hash = "planning";
+        guestRoute(false);
+      }
+      monthlyEstimate.reportValidity();
+      return;
+    }
     const original = button.textContent;
     button.disabled = true;
     button.textContent = messages.saving;
@@ -1648,6 +1635,22 @@
     if (node && !node.matches("input")) node.tabIndex = -1;
     node?.focus({ preventScroll: true });
   };
+  const entryDialogs = [...document.querySelectorAll("[data-entry-dialog]")];
+  const showEntryDialog = (hash) => {
+    let selected = null;
+    for (const dialog of entryDialogs) {
+      if (dialog.dataset.entryDialog === hash) selected = dialog;
+      else if (dialog.open) dialog.close();
+    }
+    document.querySelectorAll("[data-add-menu][open]").forEach((node) => { node.open = false; });
+    if (!selected) return false;
+    if (!selected.open) {
+      window.scrollTo({ top: 0, behavior: "instant" });
+      selected.showModal();
+      selected.querySelector(".app-form input")?.focus();
+    }
+    return true;
+  };
   const workspaceRoute = (moveFocus = true) => {
     const hash = window.location.hash.slice(1);
     const ledgerSection = Object.hasOwn(ledgerSections, hash) ? ledgerSections[hash] : null;
@@ -1658,10 +1661,6 @@
     };
     const settingsSection = Object.hasOwn(settingsSections, hash) ? settingsSections[hash] : null;
     const view = ledgerSection ? "ledger" : settingsSection ? "settings" : "overview";
-    const dialogs = [...document.querySelectorAll("[data-entry-dialog]")];
-    for (const dialog of dialogs) {
-      if (dialog.open && dialog.dataset.entryDialog !== hash) dialog.close();
-    }
     document.querySelectorAll("[data-workspace-view]").forEach((node) => {
       node.hidden = node.dataset.workspaceView !== view;
     });
@@ -1674,18 +1673,8 @@
     syncActiveLinks("[data-workspace-nav]", view === "overview" ? "dashboard" : view, "workspaceNav", "page");
     syncActiveLinks("[data-ledger-nav]", ledgerSection, "ledgerNav");
     syncActiveLinks("[data-settings-nav]", settingsSection, "settingsNav");
-    document.querySelectorAll("[data-add-menu][open]").forEach((node) => { node.open = false; });
     if (!workspaceReady) return;
-    const entryDialog = dialogs.find((dialog) => dialog.dataset.entryDialog === hash);
-    if (entryDialog) {
-      if (!entryDialog.open) {
-        window.scrollTo({ top: 0, behavior: "instant" });
-        entryDialog.showModal();
-        entryDialog.querySelector(".app-form input")?.focus();
-      }
-      return;
-    }
-    if (!moveFocus) return;
+    if (showEntryDialog(hash) || !moveFocus) return;
     window.scrollTo({ top: 0, behavior: "instant" });
     const target = hash === "cash-settings"
       ? document.getElementById(hash)
@@ -1697,16 +1686,20 @@
   const guestRoute = (moveFocus = true) => {
     const hash = window.location.hash.slice(1);
     const panel = Object.hasOwn(ledgerSections, hash) ? ledgerSections[hash]
-      : ["dashboard", "how-it-works"].includes(hash) ? hash : null;
+      : hash === "cash-settings" ? "planning"
+      : ["dashboard", "how-it-works", "planning"].includes(hash) ? hash : null;
     flowSection.hidden = Boolean(panel);
     document.querySelector("[data-guest-ledger-nav]").closest("nav").hidden = !panel;
     document.querySelector("[data-guest-actions]").hidden = !panel;
     document.querySelectorAll("[data-guest-panel]").forEach((node) => { node.hidden = node.id !== panel; });
     syncActiveLinks("[data-guest-nav]", panel ? "dashboard" : "onboarding", "guestNav", "page");
     syncActiveLinks("[data-guest-ledger-nav]", panel, "guestLedgerNav");
-    if (moveFocus) {
+    if (!showEntryDialog(hash) && moveFocus) {
       window.scrollTo({ top: 0, behavior: "instant" });
-      focusHeading((panel ? document.getElementById(panel) : flowSection)?.querySelector("h1, h2"));
+      const target = hash === "cash-settings"
+        ? document.getElementById(hash)
+        : (panel ? document.getElementById(panel) : flowSection)?.querySelector("h1, h2");
+      focusHeading(target);
     }
   };
 
@@ -2095,29 +2088,31 @@
     renderFlowResults();
   };
 
-  const showFlowStep = (nextStep) => {
+  const showFlowStep = (nextStep, moveFocus = false) => {
     flowStep = Math.min(3, Math.max(1, nextStep));
     flowPanels.forEach((panel) => {
       panel.hidden = Number(panel.dataset.flowStep) !== flowStep;
     });
-    const current = document.querySelector("[data-flow-current]");
-    if (current) current.textContent = String(flowStep);
     if (flowBack) flowBack.hidden = flowStep === 1;
     if (flowNext) {
       flowNext.hidden = flowStep === 3;
       flowNext.textContent = flowStep === 2 ? messages.flow.seeResults : messages.flow.next;
     }
     if (flowStep === 3) applyFlowToLedger();
+    if (moveFocus) {
+      window.scrollTo({ top: 0, behavior: "instant" });
+      focusHeading(flowPanels.find((panel) => !panel.hidden)?.querySelector("h2"));
+    }
   };
 
-  flowBack?.addEventListener("click", () => showFlowStep(flowStep - 1));
+  flowBack?.addEventListener("click", () => showFlowStep(flowStep - 1, true));
   flowNext?.addEventListener("click", () => {
     if (flowStep === 2 && ![flowIncome, flowCash, flowTax].every((input) => input.reportValidity())) return;
     if (flowStep === 1) {
       const warning = document.querySelector("[data-skip-warning]");
       if (warning) warning.hidden = Boolean(selectedTemplates().length || otherFixedCost());
     }
-    showFlowStep(flowStep + 1);
+    showFlowStep(flowStep + 1, true);
   });
 
   document.addEventListener("click", async (event) => {
@@ -2158,40 +2153,37 @@
     if (input) input.value = today();
   });
   showFlowStep(1);
-  if (dashboardMode) {
-    window.addEventListener("hashchange", () => workspaceRoute());
-    document.addEventListener("click", (event) => {
-      const quickLink = event.target.closest("[data-add-menu] a, .entry-link-button");
-      if (quickLink?.hash === window.location.hash) workspaceRoute();
+  const route = dashboardMode ? workspaceRoute : guestRoute;
+  window.addEventListener("hashchange", () => route());
+  document.addEventListener("click", (event) => {
+    const quickLink = event.target.closest("[data-add-menu] a, .entry-link-button");
+    if (quickLink?.hash === window.location.hash) route();
+  });
+  for (const dialog of entryDialogs) {
+    const id = dialog.dataset.entryDialog;
+    const dismiss = () => {
+      const wasEntry = window.location.hash === `#${id}`;
+      if (wasEntry) history.replaceState(history.state, "", `#${ledgerSections[id]}`);
+      if (dialog.open) dialog.close();
+      if (wasEntry) document.querySelector(`.entry-link-button[href="#${id}"]`)?.focus({ preventScroll: true });
+    };
+    dialog.querySelector("[data-close-entry]").addEventListener("click", dismiss);
+    dialog.addEventListener("close", () => {
+      if (id === "fixed-cost-entry" && editingFixedCostId) fixedForm.querySelector("[data-fixed-cancel]").click();
+      if (window.location.hash === `#${id}`) dismiss();
     });
-    document.querySelectorAll("[data-entry-dialog]").forEach((dialog) => {
-      const id = dialog.dataset.entryDialog;
-      const dismiss = () => {
-        const wasEntry = window.location.hash === `#${id}`;
-        if (wasEntry) history.replaceState(history.state, "", `#${ledgerSections[id]}`);
-        if (dialog.open) dialog.close();
-        if (wasEntry) document.querySelector(`.entry-link-button[href="#${id}"]`)?.focus({ preventScroll: true });
-      };
-      dialog.querySelector("[data-close-entry]").addEventListener("click", dismiss);
-      dialog.addEventListener("close", () => {
-        if (id === "fixed-cost-entry" && editingFixedCostId) fixedForm.querySelector("[data-fixed-cancel]").click();
-        if (window.location.hash === `#${id}`) dismiss();
-      });
-    });
-    document.querySelector("[data-workspace-retry]").addEventListener("click", loadDashboard);
-    document.querySelectorAll("[data-workspace-period]").forEach((button) => {
-      button.addEventListener("click", () => {
-        reportPeriod = button.dataset.workspacePeriod;
-        document.querySelectorAll("[data-workspace-period]").forEach((choice) => {
-          choice.setAttribute("aria-pressed", String(choice === button));
-        });
-        renderMetrics();
-      });
-    });
-  } else {
-    window.addEventListener("hashchange", () => guestRoute());
-    guestRoute(Boolean(window.location.hash));
   }
+  document.querySelector("[data-workspace-retry]")?.addEventListener("click", loadDashboard);
+  document.querySelectorAll("[data-workspace-period]").forEach((button) => {
+    button.addEventListener("click", () => {
+      reportPeriod = button.dataset.workspacePeriod;
+      document.querySelectorAll("[data-workspace-period]").forEach((choice) => {
+        choice.setAttribute("aria-pressed", String(choice === button));
+      });
+      renderMetrics();
+    });
+  });
+  if (!dashboardMode) route(Boolean(window.location.hash));
 
   loadDashboard().finally(() => {
     window.__gigledgerLoaded = true;

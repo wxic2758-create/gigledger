@@ -17,7 +17,7 @@
   <meta property="og:image" content="https://gigledger.xyz/assets/og.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="總覽範例，顯示每日底線、本月實際利潤與現金可支撐天數。">
+  <meta property="og:image:alt" content="GigLedger 儀表板預覽，包含範例收入、固定成本、實際利潤、預留稅款與現金跑道。">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="https://gigledger.xyz/assets/og.png">
   <meta name="theme-color" content="#f7f1e7">
@@ -26,7 +26,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="preload" href="/assets/logo-mark-192.png" as="image">
-  <link rel="stylesheet" href="/styles.css?v=20261121-02">
+  <link rel="stylesheet" href="/styles.css?v=20261121-03">
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"WebSite","name":"GigLedger","url":"https://gigledger.xyz/","inLanguage":["zh-Hant-TW"],"description":"為一人公司而做的帳本。把固定成本與訂閱換算成每日底線，再看淨收入、實際利潤、預留稅款與現金跑道。"}
   </script>
@@ -34,13 +34,14 @@
 <body class="locale-zh-tw site-short">
   <a class="skip-link" href="#main">跳至主要內容</a>
 
-  <header class="site-header public-header">
+  <header class="site-header">
     <div class="shell header-inner">
 
   <a class="brand" href="/zh-TW/">
     <img class="brand-mark" src="/assets/logo-mark-192.png" alt="" width="42" height="42">
     <span class="brand-word"><b>Gig</b>Ledger</span>
   </a>
+      <nav class="desktop-nav" aria-label="主要導覽"><a href="/zh-TW/product/">功能</a><a href="/zh-TW/pricing/">方案</a><a href="/zh-TW/#faq">常見問題</a></nav>
       <div class="header-actions">
 
     <a class="lang-switch" href="/en/" hreflang="en" lang="en">
@@ -48,10 +49,22 @@
       <span class="lang-short">EN</span>
     </a>
         <a class="button button-small button-orange" href="/zh-TW/app">開啟計算器</a>
+        <button class="menu-button" type="button" aria-expanded="false" aria-controls="mobileNav" aria-label="開啟選單">
+          <span></span><span></span>
+        </button>
       </div>
     </div>
-    <nav class="public-nav shell" aria-label="主要導覽"><a href="/zh-TW/" aria-current="page">首頁</a><a href="/zh-TW/product/">功能</a><a href="/zh-TW/pricing/">方案</a><a href="/zh-TW/faq/">常見問題</a></nav>
+    <nav class="mobile-nav" id="mobileNav" aria-label="主要導覽">
+      <a href="/zh-TW/product/">功能</a><a href="/zh-TW/pricing/">方案</a><a href="/zh-TW/#faq">常見問題</a>
+      <a href="/zh-TW/app">開啟計算器</a>
+
+    <a class="lang-switch" href="/en/" hreflang="en" lang="en">
+      <span class="lang-full">English</span>
+      <span class="lang-short">EN</span>
+    </a>
+    </nav>
   </header>
+
 
   <main id="main">
     <section class="hero" id="start">
@@ -64,30 +77,191 @@
             <a class="button button-orange" href="/zh-TW/app">3 分鐘算出每日底線 <span aria-hidden="true">→</span></a>
             <a class="button button-ghost" href="/api/auth/google?locale=zh-TW">使用 Google 登入</a>
           </div>
-          <p class="hero-trust">不用登入也能先試算</p>
+          <ul class="trust-list">
+
+              <li><span class="check" aria-hidden="true">✓</span>為一人公司而做</li>
+              <li><span class="check" aria-hidden="true">✓</span>不用登入也能先試算</li>
+              <li><span class="check" aria-hidden="true">✓</span>僅供預估，非稅務建議</li>
+          </ul>
         </div>
         <div class="hero-visual">
-  <section class="home-snapshot" aria-label="總覽範例，顯示每日底線、本月實際利潤與現金可支撐天數。">
-    <div class="home-snapshot-head"><strong>總覽</strong><span>範例資料</span></div>
-    <dl>
-      <div><dt>每日底線</dt><dd>$29.59 <small>/ 天</small></dd></div>
-      <div><dt>本月實際利潤</dt><dd>$2,940</dd></div>
-      <div><dt>現金可支撐天數</dt><dd>270 天</dd></div>
-    </dl>
-  </section></div>
+  <div class="dashboard" role="img" aria-label="GigLedger 儀表板預覽，包含範例收入、固定成本、實際利潤、預留稅款與現金跑道。">
+    <div class="dash-head">
+      <div class="dash-brand">
+        <img src="/assets/logo-mark-64.png" alt="" width="24" height="24">
+        <span>gigledger</span>
+      </div>
+      <span class="sample-badge">範例資料</span>
+    </div>
+    <div class="dash-month">本月</div>
+    <div class="dash-rows">
+
+        <div class="dash-row tone-default">
+          <span>總收入</span>
+          <strong>$4,800</strong>
+        </div>
+        <div class="dash-row tone-muted">
+          <span>平台手續費</span>
+          <strong>−$480</strong>
+        </div>
+        <div class="dash-row tone-muted">
+          <span>其他支出</span>
+          <strong>−$480</strong>
+        </div>
+        <div class="dash-row tone-muted">
+          <span>固定成本</span>
+          <strong>−$900</strong>
+        </div>
+        <div class="dash-row tone-accent">
+          <span>實際利潤</span>
+          <strong>$2,940</strong>
+        </div>
+    </div>
+    <div class="dash-split">
+      <div class="dash-metric">
+        <span>每日底線</span>
+        <strong>$29.59<em>/ 天</em></strong>
+      </div>
+      <div class="dash-metric">
+        <span>預留稅款</span>
+        <strong>$735</strong>
+        <small>僅供預估</small>
+      </div>
+    </div>
+    <div class="dash-chart">
+      <div class="chart-top">
+        <span>收入趨勢</span>
+        <span class="chart-key" aria-hidden="true"></span>
+      </div>
+      <div class="bars">
+
+          <div class="bar-wrap">
+            <div class="bar" style="--h:42%"></div>
+            <span>1月</span>
+          </div>
+          <div class="bar-wrap">
+            <div class="bar" style="--h:58%"></div>
+            <span>2月</span>
+          </div>
+          <div class="bar-wrap">
+            <div class="bar" style="--h:48%"></div>
+            <span>3月</span>
+          </div>
+          <div class="bar-wrap">
+            <div class="bar" style="--h:72%"></div>
+            <span>4月</span>
+          </div>
+          <div class="bar-wrap">
+            <div class="bar" style="--h:64%"></div>
+            <span>5月</span>
+          </div>
+          <div class="bar-wrap">
+            <div class="bar" style="--h:88%"></div>
+            <span>6月</span>
+          </div>
+      </div>
+    </div>
+    <div class="dash-note">多數工具漏掉的那個數字。</div>
+  </div></div>
       </div>
     </section>
 
+    <section class="daily-section" id="daily">
+      <div class="shell daily-grid">
+        <div class="section-copy">
+          <div class="section-index"><span>01</span><div></div><p>每日數字</p><span class="section-name">01 · 為什麼</span></div>
+          <h2>你的每日底線。</h2>
+          <p>AI 工具、軟體、租金。不管你這個月有沒有出貨，這些成本都照樣在跑。GigLedger 把它們換算成一個能採取行動的數字：你的每日底線。</p>
+          <strong class="aside-note">以下為四捨五入示意。精確範例：每月營業固定成本 $900，營業使用比例 100%。</strong>
+        </div>
+        <div class="daily-card">
+          <p class="daily-kicker">每日數字</p>
+          <div class="big-number">$29.59<span>每天</span></div>
+          <p class="formula">每月固定成本 × 12 ÷ 365</p>
+          <div class="daily-list">
+
+              <div><span>共享空間</span><strong>約 $18 / 天</strong></div>
+              <div><span>軟體</span><strong>約 $7 / 天</strong></div>
+              <div><span>保險</span><strong>約 $5 / 天</strong></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="home-product-links shell" id="decisions" aria-label="產品">
+      <a id="features" href="/zh-TW/product/"><strong>功能</strong><span aria-hidden="true">→</span></a>
+      <a id="pricing" href="/zh-TW/pricing/"><strong>方案</strong><span aria-hidden="true">→</span></a>
+      <a id="how" href="/zh-TW/product/#how"><strong>運作方式</strong><span aria-hidden="true">→</span></a>
+    </section>
+
+    <section class="faq-section" id="faq">
+      <div class="shell faq-grid">
+        <div class="faq-intro">
+          <h2>常見問題。</h2>
+          <p>簡單說：我們寧可講清楚，也不想過度承諾。</p>
+        </div>
+        <div class="faq-list">
+
+            <details>
+              <summary>GigLedger 會幫我報稅嗎？<span aria-hidden="true">+</span></summary>
+              <p>不會。GigLedger 提供預估與預留目標，不代為申報，也不提供稅務建議。</p>
+            </details>
+            <details>
+              <summary>能連接 Stripe 或 App Store 嗎？<span aria-hidden="true">+</span></summary>
+              <p>Pro 支援 Stripe 官方同步，也能匯入 Upwork、PayPal 和 Fiverr 等來源的美元 CSV。App Store 報表同步即將推出。</p>
+            </details>
+            <details>
+              <summary>什麼算固定成本？<span aria-hidden="true">+</span></summary>
+              <p>訂閱、軟體、租金、保險、主機等重複發生的成本。一次性花費記為支出；訂閱不要在支出裡再記一次。GigLedger 會記錄營業使用比例，但不判斷某項支出是否能抵稅。</p>
+            </details>
+            <details>
+              <summary>美國以外能用嗎？<span aria-hidden="true">+</span></summary>
+              <p>帳本可在全球使用，預留比例由你自設。25%–30% 來自常見的美國自雇做法，不是你所在地的稅法。</p>
+            </details>
+            <details>
+              <summary>我的資料會怎樣？<span aria-hidden="true">+</span></summary>
+              <p>使用 Google 登入後，我們會在 Cloudflare D1 儲存 Google 信箱、姓名與你保存的帳本資料。可在 Dashboard 匯出或刪除帳號。</p>
+            </details>
+            <details>
+              <summary>現在可以開始用嗎？<span aria-hidden="true">+</span></summary>
+              <p>可以。先不登入試算，再使用 Google 登入保存你的帳本。</p>
+            </details>
+        </div>
+      </div>
+    </section>
+
+
   </main>
-  <footer class="site-footer public-footer">
-    <div class="shell public-footer-row">
+  <footer class="site-footer">
+    <div class="shell footer-top">
+      <div>
+
+  <a class="brand" href="/zh-TW/">
+    <img class="brand-mark" src="/assets/logo-mark-192.png" alt="" width="42" height="42">
+    <span class="brand-word"><b>Gig</b>Ledger</span>
+  </a>
+        <p class="footer-tagline">一人公司的每日成本與真實利潤。</p>
+        <p class="footer-status">上線前預覽</p>
+      </div>
+      <div class="footer-links">
+        <div>
+          <p class="footer-heading">產品</p>
+          <a href="/zh-TW/product/">功能</a>
+          <a href="/zh-TW/pricing/">方案</a>
+          <a href="/zh-TW/#faq">常見問題</a>
+        </div>
+        <div>
+          <p class="footer-heading">法律</p>
+          <a href="/zh-TW/privacy">隱私</a>
+          <a href="/zh-TW/tax-disclaimer">稅務免責</a>
+        </div>
+      </div>
+    </div>
+    <div class="shell footer-bottom">
       <p>© 2026 GigLedger. 保留所有權利。</p>
-      <nav aria-label="法律">
-        <a href="/zh-TW/privacy">隱私</a>
-        <a href="/zh-TW/tax-disclaimer">稅務免責</a>
-      </nav>
+      <a href="/en/">English</a>
     </div>
   </footer>
-  <script src="/app.js?v=20261121-02" defer></script>
+  <script src="/app.js?v=20261121-03" defer></script>
 </body>
 </html>
