@@ -7,6 +7,18 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://gigledger.xyz/en/"/>
   </url>
   <url>
+    <loc>https://gigledger.xyz/en/product/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://gigledger.xyz/en/product/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant-TW" href="https://gigledger.xyz/zh-TW/product/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://gigledger.xyz/en/product/"/>
+  </url>
+  <url>
+    <loc>https://gigledger.xyz/en/pricing/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://gigledger.xyz/en/pricing/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant-TW" href="https://gigledger.xyz/zh-TW/pricing/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://gigledger.xyz/en/pricing/"/>
+  </url>
+  <url>
     <loc>https://gigledger.xyz/en/privacy</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://gigledger.xyz/en/privacy"/>
     <xhtml:link rel="alternate" hreflang="zh-Hant-TW" href="https://gigledger.xyz/zh-TW/privacy"/>
@@ -23,6 +35,18 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://gigledger.xyz/en/"/>
     <xhtml:link rel="alternate" hreflang="zh-Hant-TW" href="https://gigledger.xyz/zh-TW/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://gigledger.xyz/en/"/>
+  </url>
+  <url>
+    <loc>https://gigledger.xyz/zh-TW/product/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://gigledger.xyz/en/product/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant-TW" href="https://gigledger.xyz/zh-TW/product/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://gigledger.xyz/en/product/"/>
+  </url>
+  <url>
+    <loc>https://gigledger.xyz/zh-TW/pricing/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://gigledger.xyz/en/pricing/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant-TW" href="https://gigledger.xyz/zh-TW/pricing/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://gigledger.xyz/en/pricing/"/>
   </url>
   <url>
     <loc>https://gigledger.xyz/zh-TW/privacy</loc>

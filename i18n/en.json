@@ -142,7 +142,7 @@
       {
         "tag": "Income",
         "title": "Scattered income, one place.",
-        "body": "Add manually, import CSV, or sync official Stripe reports in Pro. App Store Connect key storage and sold-income status are available; report sync is clearly marked as pending. No bank passwords, no scraping.",
+        "body": "Record payments by hand, import a USD CSV, or connect Stripe with Pro. App Store report sync is coming soon.",
         "tone": "dark",
         "icon": "income"
       },
@@ -163,7 +163,7 @@
       {
         "tag": "Reports",
         "title": "Reports you can hand over.",
-        "body": "Export a clean monthly CSV for yourself or your accountant.",
+        "body": "Export your income as a CSV for yourself or your accountant.",
         "tone": "sand",
         "icon": "report"
       }
@@ -181,8 +181,8 @@
       },
       {
         "number": "02",
-        "title": "Add or import income",
-        "body": "Enter a payment in seconds or import a CSV from your platform. Platform fees and net payouts stay attached."
+        "title": "Estimate monthly income",
+        "body": "Enter expected net income. Add cash on hand to estimate your runway."
       },
       {
         "number": "03",
@@ -205,14 +205,14 @@
       },
       {
         "label": "Consultants and studios",
-        "body": "Project income, recurring costs, and a clean monthly CSV you can hand over."
+        "body": "Project income, recurring costs, and a CSV you can hand over."
       }
     ]
   },
   "honesty": {
     "kicker": "Official APIs where they exist. No bank passwords. No scraping.",
     "title": "Start with a working calculator. Add official sync in Pro.",
-    "body": "GigLedger starts with a free calculator. Free includes manual entry and up to five subscriptions. Pro adds CSV import, official Stripe sync, subscription reviews, and App Store Connect key storage. App Store report sync is not available yet. We will not ask for bank passwords, scrape your accounts, or file taxes for you.",
+    "body": "Start with the free calculator or log payments by hand. Pro adds CSV, Stripe sync, and subscription reviews. App Store report sync is coming soon.",
     "yesTitle": "In the first version",
     "yes": [
       "Free calculator, manual entry, and five subscriptions",
@@ -238,7 +238,7 @@
       },
       {
         "q": "Does it connect to Stripe or the App Store?",
-        "a": "Pro supports official Stripe sync and App Store Connect key storage. App Store report sync is not available yet and says so clearly. Upwork, PayPal, and Fiverr can be imported with CSV in Pro. No bank passwords and no scraping."
+        "a": "Pro supports official Stripe sync and USD CSV imports for sources such as Upwork, PayPal, and Fiverr. App Store report sync is coming soon."
       },
       {
         "q": "What counts as a fixed cost?",
@@ -525,7 +525,7 @@
     "integrations": {
       "kicker": "Pro sync",
       "title": "Official income sync",
-      "body": "Stripe sync imports charges, fees, and net income. App Store Connect securely stores a validated key and separates sold from received revenue; report sync is not configured yet. Sync is manual, so it stays within the free Cloudflare plan.",
+      "body": "Connect Stripe to import income and fees. App Store report sync is coming soon.",
       "keyLabel": "Stripe restricted key",
       "accountLabel": "Account label (optional)",
       "accountPlaceholder": "e.g. GigLedger live",
@@ -676,7 +676,7 @@
       "limitReached": "Free plans include up to {limit} subscriptions. Upgrade is coming later; existing entries stay available.",
       "proRequiredCsv": "CSV import and export are a Pro feature. Pricing is available after private beta.",
       "proRequiredReview": "Subscription reminders are a Pro feature. Pricing is available after private beta.",
-      "upgradeNote": "Pricing is TBD during private beta. Free includes 5 subscriptions; Pro unlocks CSV, Stripe sync, subscription reviews, and App Store key storage."
+      "upgradeNote": "Pricing is available after private beta. Pro unlocks CSV, Stripe sync, and subscription reviews."
     },
     "projects": {
       "title": "Projects",
@@ -699,6 +699,54 @@
       "profitKicker": "This month",
       "profitTitle": "Where the money went",
       "profitNote": "Gross income → fees → net income → expenses → fixed costs → true profit"
+    },
+    "workspace": {
+      "overview": "Overview",
+      "ledger": "Ledger",
+      "settings": "Settings",
+      "navigation": "Workspace",
+      "ledgerNavigation": "Ledger sections",
+      "fixed": "Fixed costs & subscriptions",
+      "addEntry": "Add a record",
+      "undo": "Undo",
+      "undone": "Record removed.",
+      "entrySaved": "Saved to your ledger.",
+      "saveFailed": "Could not save. Your entries are still here.",
+      "moreFields": "Optional details",
+      "uncategorized": "Uncategorized",
+      "period": "Reporting month",
+      "currentMonth": "This month",
+      "previousMonth": "Last month",
+      "dailyFloor": "Daily cost floor",
+      "dailyNote": "Based on active fixed costs",
+      "currentProfit": "This month's profit",
+      "previousProfit": "Last month's profit",
+      "profitNote": "Received income after fees and costs",
+      "runway": "Cash runway",
+      "runwayNote": "At today's fixed costs, with no new income",
+      "firstFixed": "Add your first fixed cost",
+      "addCash": "Add cash on hand",
+      "chartTitle": "Where did the money go?",
+      "chartProfit": "Profit left",
+      "shortfall": "Cost shortfall",
+      "emptyChart": "Monthly totals will appear when income or costs are recorded.",
+      "requiredSoFar": "Fixed-cost target to date",
+      "onTrack": "On target",
+      "moreNumbers": "Fees, tax reserve and other figures",
+      "extras": "Subscription review, weekly summary and share cards",
+      "planning": "Cash and planning",
+      "saveSettings": "Save settings",
+      "settingsSaved": "Settings saved.",
+      "account": "Account and data",
+      "signOut": "Sign out",
+      "appStoreComing": "Report sync is coming soon.",
+      "appStoreSaved": "A saved key is on file. You can disconnect it at any time.",
+      "loading": "Loading your ledger…",
+      "loadFailed": "Could not load your ledger.",
+      "retry": "Try again",
+      "saving": "Saving…",
+      "runwayDays": "{days} days",
+      "runwayWithHistory": "{days} days based on {months} full month(s) of income"
     }
   },
   "start": {
@@ -726,7 +774,7 @@
     },
     "sync": {
       "tag": "Official APIs · Coming soon for App Store reports",
-      "title": "Official sync for Stripe and App Store. Coming soon.",
+      "title": "Stripe sync. App Store reports coming soon.",
       "body": "Pro is designed for official Stripe sync and App Store Connect API storage. Sales and finance reports stay separate: sold is not the same as received. Upwork, PayPal, and Fiverr use CSV. No bank passwords, no scraping."
     },
     "share": {
@@ -752,13 +800,13 @@
       "pro": [
         "Unlimited subscriptions",
         "CSV import and export",
-        "Official Stripe sync and App Store key storage",
+        "Official Stripe sync",
         "Subscription reviews and reminders"
       ],
       "price": "Pricing available after private beta",
       "calculate": "Calculate your Daily Floor in 3 minutes",
       "signIn": "Sign in with Google",
-      "note": "No email waitlist. Unsaved calculations stay on the current page."
+      "note": "Pro pricing will be announced after private beta."
     }
   },
   "quickNav": {
@@ -777,5 +825,15 @@
     "features": "02 · Features",
     "decisions": "03 · Decisions",
     "how": "04 · How"
+  },
+  "marketingPages": {
+    "product": {
+      "title": "How GigLedger works",
+      "description": "Track income and costs, see your daily cost floor, and understand what is left each month."
+    },
+    "pricing": {
+      "title": "Plans",
+      "description": "Compare the GigLedger calculator, manual ledger and Pro tools during private beta."
+    }
   }
 }

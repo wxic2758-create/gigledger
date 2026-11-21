@@ -9,9 +9,12 @@
   let stripeIntegration = null;
   let appStoreIntegration = null;
   let integrationsLoaded = false;
+  let reportPeriod = "current";
+  let workspaceReady = false;
 
   const currency = new Intl.NumberFormat(locale === "zh-TW" ? "zh-TW" : "en-US", {
     style: "currency", currency: "USD", maximumFractionDigits: 2,
+    currencyDisplay: dashboardMode ? "narrowSymbol" : "symbol",
   });
   const money = (value) => currency.format(Number.isFinite(value) ? value : 0);
   const day = new Intl.NumberFormat(locale === "zh-TW" ? "zh-TW" : "en-US", {
@@ -51,6 +54,9 @@
   const monthDayCount = (date = new Date()) =>
     new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
 
+  const inclusiveDays = (start, end) =>
+    (Date.parse(end) - Date.parse(start)) / 86400000 + 1;
+
   const monthDaysElapsed = (date = new Date()) => date.getDate();
 
   const monthKey = (date = new Date()) =>
@@ -81,8 +87,10 @@
       if (!/^\d{4}-\d{2}$/.test(key) || key >= currentMonth) continue;
       buckets.set(key, (buckets.get(key) || 0) + (Number(item.amount) || 0) - (Number(item.platformFee) || 0));
     }
-    const months = [...buckets.keys()].sort().slice(-3);
-    if (!months.length) return null;
+    const earliest = [...buckets.keys()].sort()[0];
+    if (!earliest) return null;
+    const months = [3, 2, 1].map((offset) => monthKey(new Date(now.getFullYear(), now.getMonth() - offset, 1)))
+      .filter((key) => key >= earliest);
     let total = 0;
     let days = 0;
     for (const key of months) {
@@ -131,7 +139,7 @@
     const start = item.startDate && item.startDate > first ? item.startDate : first;
     const end = item.endDate && item.endDate < last ? item.endDate : last;
     if (start > end) return 0;
-    return Math.floor((new Date(`${end}T00:00:00`) - new Date(`${start}T00:00:00`)) / 86400000) + 1;
+    return inclusiveDays(start, end);
   };
 
   const monthlyCostInMonth = (item, selectedMonth) => {
@@ -146,7 +154,7 @@
     };
     const overlap = (item.versions || []).filter((version) => version.effectiveFrom <= monthEnd
       && (!version.effectiveTo || version.effectiveTo >= monthStart));
-    if (!overlap.length) {
+    if (!item.versions?.length) {
       return monthlyAmountForVersion(baseVersion)
         * activeDaysInPeriod(item, new Date(`${selectedMonth}-01T12:00:00`), selectedMonth) / daysInMonth;
     }
@@ -154,14 +162,14 @@
       const versionStart = version.effectiveFrom > monthStart ? version.effectiveFrom : monthStart;
       const versionEnd = version.effectiveTo && version.effectiveTo < monthEnd ? version.effectiveTo : monthEnd;
       if (versionStart > versionEnd) return versionSum;
-      const days = Math.floor((new Date(`${versionEnd}T00:00:00`) - new Date(`${versionStart}T00:00:00`)) / 86400000) + 1;
+      const days = inclusiveDays(versionStart, versionEnd);
       return versionSum + monthlyAmountForVersion(version) * days / daysInMonth;
     }, 0);
   };
 
   const isInCurrentMonth = (value) => String(value || "").slice(0, 7) === monthKey();
 
-  const calculate = () => {
+  const calculate = (period = monthKey()) => {
     const active = (item) => {
       const current = today();
       return (!item.startDate || item.startDate <= current) && (!item.endDate || item.endDate >= current);
@@ -171,19 +179,20 @@
         ? monthlyAmountForVersion(effectiveVersionForItem(item)) * 12 / 365
         : 0
     ), 0);
-    const monthIncomeEntries = state.income.filter((item) => isInCurrentMonth(item.date) && item.recognition !== "sold");
+    const inPeriod = (item) => String(item.date || "").slice(0, 7) === period;
+    const monthIncomeEntries = state.income.filter((item) => inPeriod(item) && item.recognition !== "sold");
     const soldIncome = state.income
-      .filter((item) => isInCurrentMonth(item.date) && item.recognition === "sold")
+      .filter((item) => inPeriod(item) && item.recognition === "sold")
       .reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
     const grossIncome = monthIncomeEntries.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
     const platformFees = monthIncomeEntries.reduce((sum, item) => sum + (Number(item.platformFee) || 0), 0);
     const netIncome = grossIncome - platformFees;
     const monthlyFixedCosts = state.fixedCosts.reduce(
-      (sum, item) => sum + monthlyCostInMonth(item, monthKey()),
+      (sum, item) => sum + monthlyCostInMonth(item, period),
       0,
     );
     const monthlyExpenses = state.expenses
-      .filter((item) => isInCurrentMonth(item.date))
+      .filter(inPeriod)
       .reduce((sum, item) => sum + (Number(item.amount) || 0) * (Number(item.businessUse) || 0) / 100, 0);
     const monthIncome = netIncome;
     const rate = Number(state.taxReserveRate) / 100;
@@ -203,12 +212,12 @@
       monthIncome,
       comparison: monthIncome - requiredToDate,
       savings,
-      noNewWorkRunway: savings !== null && Number.isFinite(savings) && savings > 0 && dailyFloor > 0
+      noNewWorkRunway: savings !== null && Number.isFinite(savings) && savings >= 0 && dailyFloor > 0
         ? Math.floor(savings / dailyFloor)
         : null,
       incomeAverage,
       netBurn,
-      averageRunway: netBurn === null || savings === null || !Number.isFinite(savings) || savings <= 0
+      averageRunway: netBurn === null || savings === null || !Number.isFinite(savings) || savings < 0
         ? null
         : netBurn <= 0 ? null : Math.floor(savings / netBurn),
       cashNotBurning: netBurn !== null && netBurn <= 0,
@@ -244,8 +253,34 @@
     };
   }
 
+  const renderWorkspaceChart = (result) => {
+    const bar = document.querySelector("[data-chart-bar]");
+    const fixed = result.monthlyFixedCosts;
+    const expenses = result.monthlyExpenses;
+    const profit = Math.max(0, result.trueProfit);
+    const shortfall = Math.max(0, -result.trueProfit);
+    const total = Math.max(result.netIncome, fixed + expenses);
+    bar.hidden = total <= 0;
+    document.querySelector("[data-chart-key]").hidden = total <= 0;
+    document.querySelector("[data-chart-empty]").hidden = total > 0;
+    document.querySelector("[data-chart-shortfall]").hidden = shortfall === 0;
+    document.querySelector("[data-chart-shortfall-value]").textContent = money(shortfall);
+    document.querySelector("[data-chart-profit]").textContent = money(profit);
+    for (const [segment, value] of Object.entries({ fixed, expenses, profit })) {
+      bar.querySelector(`[data-chart-segment="${segment}"]`).style.flexBasis = total ? `${value / total * 100}%` : "0%";
+    }
+    const boundary = bar.querySelector('[data-chart-segment="shortfall"]');
+    boundary.hidden = shortfall === 0 || result.netIncome <= 0;
+    boundary.style.insetInlineStart = total ? `${result.netIncome / total * 100}%` : "0%";
+    const title = reportPeriod === "previous" ? messages.workspace.previousProfit : messages.workspace.currentProfit;
+    document.querySelector("[data-profit-period]").textContent = title;
+    document.querySelector("[data-proto='metric-profit']").classList.toggle("is-loss", result.trueProfit < 0);
+    document.querySelector("[data-period-status]").textContent = `${title} ${money(result.trueProfit)}`;
+  };
+
   const renderMetrics = () => {
-    const result = calculate();
+    const current = calculate();
+    const result = reportPeriod === "previous" ? calculate(previousMonthKey()) : current;
     set("metric-daily", dayMoney(result.dailyFloor));
     set("metric-gross", money(result.grossIncome));
     set("metric-sold", money(result.soldIncome));
@@ -261,18 +296,30 @@
     set("metric-required", money(result.requiredToDate));
     const comparisonNode = document.querySelector("[data-proto='metric-comparison']");
     if (comparisonNode) {
-      const hasFloor = result.dailyFloor > 0;
+      const hasFloor = current.dailyFloor > 0;
+      const comparison = Math.round(current.comparison * 100) / 100;
       comparisonNode.textContent = !hasFloor
         ? messages.metrics.comparisonUnavailable
-        : result.comparison < 0
-          ? messages.metrics.ahead.replace("{amount}", money(Math.abs(result.comparison)))
-          : messages.metrics.behind.replace("{amount}", money(result.comparison));
-      comparisonNode.closest(".dashboard-comparison")?.classList.toggle("is-behind", hasFloor && result.comparison > 0);
-      comparisonNode.closest(".dashboard-comparison")?.classList.toggle("is-ahead", hasFloor && result.comparison < 0);
+        : comparison > 0
+          ? messages.metrics.ahead.replace("{amount}", money(comparison))
+          : comparison < 0
+            ? messages.metrics.behind.replace("{amount}", money(-comparison))
+            : messages.workspace.onTrack;
+      comparisonNode.closest(".dashboard-comparison")?.classList.toggle("is-behind", hasFloor && comparison < 0);
+      comparisonNode.closest(".dashboard-comparison")?.classList.toggle("is-ahead", hasFloor && comparison > 0);
+      const pace = comparisonNode.closest("[data-current-pace]");
+      if (pace) {
+        pace.hidden = !hasFloor || reportPeriod !== "current";
+        pace.classList.toggle("is-loss", comparison < 0);
+      }
     }
     const runwayNode = document.querySelector("[data-proto='metric-runway']");
     if (runwayNode) {
-      if (result.savings === null || !Number.isFinite(result.savings) || result.savings <= 0) {
+      if (dashboardMode) {
+        runwayNode.textContent = result.noNewWorkRunway === null
+          ? "—"
+          : messages.workspace.runwayDays.replace("{days}", String(result.noNewWorkRunway));
+      } else if (result.savings === null || !Number.isFinite(result.savings) || result.savings < 0) {
         runwayNode.textContent = messages.metrics.runwayUnset;
       } else if (result.noNewWorkRunway === null) {
         runwayNode.textContent = messages.metrics.runwayNeedFloor;
@@ -285,7 +332,20 @@
       }
     }
     const averageNode = document.querySelector("[data-proto='metric-runway-average']");
-    if (averageNode) {
+    if (averageNode && dashboardMode) {
+      const context = result.noNewWorkRunway !== null
+        ? messages.workspace.runwayNote
+        : result.savings !== null ? messages.metrics.runwayNeedFloor : "";
+      let average = "";
+      if (result.noNewWorkRunway !== null && result.incomeAverage) {
+        average = result.cashNotBurning
+          ? messages.metrics.runwayNotBurning
+          : messages.workspace.runwayWithHistory
+            .replace("{days}", String(result.averageRunway))
+            .replace("{months}", String(result.incomeAverage.monthCount));
+      }
+      averageNode.textContent = [context, average].filter(Boolean).join(" · ");
+    } else if (averageNode) {
       if (result.savings === null || !Number.isFinite(result.savings) || result.savings <= 0) {
         averageNode.textContent = "";
       } else if (result.incomeAverage === null) {
@@ -300,9 +360,14 @@
     if (shareAiNode) shareAiNode.textContent = money(result.aiMonthlyCosts);
     const shareDailyNode = document.querySelector("[data-share-daily]");
     if (shareDailyNode) shareDailyNode.textContent = dayMoney(result.dailyFloor);
-    renderSubscriptionSummary(result.subscriptionSummary);
-    renderAttentionQueue(result);
-    renderWeeklySummary(result);
+    if (dashboardMode) {
+      document.querySelector("[data-floor-setup]").hidden = state.fixedCosts.length > 0;
+      document.querySelector("[data-cash-setup]").hidden = state.cashOnHand !== "";
+      renderWorkspaceChart(result);
+    }
+    renderSubscriptionSummary(current.subscriptionSummary);
+    renderAttentionQueue(current);
+    renderWeeklySummary(current);
   };
 
   const renderSubscriptionSummary = (summary) => {
@@ -356,13 +421,13 @@
       });
     }
     if (!state.fixedCosts.length) {
-      items.push({ text: messages.attentionQueue.noFixedCosts, href: "#fixed-costs" });
+      items.push({ text: messages.attentionQueue.noFixedCosts, href: "#fixed-cost-entry" });
     }
     if (!state.income.some((item) => isInCurrentMonth(item.date) && item.recognition !== "sold")) {
-      items.push({ text: messages.attentionQueue.noIncome, href: "#income" });
+      items.push({ text: messages.attentionQueue.noIncome, href: "#income-entry" });
     }
     if (state.cashOnHand === "") {
-      items.push({ text: messages.attentionQueue.noCash, href: "#income" });
+      items.push({ text: messages.attentionQueue.noCash, href: "#cash-settings" });
     }
     if (integrationsLoaded && stripeIntegration?.lastError) {
       items.push({
@@ -859,6 +924,81 @@
     if (input) input.value = state.appleFeeRate;
   };
 
+  const retryEntries = new WeakMap();
+  let workspaceUpdate = Promise.resolve();
+  const updateWorkspace = (url, options) => {
+    const update = workspaceUpdate.then(async () => {
+      const response = await fetch(url, { credentials: "same-origin", ...options });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.ledger) {
+        if (data.error === "subscription_limit") {
+          throw new Error(`subscription_limit:${data.limit || state.features.subscriptionLimit || 5}`);
+        }
+        throw new Error(data.error || "workspace_update_failed");
+      }
+      applyLedger(data.ledger);
+      render();
+      return data.ledger;
+    });
+    workspaceUpdate = update.catch(() => {});
+    return update;
+  };
+  const postWorkspace = (data) => updateWorkspace("/api/workspace", {
+    method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(data),
+  });
+  const deleteWorkspaceEntry = (type, id) => updateWorkspace(
+    `/api/workspace?type=${type}&id=${encodeURIComponent(id)}`, { method: "DELETE" },
+  );
+  const showWorkspaceMessage = (form, text, isError = false) => {
+    const node = form.querySelector("[data-workspace-message]");
+    if (!node) return;
+    node.textContent = text;
+    node.hidden = !text;
+    node.classList.toggle("is-error", isError);
+  };
+  const submitWorkspaceForm = async (form, submit) => {
+    if (!workspaceReady || form.getAttribute("aria-busy") === "true") return false;
+    const controls = [...form.elements].filter((control) => !control.disabled);
+    controls.forEach((control) => { control.disabled = true; });
+    form.setAttribute("aria-busy", "true");
+    showWorkspaceMessage(form, messages.workspace.saving);
+    try {
+      await submit();
+      return true;
+    } catch (error) {
+      const [code, limit] = error.message.split(":");
+      showWorkspaceMessage(form, code === "subscription_limit"
+        ? messages.plan.limitReached.replace("{limit}", limit || "5")
+        : messages.workspace.saveFailed, true);
+      return false;
+    } finally {
+      controls.forEach((control) => { control.disabled = false; });
+      form.removeAttribute("aria-busy");
+    }
+  };
+  const addRecord = (form, key, record) => {
+    if (!dashboardMode) {
+      state[key].push(record);
+      return Promise.resolve(true);
+    }
+    return submitWorkspaceForm(form, async () => {
+      const signature = JSON.stringify({ ...record, externalRef: undefined });
+      const retry = retryEntries.get(form);
+      const externalRef = retry?.signature === signature ? retry.externalRef : record.externalRef;
+      retryEntries.set(form, { signature, externalRef });
+      const ledger = await postWorkspace({ [key]: [{ ...record, externalRef }] });
+      retryEntries.delete(form);
+      const undo = form.querySelector("[data-undo-entry]");
+      if (undo) {
+        const saved = ledger[key].find((entry) => entry.externalRef === externalRef);
+        undo.hidden = !saved;
+        undo.dataset.undoEntry = saved?.id || "";
+        undo.dataset.undoType = key === "income" ? "income" : "expense";
+      }
+      showWorkspaceMessage(form, messages.workspace.entrySaved);
+    });
+  };
+
   const fixedForm = document.querySelector("[data-proto-form='fixed']");
   if (fixedForm) {
     const revisionDate = fixedForm.querySelector("[data-revision-date]");
@@ -914,6 +1054,7 @@
     cancelButton?.addEventListener("click", () => setRevisionMode());
     fixedForm.addEventListener("submit", async (event) => {
       event.preventDefault();
+      if (!fixedForm.reportValidity()) return;
       const data = new FormData(fixedForm);
       const selected = cycles.find((cycle) => cycle.value === data.get("cycle"));
       const startDate = String(data.get("startDate") || today());
@@ -1012,7 +1153,7 @@
         }
         return;
       }
-      state.fixedCosts.push({
+      const entry = {
         name: String(data.get("name") || ""),
         cycle: selected?.value || "monthly",
         multiplier: selected?.multiplier || 12,
@@ -1027,7 +1168,8 @@
         nextBillingDate: String(data.get("nextBillingDate") || "") || null,
         projects: allocation.map((entry) => entry.name),
         allocation,
-      });
+      };
+      if (!await addRecord(fixedForm, "fixedCosts", entry)) return;
       fixedForm.reset();
       fixedForm.elements.startDate.value = today();
       fixedForm.elements.businessUse.value = "100";
@@ -1090,7 +1232,7 @@
         feeFromPercent();
       }
     });
-    incomeForm.addEventListener("submit", (event) => {
+    incomeForm.addEventListener("submit", async (event) => {
       event.preventDefault();
       if (!incomeForm.reportValidity()) return;
       const data = new FormData(incomeForm);
@@ -1098,7 +1240,7 @@
       const amount = Number(data.get("amount")) || 0;
       const suppliedFee = Number(data.get("platformFee")) || 0;
       const recognition = source === "app_store" && data.get("recognition") === "sold" ? "sold" : "received";
-      state.income.push({
+      const entry = {
         externalRef: `manual:${crypto.randomUUID()}`,
         date: String(data.get("date") || today()),
         source,
@@ -1107,7 +1249,8 @@
         platformFee: suppliedFee,
         recognition,
         projects: [String(data.get("project") || "").trim()].filter(Boolean),
-      });
+      };
+      if (!await addRecord(incomeForm, "income", entry)) return;
       incomeForm.reset();
       incomeForm.elements.date.value = today();
       const statusField = incomeForm.querySelector("[data-income-recognition-field]");
@@ -1120,7 +1263,7 @@
 
   const expenseForm = document.querySelector("[data-proto-form='expense']");
   if (expenseForm) {
-    expenseForm.addEventListener("submit", (event) => {
+    expenseForm.addEventListener("submit", async (event) => {
       event.preventDefault();
       if (!expenseForm.reportValidity()) return;
       const data = new FormData(expenseForm);
@@ -1142,16 +1285,17 @@
       if (duplicate && !window.confirm(messages.expenses.duplicateWarning.replace("{name}", duplicate.name))) {
         return;
       }
-      state.expenses.push({
+      const entry = {
         externalRef: `manual:${crypto.randomUUID()}`,
         date: expenseDate,
-        category: String(data.get("category") || ""),
+        category: String(data.get("category") || "").trim() || messages.workspace.uncategorized,
         merchant: String(data.get("merchant") || ""),
         amount,
         businessUse: Number(data.get("businessUse")),
         notes: String(data.get("notes") || ""),
         projects: [String(data.get("project") || "").trim()].filter(Boolean),
-      });
+      };
+      if (!await addRecord(expenseForm, "expenses", entry)) return;
       expenseForm.reset();
       expenseForm.elements.date.value = today();
       expenseForm.elements.businessUse.value = "100";
@@ -1263,12 +1407,8 @@
       node.setAttribute("aria-disabled", state.features.csv ? "false" : "true");
       node.title = state.features.csv ? "" : messages.plan.proRequiredCsv;
     });
-    document.querySelectorAll("[data-stripe-form] input, [data-stripe-form] button, [data-app-store-form] input, [data-app-store-form] textarea, [data-app-store-form] button")
-      .forEach((node) => {
-        node.disabled = node.closest("[data-stripe-form]")
-          ? !state.features.sync
-          : !state.features.appStoreSync;
-      });
+    document.querySelectorAll("[data-stripe-form] input, [data-stripe-form] button")
+      .forEach((node) => { node.disabled = !state.features.sync; });
     const reviewPanel = document.querySelector("[data-subscription-summary]");
     const reviewLocked = !state.features.subscriptionReview;
     reviewPanel?.classList.toggle("is-pro-locked", reviewLocked);
@@ -1355,12 +1495,40 @@
     event.preventDefault();
     csvMessage(document.querySelector("[data-csv-message]"), messages.plan.proRequiredCsv);
   });
-  const confirmDelete = () => {
+  const confirmDelete = async (event) => {
     if (!window.confirm(messages.deleteConfirm)) return;
-    window.location.assign("/api/workspace?type=account");
+    const button = event.currentTarget;
+    const status = document.querySelector("[data-delete-account-message]");
+    status.hidden = true;
+    button.disabled = true;
+    try {
+      const response = await fetch("/api/workspace?type=account", { method: "DELETE", credentials: "same-origin", redirect: "manual" });
+      if (response.type !== "opaqueredirect" && response.status !== 302) throw new Error("delete_failed");
+      window.location.assign(`/${locale}/`);
+    } catch {
+      status.textContent = messages.deleteFailed;
+      status.hidden = false;
+      button.disabled = false;
+    }
   };
   document.querySelector("[data-delete-account]")?.addEventListener("click", confirmDelete);
   document.addEventListener("click", async (event) => {
+    const undo = event.target.closest("[data-undo-entry]");
+    if (undo && !undo.disabled && undo.dataset.undoEntry) {
+      const form = undo.closest("form");
+      undo.disabled = true;
+      try {
+        await deleteWorkspaceEntry(undo.dataset.undoType, undo.dataset.undoEntry);
+        undo.hidden = true;
+        undo.dataset.undoEntry = "";
+        showWorkspaceMessage(form, messages.workspace.undone);
+      } catch {
+        showWorkspaceMessage(form, messages.deleteEntryFailed, true);
+      } finally {
+        undo.disabled = false;
+      }
+      return;
+    }
     const button = event.target.closest("[data-delete-entry]");
     if (!button || button.disabled) return;
     if (!window.confirm(messages.deleteEntryConfirm)) return;
@@ -1376,28 +1544,15 @@
     }
     button.disabled = true;
     try {
-      const id = button.dataset.entryId;
-      const response = await fetch(`/api/workspace?type=${button.dataset.entryType}&id=${encodeURIComponent(id)}`, {
-        method: "DELETE",
-        credentials: "same-origin",
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok || !data.ledger) throw new Error("delete_entry_failed");
-      applyLedger(data.ledger);
-      const settingsForm = document.querySelector('[data-proto-form="settings"]');
-      if (settingsForm) {
-        settingsForm.elements.cashOnHand.value = state.cashOnHand;
-        settingsForm.elements.appleFeeRate.value = state.appleFeeRate;
-      }
-      refreshTaxInputs();
-      render();
+      await deleteWorkspaceEntry(button.dataset.entryType, button.dataset.entryId);
     } catch {
       button.disabled = false;
-      window.alert(data?.error === "pro_required" ? messages.plan.proRequiredReview : messages.deleteEntryFailed);
+      window.alert(messages.deleteEntryFailed);
     }
   });
   const settingsForm = document.querySelector('[data-proto-form="settings"]');
   settingsForm?.addEventListener("input", (event) => {
+    if (dashboardMode) return;
     state.taxReserveRate = String(settingsForm.elements.taxReserveRate.value || "");
     state.appleFeeRate = String(settingsForm.elements.appleFeeRate.value || "");
     state.cashOnHand = String(settingsForm.elements.cashOnHand.value || "");
@@ -1406,6 +1561,15 @@
       monthlyIncomeEstimateChanged = true;
     }
     renderMetrics();
+  });
+  settingsForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!dashboardMode || !settingsForm.reportValidity()) return;
+    const settings = Object.fromEntries(new FormData(settingsForm));
+    await submitWorkspaceForm(settingsForm, async () => {
+      await postWorkspace({ settings });
+      showWorkspaceMessage(settingsForm, messages.workspace.settingsSaved);
+    });
   });
 
   document.querySelector("[data-weekly-dismiss]")?.addEventListener("click", () => {
@@ -1465,15 +1629,59 @@
     setTimeout(() => { button.textContent = original; }, 1800);
   });
 
+  const workspaceRoute = (moveFocus = true) => {
+    const hash = window.location.hash.slice(1);
+    const ledgerSections = {
+      ledger: "income", income: "income", "income-entry": "income",
+      expenses: "expenses", "expense-entry": "expenses", projects: "projects",
+      "fixed-costs": "fixed-costs", "fixed-cost-entry": "fixed-costs",
+    };
+    const ledgerSection = Object.hasOwn(ledgerSections, hash) ? ledgerSections[hash] : null;
+    const settings = ["settings", "sources", "cash-settings", "stripe-connect", "app-store-connect"].includes(hash);
+    const view = ledgerSection ? "ledger" : settings ? "settings" : "overview";
+    document.querySelectorAll("[data-workspace-view]").forEach((node) => {
+      node.hidden = node.dataset.workspaceView !== view;
+    });
+    document.querySelectorAll("[data-ledger-panel]").forEach((node) => {
+      node.hidden = node.id !== ledgerSection;
+    });
+    const currentPage = view === "overview" ? "dashboard" : view;
+    for (const link of document.querySelectorAll("[data-workspace-nav], [data-ledger-nav]")) {
+      const selected = link.dataset.workspaceNav ? currentPage === link.dataset.workspaceNav : ledgerSection === link.dataset.ledgerNav;
+      if (selected) link.setAttribute("aria-current", link.dataset.workspaceNav ? "page" : "location");
+      else link.removeAttribute("aria-current");
+    }
+    document.querySelectorAll("[data-add-menu][open]").forEach((node) => { node.open = false; });
+    if (!moveFocus || !workspaceReady) return;
+    const entry = ["income-entry", "expense-entry", "fixed-cost-entry"].includes(hash);
+    const anchor = entry || ["sources", "cash-settings", "stripe-connect", "app-store-connect"].includes(hash)
+      ? document.getElementById(hash) : document.querySelector(`[data-workspace-view="${view}"] h1`);
+    if (!anchor) return;
+    const focusTarget = entry ? anchor.querySelector("input[name='amount'], input[name='name']") : anchor;
+    if (focusTarget) {
+      if (!focusTarget.matches("input")) focusTarget.tabIndex = -1;
+      focusTarget.focus({ preventScroll: true });
+    }
+    anchor.scrollIntoView({ block: "start", behavior: "instant" });
+  };
+
   const loadDashboard = async () => {
     if (!dashboardMode) return;
+    const loader = document.querySelector("[data-workspace-load]");
+    const loadingText = loader.querySelector("[data-workspace-load-message]");
+    const retry = loader.querySelector("[data-workspace-retry]");
+    if (!workspaceReady) {
+      loadingText.textContent = messages.workspace.loading;
+      retry.hidden = true;
+    }
     try {
       const response = await fetch("/api/me", { credentials: "same-origin" });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok || !data.authenticated || !data.ledger) {
+      if (response.status === 401 || (response.ok && !data.ledger)) {
         window.location.assign(`/${locale}/app`);
         return;
       }
+      if (!response.ok || !data.authenticated) throw new Error("dashboard_load_failed");
       applyLedger(data.ledger);
       const settingsForm = document.querySelector('[data-proto-form="settings"]');
       if (settingsForm) {
@@ -1483,15 +1691,23 @@
       refreshAppleFeeInput();
       refreshTaxInputs();
       render();
+      const wasReady = workspaceReady;
+      workspaceReady = true;
+      document.querySelector("[data-dashboard]").setAttribute("aria-busy", "false");
+      loader.hidden = true;
+      loader.closest("main").classList.remove("workspace-pending");
+      if (!wasReady) workspaceRoute(Boolean(window.location.hash));
       await loadIntegrations();
     } catch {
-      window.location.assign(`/${locale}/app`);
+      loader.hidden = false;
+      loadingText.textContent = messages.workspace.loadFailed;
+      retry.hidden = false;
     }
   };
 
   const integrationNodes = () => ({
     panel: document.querySelector("[data-integration-panel]"),
-    ready: Boolean(document.querySelector("[data-integration-panel]")?.querySelector("[data-app-store-form]")),
+    ready: Boolean(document.querySelector("[data-integration-panel]")),
     badge: document.querySelector("[data-plan-badge]"),
     stripe: {
       form: document.querySelector("[data-stripe-form]"),
@@ -1502,13 +1718,8 @@
       disconnect: document.querySelector("[data-stripe-disconnect]"),
     },
     appStore: {
-      form: document.querySelector("[data-app-store-form]"),
       message: document.querySelector("[data-app-store-message]"),
-      statusLabel: document.querySelector("[data-app-store-status-label]"),
-      syncLabel: document.querySelector("[data-app-store-sync-label]"),
-      sync: document.querySelector("[data-app-store-sync]"),
       disconnect: document.querySelector("[data-app-store-disconnect]"),
-      pending: document.querySelector("[data-app-store-pending]"),
     },
   });
   const renderIntegration = () => {
@@ -1535,19 +1746,9 @@
 
     const appStoreConnected = ["connected", "pending"].includes(appStoreIntegration?.status);
     const appStoreNodes = nodes.appStore;
-    if (appStoreNodes.statusLabel) appStoreNodes.statusLabel.textContent = appStoreConnected ? messages.integrations.appStoreStored : messages.integrations.notConnected;
-    if (appStoreNodes.syncLabel) {
-      appStoreNodes.syncLabel.textContent = !appStoreConnected
-        ? messages.integrations.neverSynced
-        : appStoreIntegration.lastSyncAt
-          ? messages.integrations.lastSync.replace("{date}", appStoreIntegration.lastSyncAt.slice(0, 10))
-          : messages.integrations.neverSynced;
-    }
-    if (appStoreNodes.pending) appStoreNodes.pending.hidden = !appStoreConnected;
-    if (appStoreNodes.sync) appStoreNodes.sync.disabled = !appStoreConnected || !state.features.appStoreSync;
+    const appStoreControls = document.querySelector("[data-app-store-controls]");
+    if (appStoreControls) appStoreControls.hidden = !appStoreConnected;
     if (appStoreNodes.disconnect) appStoreNodes.disconnect.disabled = !appStoreConnected;
-    const appStoreFormInputs = appStoreNodes.form ? [...appStoreNodes.form.elements] : [];
-    appStoreFormInputs.forEach((node) => { node.disabled = !state.features.appStoreSync; });
     renderAttentionQueue(calculate());
   };
 
@@ -1669,87 +1870,6 @@
     } catch {
       button.disabled = false;
       showIntegrationMessage(messages.integrations.disconnectFailed, true);
-    }
-  });
-
-  document.querySelector("[data-app-store-form]")?.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const data = new FormData(form);
-    const issuerId = String(data.get("issuerId") || "").trim();
-    const keyId = String(data.get("keyId") || "").trim();
-    const privateKey = String(data.get("privateKey") || "").trim();
-    if (!issuerId || !keyId || !privateKey.includes("BEGIN PRIVATE KEY")) {
-      showIntegrationMessage(messages.integrations.invalidAppStore, true, "appStore");
-      return;
-    }
-    const button = form.querySelector("button[type=submit]");
-    const original = button.textContent;
-    button.disabled = true;
-    button.textContent = messages.integrations.syncing;
-    try {
-      const response = await fetch("/api/workspace/integrations", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ type: "app_store", issuerId, keyId, privateKey }),
-      });
-      const result = await response.json().catch(() => ({}));
-      if (response.status === 403 && result.error === "pro_required") {
-        showIntegrationMessage(messages.integrations.appStoreProRequired, true, "appStore");
-        return;
-      }
-      if (!response.ok) {
-        const invalid = ["invalid_app_store_credentials", "invalid_app_store_private_key"].includes(result.error);
-        showIntegrationMessage(invalid
-          ? messages.integrations.invalidAppStore
-          : messages.integrations.appStoreConnectFailed, true, "appStore");
-        return;
-      }
-      form.reset();
-      appStoreIntegration = { type: "app_store", status: "pending", lastSyncAt: null, lastError: null };
-      renderIntegration();
-      showIntegrationMessage(result.pending
-        ? messages.integrations.appStoreConnected
-        : messages.integrations.appStoreSaved, false, "appStore");
-    } catch {
-      showIntegrationMessage(messages.integrations.appStoreConnectFailed, true, "appStore");
-    } finally {
-      button.disabled = false;
-      button.textContent = original;
-      renderIntegration();
-    }
-  });
-
-  document.querySelector("[data-app-store-sync]")?.addEventListener("click", async (event) => {
-    const button = event.currentTarget;
-    const original = button.textContent;
-    button.disabled = true;
-    button.textContent = messages.integrations.syncing;
-    try {
-      const response = await fetch("/api/workspace/integrations/sync?type=app_store", {
-        method: "POST",
-        credentials: "same-origin",
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        showIntegrationMessage(
-          data.error === "app_store_report_sync_not_configured"
-            ? messages.integrations.appStoreSyncUnavailable
-            : data.error === "pro_required"
-              ? messages.integrations.appStoreProRequired
-              : messages.integrations.appStoreSyncUnavailable,
-          true,
-          "appStore",
-        );
-        return;
-      }
-      showIntegrationMessage(messages.integrations.appStoreSyncUnavailable, false, "appStore");
-    } catch {
-      showIntegrationMessage(messages.integrations.appStoreSyncUnavailable, true, "appStore");
-    } finally {
-      button.textContent = original;
-      renderIntegration();
     }
   });
 
@@ -1993,6 +2113,23 @@
     if (input) input.value = today();
   });
   showFlowStep(1);
+  if (dashboardMode) {
+    window.addEventListener("hashchange", () => workspaceRoute());
+    document.addEventListener("click", (event) => {
+      const quickLink = event.target.closest("[data-add-menu] a");
+      if (quickLink?.hash === window.location.hash) workspaceRoute();
+    });
+    document.querySelector("[data-workspace-retry]").addEventListener("click", loadDashboard);
+    document.querySelectorAll("[data-workspace-period]").forEach((button) => {
+      button.addEventListener("click", () => {
+        reportPeriod = button.dataset.workspacePeriod;
+        document.querySelectorAll("[data-workspace-period]").forEach((choice) => {
+          choice.setAttribute("aria-pressed", String(choice === button));
+        });
+        renderMetrics();
+      });
+    });
+  }
 
   loadDashboard().finally(() => {
     window.__gigledgerLoaded = true;

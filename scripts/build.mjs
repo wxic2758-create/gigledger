@@ -61,19 +61,23 @@ const languageSwitch = (t, current, suffix = "") => {
     </a>`;
 };
 
-const nav = (t, current) => `
+const nav = (t, current, route) => {
+  const links = [
+    ["product", t.nav.features],
+    ["pricing", t.nav.pricing],
+    ["#faq", t.nav.faq],
+  ];
+  const navLinks = links.map(([path, label]) => {
+    const href = path.startsWith("#") ? `/${current.folder}/${path}` : `/${current.folder}/${path}/`;
+    return `<a href="${href}"${route === path ? ' aria-current="page"' : ""}>${esc(label)}</a>`;
+  }).join("");
+  return `
   <header class="site-header">
     <div class="shell header-inner">
       ${logo(current.folder)}
-      <nav class="desktop-nav" aria-label="${esc(t.nav.aria)}">
-        <a href="/${current.folder}/#daily">${esc(t.nav.why)}</a>
-        <a href="/${current.folder}/#features">${esc(t.nav.features)}</a>
-        <a href="/${current.folder}/#pricing">${esc(t.nav.pricing)}</a>
-        <a href="/${current.folder}/#how">${esc(t.nav.how)}</a>
-        <a href="/${current.folder}/#faq">${esc(t.nav.faq)}</a>
-      </nav>
+      <nav class="desktop-nav" aria-label="${esc(t.nav.aria)}">${navLinks}</nav>
       <div class="header-actions">
-        ${languageSwitch(t, current)}
+        ${languageSwitch(t, current, route ? route + "/" : "")}
         <a class="button button-small button-orange" href="/${current.folder}/app">${esc(t.nav.cta)}</a>
         <button class="menu-button" type="button" aria-expanded="false" aria-controls="mobileNav" aria-label="${esc(t.nav.menuOpen)}">
           <span></span><span></span>
@@ -81,15 +85,12 @@ const nav = (t, current) => `
       </div>
     </div>
     <nav class="mobile-nav" id="mobileNav" aria-label="${esc(t.nav.aria)}">
-      <a href="/${current.folder}/#daily">${esc(t.nav.why)}</a>
-      <a href="/${current.folder}/#features">${esc(t.nav.features)}</a>
-      <a href="/${current.folder}/#pricing">${esc(t.nav.pricing)}</a>
-      <a href="/${current.folder}/#how">${esc(t.nav.how)}</a>
-      <a href="/${current.folder}/#faq">${esc(t.nav.faq)}</a>
+      ${navLinks}
       <a href="/${current.folder}/app">${esc(t.nav.cta)}</a>
-      ${languageSwitch(t, current)}
+      ${languageSwitch(t, current, route ? route + "/" : "")}
     </nav>
   </header>`;
+};
 
 const dashboard = (t) => `
   <div class="dashboard" role="img" aria-label="${esc(t.hero.visualAria)}">
@@ -145,7 +146,7 @@ const dashboard = (t) => `
 
 const hero = (t, current) => `
   <main id="main">
-    <section class="hero">
+    <section class="hero" id="start">
       <div class="shell hero-grid">
         <div class="hero-copy">
           <p class="kicker">${esc(t.hero.kicker)}</p>
@@ -168,29 +169,12 @@ const hero = (t, current) => `
       </div>
     </section>`;
 
-const quickNav = (t) => {
-  const links = [
-    { href: "#daily", label: t.quickNav.start },
-    { href: "#features", label: t.quickNav.features },
-    { href: "#decisions", label: t.quickNav.decisions },
-    { href: "#pricing", label: t.quickNav.pricing },
-    { href: "#how", label: t.quickNav.how },
-    { href: "#faq", label: t.quickNav.faq },
-  ];
-  return `
-    <nav class="quick-nav" aria-label="${esc(t.quickNav.label)}">
-      <div class="shell quick-nav-inner">
-        <div class="quick-nav-copy">
-          <strong>${esc(t.quickNav.label)}</strong>
-          <small>${esc(t.quickNav.hint)}</small>
-        </div>
-        <div class="quick-nav-list">
-          ${links.map((link) => `<a href="${link.href}">${esc(link.label)}</a>`).join("")}
-          <a class="quick-cta" href="/${t.locale}/app">${esc(t.quickNav.primary)} <span aria-hidden="true">→</span></a>
-        </div>
-      </div>
-    </nav>`;
-};
+const productLinks = (t) => `
+    <section class="home-product-links shell" id="decisions" aria-label="${esc(t.footer.product)}">
+      <a id="features" href="/${t.locale}/product/"><strong>${esc(t.nav.features)}</strong><span aria-hidden="true">→</span></a>
+      <a id="pricing" href="/${t.locale}/pricing/"><strong>${esc(t.nav.pricing)}</strong><span aria-hidden="true">→</span></a>
+      <a id="how" href="/${t.locale}/product/#how"><strong>${esc(t.nav.how)}</strong><span aria-hidden="true">→</span></a>
+    </section>`;
 
 const dailySection = (t) => `
     <section class="daily-section" id="daily">
@@ -239,18 +223,6 @@ const featuresSection = (t) => `
             )
             .join("")}
         </div>
-        <div class="decision-strip" aria-label="${esc(t.productBlocks.title)}">
-          <a class="decision-strip-link" href="#decisions">
-            <span>${esc(t.quickNav.decisions)}</span>
-            <strong>${esc(t.productBlocks.ai.title)}</strong>
-            <em>${esc(t.quickNav.label)} →</em>
-          </a>
-          <a class="decision-strip-link" href="#pricing">
-            <span>${esc(t.quickNav.pricing)}</span>
-            <strong>${esc(t.productBlocks.pricing.title)}</strong>
-            <em>${esc(t.productBlocks.pricing.price)}</em>
-          </a>
-        </div>
       </div>
     </section>`;
 
@@ -285,29 +257,36 @@ const productBlocksSection = (t) => {
             <p>${esc(card.body)}</p>
           </article>`).join("")}
         </div>
+      </div>
+    </section>`;
+};
+
+const pricingSection = (t) => {
+  const p = t.productBlocks.pricing;
+  return `
+    <section class="shell standalone-pricing">
         <div class="pricing-panel" id="pricing">
           <div class="pricing-copy">
-            <p class="kicker">${esc(p.pricing.tag)}</p>
-            <h2>${esc(p.pricing.title)}</h2>
+            <p class="kicker">${esc(p.tag)}</p>
+            <h1>${esc(p.title)}</h1>
             <div class="pricing-grid">
               <div>
-                <h3>${esc(p.pricing.freeTitle)}</h3>
-                <ul>${p.pricing.free.map((item) => `<li>${esc(item)}</li>`).join("")}</ul>
+                <h3>${esc(p.freeTitle)}</h3>
+                <ul>${p.free.map((item) => `<li>${esc(item)}</li>`).join("")}</ul>
               </div>
               <div>
-                <h3>${esc(p.pricing.proTitle)}</h3>
-                <ul>${p.pricing.pro.map((item) => `<li>${esc(item)}</li>`).join("")}</ul>
+                <h3>${esc(p.proTitle)}</h3>
+                <ul>${p.pro.map((item) => `<li>${esc(item)}</li>`).join("")}</ul>
               </div>
             </div>
-            <strong>${esc(p.pricing.price)}</strong>
+            <strong>${esc(p.price)}</strong>
             <div class="pricing-actions">
-              <a class="button button-orange" href="/${t.locale}/app">${esc(p.pricing.calculate)} <span aria-hidden="true">→</span></a>
-              <a class="button button-ghost" href="/api/auth/google?locale=${t.locale}">${esc(p.pricing.signIn)}</a>
+              <a class="button button-orange" href="/${t.locale}/app">${esc(p.calculate)} <span aria-hidden="true">→</span></a>
+              <a class="button button-ghost" href="/api/auth/google?locale=${t.locale}">${esc(p.signIn)}</a>
             </div>
-            <small>${esc(p.pricing.note)}</small>
+            <small>${esc(p.note)}</small>
           </div>
         </div>
-      </div>
     </section>`;
 };
 
@@ -414,7 +393,7 @@ const startSection = (t) => `
       </div>
     </section>`;
 
-const footer = (t) => `
+const footer = (t, route) => `
   </main>
   <footer class="site-footer">
     <div class="shell footer-top">
@@ -426,8 +405,8 @@ const footer = (t) => `
       <div class="footer-links">
         <div>
           <p class="footer-heading">${esc(t.footer.product)}</p>
-          <a href="/${t.locale}/#daily">${esc(t.footer.why)}</a>
-          <a href="/${t.locale}/#how">${esc(t.footer.how)}</a>
+          <a href="/${t.locale}/product/">${esc(t.nav.features)}</a>
+          <a href="/${t.locale}/pricing/">${esc(t.nav.pricing)}</a>
           <a href="/${t.locale}/#faq">${esc(t.footer.faq)}</a>
         </div>
         <div>
@@ -439,7 +418,7 @@ const footer = (t) => `
     </div>
     <div class="shell footer-bottom">
       <p>${esc(t.footer.copyright.replace("{year}", String(new Date().getFullYear())))}</p>
-      <a href="/${t.alternatePath}">${esc(t.nav.switchTo)}</a>
+      <a href="/${t.alternatePath}${route ? route + "/" : ""}">${esc(t.nav.switchTo)}</a>
     </div>
   </footer>`;
 
@@ -482,7 +461,23 @@ const legalPage = ({ locale, t, type }) => {
 };
 
 const appPage = ({ locale, t, mode = "app" }) => {
-  const option = (value) => `<option value="${value}">${esc(t.app.cycles[value])}</option>`;
+  const workspace = mode === "dashboard";
+  const w = t.app.workspace;
+  const workspaceNav = (links, attribute, label) => `
+    <nav class="workspace-nav shell" aria-label="${esc(label)}">
+      ${links.map(([href, text]) => `<a href="#${href}" ${attribute}="${href}"${href === "dashboard" ? ' aria-current="page"' : ""}>${esc(text)}</a>`).join("")}
+    </nav>`;
+  const addMenu = `
+    <details class="workspace-add" data-add-menu>
+      <summary class="button button-dark">+ ${esc(w.addEntry)}</summary>
+      <div class="workspace-add-options">
+        <a href="#income-entry">${esc(t.app.income.add)}</a>
+        <a href="#expense-entry">${esc(t.app.expenses.add)}</a>
+        <a href="#fixed-cost-entry">${esc(t.app.fixed.add)}</a>
+      </div>
+    </details>`;
+  const isGuest = !workspace;
+  const option = (value) => `<option value="${value}"${value === "monthly" ? " selected" : ""}>${esc(t.app.cycles[value])}</option>`;
   const sourceOption = (value) => `<option value="${value}">${esc(t.app.sources[value])}</option>`;
   const title = mode === "dashboard" ? t.dashboard.title : t.app.title;
   const heading = mode === "dashboard" ? t.dashboard.heading : t.app.heading;
@@ -497,39 +492,34 @@ const appPage = ({ locale, t, mode = "app" }) => {
   <meta name="robots" content="noindex">
   <link rel="icon" href="/assets/favicon-32.png" sizes="32x32">
   <link rel="stylesheet" href="/styles.css?v=20261119-01">
-  <link rel="stylesheet" href="/proto.css?v=20261116-27">
+  <link rel="stylesheet" href="/proto.css?v=20261121-01">
 </head>
 <body class="${bodyClass}">
   <script type="application/json" id="proto-messages">${JSON.stringify(mode === "dashboard" ? { ...t.app, dashboard: t.dashboard } : t.app).replaceAll("</", "<\\/")}</script>
   <header class="site-header">
     <div class="shell header-inner">
       ${logo(locale.folder)}
+      ${isGuest ? `
       <nav class="desktop-nav app-nav" aria-label="${esc(t.app.navAria)}">
-        <a href="#dashboard">${esc(t.app.nav.dashboard)}</a>
-        ${mode === "dashboard" ? `<a href="#sources">${esc(t.app.nav.sources)}</a>` : ""}
+        <a href="#onboarding">${esc(t.app.flow.title)}</a>
         <a href="#fixed-costs">${esc(t.app.nav.fixed)}</a>
         <a href="#income">${esc(t.app.nav.income)}</a>
-        <a href="#how-it-works">${esc(t.app.nav.how)}</a>
-      </nav>
+      </nav>` : ""}
       <div class="header-actions">
-        ${languageSwitch(t, locale, "app")}
-        <a class="button button-small button-orange" href="${mode === "dashboard" ? `/${locale.folder}/dashboard/?reload=1` : `/api/auth/google?locale=${locale.code}`}">${esc(mode === "dashboard" ? t.dashboard.refresh : t.app.signIn)}</a>
-        <button class="menu-button" type="button" aria-expanded="false" aria-controls="mobileNav" aria-label="${esc(t.nav.menuOpen)}">
-          <span></span><span></span>
-        </button>
+        ${languageSwitch(t, locale, workspace ? "dashboard" : "app")}
+        ${isGuest ? `<a class="button button-small button-orange" href="/api/auth/google?locale=${locale.code}">${esc(t.app.signIn)}</a>` : ""}
       </div>
     </div>
-    <nav class="mobile-nav" id="mobileNav" aria-label="${esc(t.app.navAria)}">
-      <a href="#dashboard">${esc(t.app.nav.dashboard)}</a>
-      ${mode === "dashboard" ? `<a href="#sources">${esc(t.app.nav.sources)}</a>` : ""}
-      <a href="#fixed-costs">${esc(t.app.nav.fixed)}</a>
-      <a href="#income">${esc(t.app.nav.income)}</a>
-      <a href="#how-it-works">${esc(t.app.nav.how)}</a>
-      ${languageSwitch(t, locale, "app")}
-    </nav>
+    ${workspace ? workspaceNav([["dashboard", w.overview], ["ledger", w.ledger], ["settings", w.settings]], "data-workspace-nav", w.navigation) : ""}
   </header>
-  <main id="main">
-    <section class="app-flow shell" id="onboarding" ${mode === "dashboard" ? "hidden" : ""}>
+  <main id="main"${workspace ? ' class="workspace-pending"' : ""}>
+    ${workspace ? `
+    <div class="shell workspace-load" data-workspace-load>
+      <p data-workspace-load-message role="status">${esc(w.loading)}</p>
+      <button class="button button-ghost" type="button" data-workspace-retry hidden>${esc(w.retry)}</button>
+    </div>` : ""}
+    ${isGuest ? `
+    <section class="app-flow shell" id="onboarding">
       <div class="flow-head">
         <p class="app-steps-kicker">${esc(t.app.flow.kicker)}</p>
         <h1>${esc(t.app.flow.title)}</h1>
@@ -588,22 +578,113 @@ const appPage = ({ locale, t, mode = "app" }) => {
       </div>
     </section>
 
-    <section class="app-hero shell" id="dashboard" ${mode === "dashboard" ? "data-dashboard" : ""}>
+    ` : ""}
+
+${workspace ? `
+    <section class="workspace-overview shell" id="dashboard" data-dashboard data-workspace-view="overview" aria-busy="true">
+      <div class="workspace-heading">
+        <div><h1>${esc(w.overview)}</h1><p class="workspace-currency">USD</p></div>
+        ${addMenu}
+      </div>
+      <div class="workspace-period" role="group" aria-label="${esc(w.period)}">
+        <button type="button" data-workspace-period="current" aria-pressed="true">${esc(w.currentMonth)}</button>
+        <button type="button" data-workspace-period="previous" aria-pressed="false">${esc(w.previousMonth)}</button>
+      </div>
+      <div class="workspace-stats">
+        <article class="workspace-stat workspace-floor">
+          <span>${esc(w.dailyFloor)}</span>
+          <strong data-proto="metric-daily">—</strong>
+          <small>${esc(w.dailyNote)}</small>
+          <a href="#fixed-cost-entry" data-floor-setup hidden>${esc(w.firstFixed)}</a>
+        </article>
+        <article class="workspace-stat">
+          <span data-profit-period>${esc(w.currentProfit)}</span>
+          <strong data-proto="metric-profit">—</strong>
+          <small>${esc(w.profitNote)}</small>
+        </article>
+        <article class="workspace-stat">
+          <span>${esc(w.runway)}</span>
+          <strong data-proto="metric-runway">—</strong>
+          <small data-proto="metric-runway-average"></small>
+          <a href="#cash-settings" data-cash-setup hidden>${esc(w.addCash)}</a>
+        </article>
+      </div>
+      <section class="workspace-chart" aria-labelledby="workspace-chart-title">
+        <div class="workspace-chart-head">
+          <div>
+            <h2 id="workspace-chart-title">${esc(w.chartTitle)}</h2>
+            <p>${esc(t.app.metrics.net)} <strong data-proto="metric-net">—</strong></p>
+          </div>
+          <p class="workspace-shortfall" data-chart-shortfall hidden><span>${esc(w.shortfall)}</span> <strong data-chart-shortfall-value>—</strong></p>
+        </div>
+        <p class="app-note" data-chart-empty hidden>${esc(w.emptyChart)}</p>
+        <div class="workspace-chart-bar" data-chart-bar hidden aria-hidden="true">
+          <span data-chart-segment="fixed"></span><span data-chart-segment="expenses"></span><span data-chart-segment="profit"></span><span data-chart-segment="shortfall"></span>
+        </div>
+        <dl class="workspace-chart-key" data-chart-key hidden>
+          <div><dt class="chart-fixed">${esc(t.app.metrics.costs)}</dt><dd data-proto="metric-costs">—</dd></div>
+          <div><dt class="chart-expenses">${esc(t.app.metrics.expenses)}</dt><dd data-proto="metric-expenses">—</dd></div>
+          <div><dt class="chart-profit">${esc(w.chartProfit)}</dt><dd data-chart-profit>—</dd></div>
+        </dl>
+        <p class="workspace-pace" data-current-pace hidden><strong data-proto="metric-comparison"></strong> <span>${esc(w.requiredSoFar)} <strong data-proto="metric-required">—</strong></span></p>
+        <details class="workspace-secondary">
+          <summary>${esc(w.moreNumbers)}</summary>
+          <dl>
+            <div><dt>${esc(t.app.metrics.gross)}</dt><dd data-proto="metric-gross">—</dd></div>
+            <div><dt>${esc(t.app.metrics.fees)}</dt><dd data-proto="metric-fees">—</dd></div>
+            <div><dt>${esc(t.app.metrics.tax)}</dt><dd data-proto="metric-tax">—</dd></div>
+            <div data-sold-card hidden><dt>${esc(t.app.metrics.sold)}</dt><dd data-proto="metric-sold">—</dd></div>
+          </dl>
+          <p class="app-note">${esc(t.app.taxNote)}</p>
+        </details>
+        <p class="workspace-sr" data-period-status role="status"></p>
+      </section>
+      <section class="attention-queue" data-attention-queue aria-labelledby="attention-queue-title">
+        <div class="attention-head">
+          <p class="app-steps-kicker">${esc(t.app.attentionQueue.kicker)}</p>
+          <h2 id="attention-queue-title">${esc(t.app.attentionQueue.title)}</h2>
+        </div>
+        <ul class="attention-list" data-attention-list></ul>
+        <p class="attention-empty" data-attention-empty hidden>${esc(t.app.attentionQueue.empty)}</p>
+      </section>
+
+      <details class="workspace-secondary workspace-extras">
+        <summary>${esc(w.extras)}</summary>
+      <div class="weekly-summary" data-weekly-summary hidden>
+        <div><span>${esc(t.app.weeklySummary.title)}</span><p data-weekly-text></p></div>
+        <button class="text-link" type="button" data-weekly-dismiss>${esc(t.app.weeklySummary.dismiss)}</button>
+      </div>
+      <div class="share-panel">
+        <div class="share-cards">
+          <article class="share-card" data-share-card="ai">
+            <span>${esc(t.app.share.ai)}</span>
+            <strong data-share-ai>$0.00</strong>
+            <small>GigLedger</small>
+          </article>
+          <article class="share-card" data-share-card="daily">
+            <span>${esc(t.app.share.daily)}</span>
+            <strong data-share-daily>$0.00</strong>
+            <small>GigLedger</small>
+          </article>
+        </div>
+        <div class="share-actions">
+          <button class="button button-ghost" type="button" data-share-download>${esc(t.app.share.download)}</button>
+          <button class="button button-dark" type="button" data-share-x>${esc(t.app.share.shareX)}</button>
+          <button class="button button-ghost" type="button" data-share-copy>${esc(t.app.share.copyText)}</button>
+        </div>
+      </div>
+
+      </details>
+    </section>
+` : `
+    <section class="app-hero shell" id="dashboard">
       <div class="app-badge">${esc(t.app.badge)}</div>
       <h1>${esc(heading)}</h1>
       <p>${esc(subheading)}</p>
       <div class="account-actions">
         <button class="button button-dark" type="button" data-save-google>${esc(t.app.saveGoogle)}</button>
-        ${mode === "dashboard" ? `
-        <a class="button button-ghost" href="/api/workspace/export">${esc(t.app.export)}</a>
-        <button class="button button-danger" type="button" data-delete-account>${esc(t.app.deleteAccount)}</button>
-        ` : ""}
         <span class="account-note">${esc(t.app.saveNote)}</span>
         <p class="form-message account-message" role="status" aria-live="polite" data-save-message hidden></p>
-      </div>
-      <div class="weekly-summary" data-weekly-summary hidden>
-        <div><span>${esc(t.app.weeklySummary.title)}</span><p data-weekly-text></p></div>
-        <button class="text-link" type="button" data-weekly-dismiss>${esc(t.app.weeklySummary.dismiss)}</button>
       </div>
       <div class="dashboard-primary">
         <article class="dashboard-primary-card"><span>${esc(t.app.metrics.daily)}</span><strong data-proto="metric-daily">$0.00</strong><small>${esc(t.app.metrics.dailyNote)}</small></article>
@@ -636,60 +717,10 @@ const appPage = ({ locale, t, mode = "app" }) => {
       <div class="dashboard-secondary">
         <article><span>${esc(t.app.metrics.tax)}</span><strong data-proto="metric-tax">$0.00</strong><small>${esc(t.app.taxNote)}</small></article>
       </div>
-      ${mode === "dashboard" ? `
-      <section class="subscription-summary" data-subscription-summary aria-labelledby="subscription-summary-title">
-        <div class="subscription-summary-head">
-          <div>
-            <p class="app-steps-kicker">${esc(t.app.subscriptionReview.summaryKicker)}</p>
-            <h2 id="subscription-summary-title">${esc(t.app.subscriptionReview.summaryTitle)}</h2>
-          </div>
-          <span class="summary-count" data-subscription-count>0</span>
-        </div>
-        <div class="subscription-summary-grid">
-          <div>
-            <span>${esc(t.app.subscriptionReview.summaryUpcoming)}</span>
-            <strong data-subscription-upcoming>${esc(t.app.subscriptionReview.summaryNone)}</strong>
-          </div>
-          <div>
-            <span>${esc(t.app.subscriptionReview.summarySuggested)}</span>
-            <strong data-subscription-suggested>${esc(t.app.subscriptionReview.summaryNone)}</strong>
-          </div>
-        </div>
-      </section>
-      ` : ""}
-      ${mode === "dashboard" ? `
-      <section class="attention-queue" data-attention-queue aria-labelledby="attention-queue-title">
-        <div class="attention-head">
-          <p class="app-steps-kicker">${esc(t.app.attentionQueue.kicker)}</p>
-          <h2 id="attention-queue-title">${esc(t.app.attentionQueue.title)}</h2>
-        </div>
-        <ul class="attention-list" data-attention-list></ul>
-        <p class="attention-empty" data-attention-empty hidden>${esc(t.app.attentionQueue.empty)}</p>
-      </section>
-      ` : ""}
-      ${mode === "dashboard" ? `
-      <div class="share-panel">
-        <div class="share-cards">
-          <article class="share-card" data-share-card="ai">
-            <span>${esc(t.app.share.ai)}</span>
-            <strong data-share-ai>$0.00</strong>
-            <small>GigLedger</small>
-          </article>
-          <article class="share-card" data-share-card="daily">
-            <span>${esc(t.app.share.daily)}</span>
-            <strong data-share-daily>$0.00</strong>
-            <small>GigLedger</small>
-          </article>
-        </div>
-        <div class="share-actions">
-          <button class="button button-ghost" type="button" data-share-download>${esc(t.app.share.download)}</button>
-          <button class="button button-dark" type="button" data-share-x>${esc(t.app.share.shareX)}</button>
-          <button class="button button-ghost" type="button" data-share-copy>${esc(t.app.share.copyText)}</button>
-        </div>
-      </div>
-      ` : ""}
     </section>
+    `}
 
+    ${isGuest ? `
     <section class="app-steps shell" id="how-it-works">
       <p class="app-steps-kicker">${esc(t.app.onboarding.kicker)}</p>
       <ol>
@@ -705,7 +736,24 @@ const appPage = ({ locale, t, mode = "app" }) => {
       </ol>
     </section>
 
-    ${mode === "dashboard" ? `
+    ` : ""}
+
+    ${workspace ? `
+    <div data-workspace-view="settings" id="settings" hidden>
+      <section class="app-section shell workspace-settings">
+        <div class="workspace-heading"><h1>${esc(w.settings)}</h1></div>
+        <h2>${esc(w.planning)}</h2>
+        <form class="app-form app-settings-form" data-proto-form="settings">
+          <label><span>${esc(t.app.taxRateLabel)}</span><input name="taxReserveRate" type="number" min="0" max="100" step="0.1" placeholder="${esc(t.app.taxRatePlaceholder)}"></label>
+          <label><span>${esc(t.app.appleFeeLabel)}</span><select name="appleFeeRate"><option value="">${esc(t.app.appleFeeUnset)}</option><option value="15">15%</option><option value="30">30%</option></select></label>
+          <label><span>${esc(t.app.cashLabel)}</span><input id="cash-settings" name="cashOnHand" type="number" min="0" step="0.01"></label>
+          <label><span>${esc(t.app.monthlyIncomeEstimateLabel)}</span><input name="monthlyIncomeEstimate" type="number" min="0" step="0.01"></label>
+          <p class="app-note">${esc(t.app.monthlyIncomeEstimateNote)}</p>
+          <p class="app-note">${esc(t.app.taxReference)} ${esc(t.app.appleFeeNote)}</p>
+          <button class="button button-dark" type="submit">${esc(w.saveSettings)}</button>
+          <p class="form-message" data-workspace-message role="status" hidden></p>
+        </form>
+      </section>
     <section class="app-section shell" id="sources">
       <div class="app-section-head">
         <p class="app-steps-kicker">${esc(t.app.dataSources.title)}</p>
@@ -713,11 +761,6 @@ const appPage = ({ locale, t, mode = "app" }) => {
         <p>${esc(t.app.dataSources.subheading)}</p>
       </div>
       <div class="sources-grid">
-        <article class="source-card">
-          <h3>${esc(t.app.dataSources.manualTitle)}</h3>
-          <p>${esc(t.app.dataSources.manualBody)}</p>
-          <a class="button button-dark" href="#fixed-costs">${esc(t.app.dataSources.ledgerLink)}</a>
-        </article>
         <article class="source-card">
           <h3>${esc(t.app.csv.title)}</h3>
           <p>${esc(t.app.dataSources.csvBody)}</p>
@@ -763,35 +806,35 @@ const appPage = ({ locale, t, mode = "app" }) => {
               </div>
             </div>
           </div>
-          <div class="integration-grid">
-            <form class="integration-form" id="app-store-connect" data-app-store-form>
-              <h3>${esc(t.app.integrations.appStoreTitle)}</h3>
-              <p class="app-note">${esc(t.app.integrations.appStoreBody)}</p>
-              <label><span>${esc(t.app.integrations.issuerLabel)}</span><input name="issuerId" required></label>
-              <label><span>${esc(t.app.integrations.keyIdLabel)}</span><input name="keyId" required></label>
-              <label><span>${esc(t.app.integrations.privateKeyLabel)}</span><textarea name="privateKey" rows="5" required></textarea></label>
-              <p class="app-note">${esc(t.app.integrations.privateKeyNote)}</p>
-              <button class="button button-dark" type="submit">${esc(t.app.integrations.connectAppStore)}</button>
-              <p class="form-message" data-app-store-message role="status" aria-live="polite" hidden></p>
-            </form>
-            <div class="integration-status" data-app-store-status>
-              <span>${esc(t.app.integrations.statusLabel)}</span>
-              <strong data-app-store-status-label>${esc(t.app.integrations.notConnected)}</strong>
-              <small data-app-store-sync-label></small>
-              <small data-app-store-pending hidden>${esc(t.app.integrations.appStorePending)}</small>
-              <div class="integration-actions">
-                <button class="button button-ghost" type="button" data-app-store-sync disabled>${esc(t.app.integrations.syncAppStore)}</button>
-                <button class="button button-danger" type="button" data-app-store-disconnect disabled>${esc(t.app.integrations.disconnect)}</button>
-              </div>
+          <div class="workspace-provider" id="app-store-connect">
+            <h3>${esc(t.app.integrations.appStoreTitle)}</h3>
+            <p>${esc(w.appStoreComing)}</p>
+            <p class="form-message" data-app-store-message role="status" hidden></p>
+            <div class="integration-actions" data-app-store-controls hidden>
+              <small data-app-store-pending>${esc(w.appStoreSaved)}</small>
+              <button class="button button-danger" type="button" data-app-store-disconnect disabled>${esc(t.app.integrations.disconnect)}</button>
             </div>
           </div>
-          <p class="integration-note">${esc(t.app.integrations.body)}</p>
         </section>
       </div>
     </section>
+      <section class="app-section shell workspace-account">
+        <h2>${esc(w.account)}</h2>
+        <div class="workspace-account-actions">
+          <a class="button button-ghost" href="/api/workspace/export">${esc(t.app.export)}</a>
+          <a class="button button-ghost" href="/api/auth/logout">${esc(w.signOut)}</a>
+          <button class="button button-danger" type="button" data-delete-account>${esc(t.app.deleteAccount)}</button>
+        </div>
+        <p class="form-message" data-delete-account-message role="status" hidden></p>
+      </section>
+    </div>
+    <div data-workspace-view="ledger" id="ledger" hidden>
+      <div class="shell workspace-heading ledger-heading"><h1>${esc(w.ledger)}</h1>${addMenu}</div>
+      ${workspaceNav([["income", t.app.income.title], ["expenses", t.app.expenses.title], ["fixed-costs", w.fixed], ["projects", t.app.projects.title]], "data-ledger-nav", w.ledgerNavigation)}
+    </div>
     ` : ""}
 
-    <section class="app-section shell" id="projects">
+    <section class="app-section shell" id="projects" ${workspace ? 'data-ledger-panel hidden' : ""}>
       <div class="app-section-head">
         <h2>${esc(t.app.projects.title)}</h2>
         <p>${esc(t.app.projects.body)}</p>
@@ -810,36 +853,39 @@ const appPage = ({ locale, t, mode = "app" }) => {
       </div>
     </section>
 
-    <section class="app-section shell" id="fixed-costs">
+    <section class="app-section shell" id="fixed-costs" ${workspace ? 'data-ledger-panel hidden' : ""}>
       <div class="app-section-head">
         <h2>${esc(t.app.fixed.title)}</h2>
         <p>${esc(t.app.fixed.body)}</p>
       </div>
       <div class="app-grid">
-        <form class="app-form" data-proto-form="fixed" novalidate>
+        <form class="app-form" data-proto-form="fixed" id="fixed-cost-entry" novalidate>
           <label><span>${esc(t.app.fields.name)}</span><input name="name" required></label>
-          <div class="allocation-field">
-            <span class="allocation-label">${esc(t.app.fields.projectAllocation)}</span>
-            <p class="allocation-note">${esc(t.app.fields.projectAllocationNote)}</p>
-            <div class="allocation-list" data-allocation-list></div>
-            <button class="button button-ghost allocation-add" type="button" data-allocation-add>${esc(t.app.fields.addProjectShare)}</button>
-            <p class="allocation-total" data-allocation-total></p>
-          </div>
-          <label class="app-checkbox"><input name="isSubscription" type="checkbox"> <span>${esc(t.app.fields.subscription)}</span></label>
-          <label class="app-checkbox"><input name="isSoftware" type="checkbox" checked> <span>${esc(t.app.fields.software)}</span></label>
           <label><span>${esc(t.app.fields.amount)}</span><input name="amount" type="number" min="0" step="0.01" required></label>
           <label><span>${esc(t.app.fields.cycle)}</span><select name="cycle">${["daily","weekly","biweekly","monthly","quarterly","yearly"].map(option).join("")}</select></label>
-          <label><span>${esc(t.app.fields.businessUse)}</span><input name="businessUse" type="number" min="0" max="100" value="100" required></label>
-          <label><span>${esc(t.app.fields.startDate)}</span><input name="startDate" type="date" required></label>
-          <label><span>${esc(t.app.fields.endDate)}</span><input name="endDate" type="date"></label>
+          <label class="app-checkbox"><input name="isSubscription" type="checkbox"> <span>${esc(t.app.fields.subscription)}</span></label>
           <label data-revision-date hidden><span>${esc(t.app.fixedRevision.effectiveFrom)}</span><input name="effectiveFrom" type="date"></label>
-          <div class="subscription-fields" data-subscription-fields>
-            <label><span>${esc(t.app.fields.nextBillingDate)}</span><input name="nextBillingDate" type="date"></label>
-            <label><span>${esc(t.app.fields.productUrl)}</span><input name="productUrl" type="url" placeholder="https://"></label>
-            <label><span>${esc(t.app.fields.manageUrl)}</span><input name="manageUrl" type="url" placeholder="https://"></label>
-          </div>
-          <p class="app-note">${esc(t.app.fixedVersionNote)}</p>
-          <p class="form-message" data-fixed-edit-message role="status" aria-live="polite" hidden></p>
+          <details class="workspace-form-options">
+            <summary>${esc(w.moreFields)}</summary>
+            <label class="app-checkbox"><input name="isSoftware" type="checkbox" checked> <span>${esc(t.app.fields.software)}</span></label>
+            <label><span>${esc(t.app.fields.businessUse)}</span><input name="businessUse" type="number" min="0" max="100" value="100" required></label>
+            <label><span>${esc(t.app.fields.startDate)}</span><input name="startDate" type="date" required></label>
+            <label><span>${esc(t.app.fields.endDate)}</span><input name="endDate" type="date"></label>
+            <div class="subscription-fields" data-subscription-fields hidden>
+              <label><span>${esc(t.app.fields.nextBillingDate)}</span><input name="nextBillingDate" type="date"></label>
+              <label><span>${esc(t.app.fields.productUrl)}</span><input name="productUrl" type="url" placeholder="https://"></label>
+              <label><span>${esc(t.app.fields.manageUrl)}</span><input name="manageUrl" type="url" placeholder="https://"></label>
+            </div>
+            <p class="app-note">${esc(t.app.fixedVersionNote)}</p>
+            <div class="allocation-field">
+              <span class="allocation-label">${esc(t.app.fields.projectAllocation)}</span>
+              <p class="allocation-note">${esc(t.app.fields.projectAllocationNote)}</p>
+              <div class="allocation-list" data-allocation-list></div>
+              <button class="button button-ghost allocation-add" type="button" data-allocation-add>${esc(t.app.fields.addProjectShare)}</button>
+              <p class="allocation-total" data-allocation-total></p>
+            </div>
+          </details>
+          <p class="form-message" data-fixed-edit-message data-workspace-message role="status" aria-live="polite" hidden></p>
           <div class="fixed-form-actions">
             <button class="button button-dark" type="submit" data-fixed-submit>${esc(t.app.fixed.add)}</button>
             <button class="button button-ghost" type="button" data-fixed-cancel hidden>${esc(t.app.fixedRevision.cancel)}</button>
@@ -854,12 +900,13 @@ const appPage = ({ locale, t, mode = "app" }) => {
       </div>
     </section>
 
-    <section class="app-section shell" id="income">
+    <section class="app-section shell" id="income" ${workspace ? 'data-ledger-panel hidden' : ""}>
       <div class="app-section-head">
         <h2>${esc(t.app.income.title)}</h2>
         <p>${esc(t.app.income.body)}</p>
       </div>
       <div class="app-grid">
+        ${isGuest ? `
         <form class="app-form app-settings-form" data-proto-form="settings" novalidate>
           <label><span>${esc(t.app.taxRateLabel)}</span><input name="taxReserveRate" type="number" min="0" max="100" step="0.1" placeholder="${esc(t.app.taxRatePlaceholder)}"></label>
           <label><span>${esc(t.app.appleFeeLabel)}</span><select name="appleFeeRate"><option value="">${esc(t.app.appleFeeUnset)}</option><option value="15">15%</option><option value="30">30%</option></select></label>
@@ -868,16 +915,21 @@ const appPage = ({ locale, t, mode = "app" }) => {
           <p class="app-note">${esc(t.app.monthlyIncomeEstimateNote)}</p>
           <p class="app-note">${esc(t.app.taxReference)} ${esc(t.app.appleFeeNote)}</p>
         </form>
-        <form class="app-form" data-proto-form="income" novalidate>
+        ` : ""}
+        <form class="app-form" data-proto-form="income" id="income-entry" novalidate>
+          <label><span>${esc(t.app.fields.amount)}</span><input name="amount" type="number" min="0" step="0.01" required></label>
           <label><span>${esc(t.app.fields.date)}</span><input name="date" type="date" required></label>
-          <label><span>${esc(t.app.fields.source)}</span><select name="source">${["upwork","fiverr","stripe","app_store","direct","paypal","other"].map(sourceOption).join("")}</select></label>
+          <label><span>${esc(t.app.fields.source)}</span><select name="source">${["direct","upwork","fiverr","stripe","app_store","paypal","other"].map(sourceOption).join("")}</select></label>
           <label data-income-recognition-field hidden><span>${esc(t.app.fields.recognition)}</span><select name="recognition"><option value="received">${esc(t.app.income.recognitionReceived)}</option><option value="sold">${esc(t.app.income.recognitionSold)}</option></select></label>
           <label><span>${esc(t.app.fields.client)}</span><input name="client"></label>
+          <details class="workspace-form-options">
+            <summary>${esc(w.moreFields)}</summary>
           <label><span>${esc(t.app.fields.project)}</span><select name="project" data-project-options></select></label>
-          <label><span>${esc(t.app.fields.amount)}</span><input name="amount" type="number" min="0" step="0.01" required></label>
           <label><span>${esc(t.app.fields.platformFee)}</span><input name="platformFee" type="number" min="0" step="0.01" value="0"></label>
           <label><span>${esc(t.app.fields.platformFeePercent)}</span><input name="platformFeePercent" type="number" min="0" max="100" step="0.01" value="0"></label>
+          </details>
           <button class="button button-dark" type="submit">${esc(t.app.income.add)}</button>
+          ${workspace ? `<div class="workspace-save-feedback"><p class="form-message" data-workspace-message role="status" hidden></p><button type="button" class="text-link" data-undo-entry hidden>${esc(w.undo)}</button></div>` : ""}
         </form>
         <div class="app-table-wrap">
           <table>
@@ -889,21 +941,25 @@ const appPage = ({ locale, t, mode = "app" }) => {
       <p class="app-note">${esc(t.app.disclaimer)}</p>
     </section>
 
-    <section class="app-section shell" id="expenses">
+    <section class="app-section shell" id="expenses" ${workspace ? 'data-ledger-panel hidden' : ""}>
       <div class="app-section-head">
         <h2>${esc(t.app.expenses.title)}</h2>
         <p>${esc(t.app.expenses.body)}</p>
       </div>
       <div class="app-grid">
-        <form class="app-form" data-proto-form="expense" novalidate>
+        <form class="app-form" data-proto-form="expense" id="expense-entry" novalidate>
+          <label><span>${esc(t.app.fields.amount)}</span><input name="amount" type="number" min="0" step="0.01" required></label>
           <label><span>${esc(t.app.fields.date)}</span><input name="date" type="date" required></label>
-          <label><span>${esc(t.app.fields.category)}</span><input name="category" required></label>
+          <label><span>${esc(t.app.fields.category)}</span><input name="category"></label>
+          <label><span>${esc(t.app.fields.notes)}</span><input name="notes"></label>
+          <details class="workspace-form-options">
+            <summary>${esc(w.moreFields)}</summary>
           <label><span>${esc(t.app.fields.merchant)}</span><input name="merchant"></label>
           <label><span>${esc(t.app.fields.project)}</span><select name="project" data-project-options></select></label>
-          <label><span>${esc(t.app.fields.amount)}</span><input name="amount" type="number" min="0" step="0.01" required></label>
           <label><span>${esc(t.app.fields.businessUse)}</span><input name="businessUse" type="number" min="0" max="100" value="100" required></label>
-          <label><span>${esc(t.app.fields.notes)}</span><input name="notes"></label>
+          </details>
           <button class="button button-dark" type="submit">${esc(t.app.expenses.add)}</button>
+          ${workspace ? `<div class="workspace-save-feedback"><p class="form-message" data-workspace-message role="status" hidden></p><button type="button" class="text-link" data-undo-entry hidden>${esc(w.undo)}</button></div>` : ""}
         </form>
         <div class="app-table-wrap">
           <table>
@@ -918,31 +974,54 @@ const appPage = ({ locale, t, mode = "app" }) => {
   <footer class="site-footer">
     <div class="shell footer-bottom">
       <p>${esc(t.footer.copyright.replace("{year}", String(new Date().getFullYear())))}</p>
-      <a href="/${t.alternatePath}app">${esc(t.nav.switchTo)}</a>
+      <a href="/${t.alternatePath}${workspace ? "dashboard" : "app"}">${esc(t.nav.switchTo)}</a>
     </div>
   </footer>
-  <script src="/app-ledger.js?v=20261119-02" defer></script>
+  <script src="/app-ledger.js?v=20261121-01" defer></script>
   <script src="/app.js" defer></script>
 </body>
 </html>`;
 };
 
-const page = ({ locale, t }) => `<!doctype html>
+const page = ({ locale, t, route = "" }) => {
+  const suffix = route ? `${route}/` : "";
+  const copy = route ? t.marketingPages[route] : t.meta;
+  const title = route ? `${copy.title} — GigLedger` : copy.title;
+  const content = route === "product" ? `
+    <main id="main">
+      <section class="shell product-intro">
+        <h1>${esc(copy.title)}</h1>
+        <p>${esc(copy.description)}</p>
+        <a class="button button-orange" href="/${locale.folder}/app">${esc(t.nav.cta)}</a>
+      </section>
+      ${featuresSection(t)}
+      ${productBlocksSection(t)}
+      ${stepsSection(t)}
+      ${audienceSection(t)}
+      ${honestySection(t)}
+      ${startSection(t)}
+    ` : route === "pricing" ? `<main id="main">${pricingSection(t)}` : `
+      ${hero(t, locale)}
+      ${dailySection(t)}
+      ${productLinks(t)}
+      ${faqSection(t)}
+    `;
+  return `<!doctype html>
 <html lang="${locale.htmlLang}" dir="${locale.dir}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>${esc(t.meta.title)}</title>
-  <meta name="description" content="${esc(t.meta.description)}">
-  <link rel="canonical" href="${siteUrl}/${locale.folder}/">
-  <link rel="alternate" hreflang="en" href="${siteUrl}/en/">
-  <link rel="alternate" hreflang="zh-Hant-TW" href="${siteUrl}/zh-TW/">
-  <link rel="alternate" hreflang="x-default" href="${siteUrl}/en/">
+  <title>${esc(title)}</title>
+  <meta name="description" content="${esc(copy.description)}">
+  <link rel="canonical" href="${siteUrl}/${locale.folder}/${suffix}">
+  <link rel="alternate" hreflang="en" href="${siteUrl}/en/${suffix}">
+  <link rel="alternate" hreflang="zh-Hant-TW" href="${siteUrl}/zh-TW/${suffix}">
+  <link rel="alternate" hreflang="x-default" href="${siteUrl}/en/${suffix}">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="GigLedger">
-  <meta property="og:title" content="${esc(t.meta.ogTitle)}">
-  <meta property="og:description" content="${esc(t.meta.ogDescription)}">
-  <meta property="og:url" content="${siteUrl}/${locale.folder}/">
+  <meta property="og:title" content="${esc(copy.ogTitle || copy.title)}">
+  <meta property="og:description" content="${esc(copy.ogDescription || copy.description)}">
+  <meta property="og:url" content="${siteUrl}/${locale.folder}/${suffix}">
   <meta property="og:image" content="${siteUrl}/assets/og.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
@@ -955,7 +1034,7 @@ const page = ({ locale, t }) => `<!doctype html>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="preload" href="/assets/logo-mark-192.png" as="image">
-  <link rel="stylesheet" href="/styles.css?v=20261119-01">
+  <link rel="stylesheet" href="/styles.css?v=20261121-01">
   <script type="application/ld+json">
   ${JSON.stringify({
     "@context": "https://schema.org",
@@ -963,33 +1042,29 @@ const page = ({ locale, t }) => `<!doctype html>
     name: "GigLedger",
     url: `${siteUrl}/`,
     inLanguage: [locale.htmlLang],
-    description: t.meta.description,
+    description: copy.description,
   }).replaceAll("</", "<\\/")}
   </script>
 </head>
-<body class="locale-${locale.code.replace("-", "-").toLowerCase()}">
+<body class="locale-${locale.code.toLowerCase()} ${route ? "site-detail" : "site-short"}">
   <a class="skip-link" href="#main">${esc(t.skip)}</a>
-  ${nav(t, locale)}
-  ${hero(t, locale)}
-  ${quickNav(t)}
-  ${dailySection(t)}
-  ${featuresSection(t)}
-  ${productBlocksSection(t)}
-  ${stepsSection(t)}
-  ${audienceSection(t)}
-  ${honestySection(t)}
-  ${faqSection(t)}
-  ${startSection(t)}
-  ${footer(t)}
+  ${nav(t, locale, route)}
+  ${content}
+  ${footer(t, route)}
   <script src="/app.js" defer></script>
 </body>
 </html>`;
+};
 
 for (const locale of locales) {
   const t = messages[locale.code];
   const folder = join(root, locale.folder);
   await mkdir(folder, { recursive: true });
-  await writeFile(join(folder, "index.html"), page({ locale, t }));
+  await writeFile(join(folder, "index.html"), cleanHtml(page({ locale, t })));
+  for (const route of ["product", "pricing"]) {
+    await mkdir(join(folder, route), { recursive: true });
+    await writeFile(join(folder, route, "index.html"), cleanHtml(page({ locale, t, route })));
+  }
   await writeFile(
     join(folder, "privacy.html"),
     legalPage({ locale, t, type: "privacy" }),
@@ -1027,19 +1102,14 @@ await writeFile(
 `,
 );
 
-const sitemapUrls = [];
-for (const locale of locales) {
-  for (const file of ["", "privacy", "tax-disclaimer"]) {
-    sitemapUrls.push(`${siteUrl}/${locale.folder}/${file}`);
-  }
-}
+const indexablePages = ["", "product/", "pricing/", "privacy", "tax-disclaimer"];
 await writeFile(
   join(root, "sitemap.xml"),
   `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
 ${locales
   .flatMap((locale) =>
-    ["", "privacy", "tax-disclaimer"].map(
+    indexablePages.map(
       (file) => `  <url>
     <loc>${siteUrl}/${locale.folder}/${file}</loc>
     <xhtml:link rel="alternate" hreflang="en" href="${siteUrl}/en/${file}"/>
@@ -1059,7 +1129,7 @@ const publicFiles = [
   "app.js", "app-ledger.js", "styles.css", "proto.css",
   "assets/favicon-32.png", "assets/logo-mark-192.png", "assets/logo-mark-64.png", "assets/og.png",
   ...locales.flatMap(({ folder }) =>
-    ["index.html", "privacy.html", "tax-disclaimer.html", "app/index.html", "dashboard/index.html"]
+    ["index.html", "privacy.html", "tax-disclaimer.html", "app/index.html", "dashboard/index.html", "product/index.html", "pricing/index.html"]
       .map((name) => join(folder, name)),
   ),
 ];
@@ -1074,5 +1144,5 @@ await writeFile(join(dist, "404.html"),
 );
 
 console.log(
-  `Built ${locales.length * 5} pages with ${Object.keys(messages).length} locales.`,
+  `Built ${locales.length * 7} pages with ${Object.keys(messages).length} locales.`,
 );

@@ -107,8 +107,8 @@ All product calculations use USD and allow a tolerance of `$0.01`.
 | AF-57 | 5.9 share card | PNG download, X intent, and copy text work | Pass | Ego-browser produced a `image/png` blob and the copy action returned “My monthly AI spending is $20.00.” The X intent uses the same calculated amount. |
 | AF-58 | 5.9 share card | No fabricated user counts or ratings | Pass | No social proof data is generated. |
 | AF-59 | 5.9 weekly summary | Monday summary appears only when data exists | Pass | Empty ledgers hide the summary. With `$1,240` last-week net income, a `$30.25` Daily Floor, and `$20` AI software, the summary read “Last week net income $1,240.00; that covers 40 days at your Daily Floor. AI/software is 2% of monthly fixed costs.” |
-| AF-60 | 7 hierarchy | Dashboard starts with Daily Floor and this-month comparison | Pass | Ego-browser verified a four-card primary row: Daily Floor, needed by today, this-month comparison, and cash runway. Desktop renders four columns; mobile keeps Daily Floor and runway full-width with no horizontal overflow. |
-| AF-61 | 7 hierarchy | Runway, profit breakdown, tax reserve, subscription summary, projects, details | Pass | Profit is a separate “Where the money went” breakdown with gross → fees → net → expenses → fixed costs → true profit; tax, subscription summary, projects, and details follow below. Verified in `en` and `zh-TW`. |
+| AF-60 | 7 hierarchy | Dashboard starts with Daily Floor and this-month comparison | Pass | Ego-browser on an isolated fixture verified three overview cards: Daily Floor, period profit, and conservative cash runway. No horizontal overflow at 320 px and 390 px. To-date comparison sits below the profit chart. |
+| AF-61 | 7 hierarchy | Runway, profit breakdown, tax reserve, subscription summary, projects, details | Pass | Overview has a labeled profit chart, with tax and sharing in collapsible sections. The Ledger and Settings views have independent navigation. Cash runway and Daily Floor retain their current values when prior-month profit is selected. |
 | AF-62 | 6 onboarding CTA | Primary CTA opens the calculator; secondary CTA signs in with Google | Pass | Marketing hero links to `/en/app` and Google sign-in. |
 | AF-63 | 6 no waitlist | No waitlist email collection | Pass | No waitlist form or endpoint remains. |
 | AF-64 | 13 legal | Privacy explains Google account data, D1 storage, integration credentials, export, and deletion | Pass | Privacy notice lists Google email/name, account identifier, optional avatar URL, short-lived OAuth draft, encrypted Stripe/App Store credentials, and the account-deletion scope. |
@@ -120,8 +120,8 @@ All product calculations use USD and allow a tolerance of `$0.01`.
 | AF-70 | 11 no hidden downgrade | Downgrading does not delete existing subscriptions | Pass | Downgrading from Pro to free preserved all five existing subscriptions; the limit only blocked new additions. |
 | AF-71 | 5.4 secrets | Credentials are never written to application logs | Partial | Production canary requests used a randomly generated string as both a fake Stripe key and the body of a fake `.p8`; both returned `400`, no canary plaintext appeared in the `integrations` table, and no application source logs request bodies or decrypted credentials. D1 was restored to its pre-canary Time Travel bookmark and the existing test integration row was confirmed unchanged. Deployment log capture could not be completed: Wrangler `pages deployment tail` failed with `ECONNRESET` / direct `ECONNREFUSED`, while the Cloudflare REST tail session opened but its WebSocket never established. This remains Partial until the deployment log is checked from a network or Cloudflare dashboard that can hold the tail connection. |
 | AF-72 | 5.4 App Store sync | App Store report sync either imports real data or states it is unavailable | Pass | The endpoint intentionally returns `501 app_store_report_sync_not_configured`; the UI tells the user no report data will be imported. |
-| AF-73 | 13 marketing | Website has AI subscription review, cash runway, sync Coming soon, sample share card, and Free/Pro blocks | Pass | Production `en` and `zh-TW` homepages render all four decision blocks plus pricing. Pricing is TBD, CTAs go to calculator and Google sign-in, and no waitlist form remains. |
-| AF-74 | 13 marketing | No ambiguous monthly-view reports copy; all CTAs are locale-aware | Pass | Production copy uses monthly CSV; the “monthly view” phrase is gone. Pricing CTAs link to `/{locale}/app` and `/api/auth/google?locale={locale}`. |
+| AF-73 | 13 marketing | Website has AI subscription review, cash runway, sync Coming soon, sample share card, and Free/Pro blocks | Pass | A shorter home links to bilingual product and pricing pages. Product details explain AI subscriptions, runway, sync status, and share cards. Pricing remains TBD. |
+| AF-74 | 13 marketing | No ambiguous monthly-view reports copy; all CTAs are locale-aware | Pass | The site describes income CSV export. Pricing CTAs link to the localized calculator and Google sign-in. |
 
 ## Known Gaps To Track
 
@@ -147,7 +147,7 @@ These are real PRD gaps, not accepted excuses. They are listed here so the next 
 10. Enter an expense matching an active subscription's name, amount, and month; confirm Cancel leaves it out and Confirm allows the save.
 11. Add an App Store sold-only entry; confirm it appears in “Sold, not received” and not in true profit.
 12. Set a Pro plan, import a valid CSV, export it, and re-import it; confirm no duplicates.
-13. Reconnect an App Store key, confirm the status says the key is saved, and confirm sync says reports are not configured.
+13. Verify App Store report sync is labeled Coming soon and that an existing key can be disconnected.
 14. Disconnect App Store and Stripe; confirm imported history remains.
 15. Select the App Store subscription template; confirm Open and Manage link to Apple's pages.
 16. Set Apple fee to 15%, add a `$99.99` sold App Store entry, and confirm `$15.00` fee / `$84.99` net; switch to 30% and confirm a new sold entry uses `$30.00` while the old entry and received entries keep their original fees.
@@ -160,7 +160,7 @@ These are real PRD gaps, not accepted excuses. They are listed here so the next 
 Before treating this matrix as release evidence:
 
 - `node --check` must pass for `app-ledger.js`, `functions/api/workspace.js`, `functions/lib/ledger.js`, and integration handlers.
-- `node scripts/build.mjs` must report `Built 10 pages with 2 locales.`
+- `node scripts/build.mjs` must report `Built 14 pages with 2 locales.`
 - `wrangler pages functions build` must complete without syntax errors.
 - `git diff --check` must be clean.
 - The production deployment must be exercised with `ego-browser`, not Chrome.

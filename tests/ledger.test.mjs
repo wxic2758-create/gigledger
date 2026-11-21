@@ -5,7 +5,7 @@ import { test } from "node:test";
 import { onRequestPost as startGoogleSave } from "../functions/api/auth/google.js";
 import { onRequestGet as googleCallback } from "../functions/api/auth/google/callback.js";
 import { onRequestGet as getMe } from "../functions/api/me.js";
-import { onRequestDelete as removeEntry } from "../functions/api/workspace.js";
+import { onRequestDelete as removeEntry, onRequestPost as updateWorkspace } from "../functions/api/workspace.js";
 import { onRequestGet as exportCsv, onRequestPost as importCsv } from "../functions/api/workspace/csv.js";
 import { loadWorkspace, normalizeDraft, saveWorkspaceDraft } from "../functions/lib/ledger.js";
 import { createSessionToken, sessionCookie } from "../functions/lib/session.js";
@@ -170,4 +170,33 @@ test("CSV imports USD, reports foreign currency and invalid amounts, and dedupli
   assert.equal((await upload(await exported.text())).imported, 0);
   const { income } = await loadWorkspace(env.DB, owner.workspace);
   assert.equal(income.reduce((sum, item) => sum + item.amount, 0), 101);
+});
+
+test("workspace settings preserve explicit zero, can be cleared, and do not add income", async (t) => {
+  const { env, sqlite } = fixture(t);
+  const owner = await account(sqlite, env, "settings");
+  const save = (changes) => updateWorkspace({
+    env,
+    request: new Request(`${origin}/api/workspace`, {
+      method: "POST",
+      headers: { cookie: owner.cookie, "content-type": "application/json" },
+      body: JSON.stringify({ settings: { cashOnHand: "", taxReserveRate: "", monthlyIncomeEstimate: "", appleFeeRate: "", ...changes } }),
+    }),
+  });
+
+  assert.equal((await save({ cashOnHand: "-1" })).status, 400);
+  const saved = await save({ cashOnHand: "0", taxReserveRate: "25", monthlyIncomeEstimate: "2000", appleFeeRate: "15" });
+  assert.equal(saved.status, 200);
+  const first = await loadWorkspace(env.DB, owner.workspace);
+  assert.equal(first.workspace.cashOnHand, 0);
+  assert.equal(first.workspace.taxReserveRate, 0.25);
+  assert.equal(first.workspace.appleFeeRate, 0.15);
+  assert.equal(first.workspace.monthlyIncomeEstimate, 2000);
+  assert.deepEqual(first.income, []);
+
+  assert.equal((await save({})).status, 200);
+  const { workspace } = await loadWorkspace(env.DB, owner.workspace);
+  for (const key of ["cashOnHand", "cashOnHandAsOf", "taxReserveRate", "appleFeeRate", "monthlyIncomeEstimate"]) {
+    assert.equal(workspace[key], null, key);
+  }
 });

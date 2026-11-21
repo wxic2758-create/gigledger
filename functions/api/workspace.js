@@ -44,6 +44,28 @@ export const onRequestPost = async ({ env, request }) => {
   } catch {
     return json({ error: "invalid_json" }, 400);
   }
+  if (payload?.settings) {
+    const { cashOnHand, taxReserveRate, monthlyIncomeEstimate, appleFeeRate } = payload.settings;
+    const optionalAmount = (value, max = Infinity) => value === ""
+      || (typeof value === "string" && value.trim() !== "" && Number.isFinite(Number(value))
+        && Number(value) >= 0 && Number(value) <= max);
+    if (!optionalAmount(cashOnHand) || !optionalAmount(taxReserveRate, 100)
+      || !optionalAmount(monthlyIncomeEstimate) || !["", "15", "30"].includes(appleFeeRate)) {
+      return json({ error: "invalid_settings" }, 400);
+    }
+    const draft = await normalizeDraft(payload.settings);
+    const timestamp = new Date().toISOString();
+    await env.DB.prepare(
+      `UPDATE workspaces SET cash_on_hand_as_of = CASE
+          WHEN ? IS NULL THEN NULL WHEN cash_on_hand IS ? THEN cash_on_hand_as_of ELSE ? END,
+         cash_on_hand = ?, tax_reserve_rate = ?, apple_fee_rate = ?, monthly_income_estimate = ?, updated_at = ?
+       WHERE id = ?`,
+    ).bind(
+      draft.cashOnHand, draft.cashOnHand, timestamp, draft.cashOnHand, draft.taxReserveRate,
+      draft.appleFeeRate, draft.monthlyIncomeEstimate, timestamp, workspace.id,
+    ).run();
+    return json({ authenticated: true, ledger: await loadWorkspace(env.DB, workspace.id) });
+  }
   const draft = await normalizeDraft(payload);
   const workspaceRecord = await env.DB.prepare("SELECT plan FROM workspaces WHERE id = ?").bind(workspace.id).first();
   const features = planFeatures(workspaceRecord?.plan);
