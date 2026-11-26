@@ -213,10 +213,10 @@
   "honesty": {
     "kicker": "有官方 API 就用官方 API。不收银行密码，不抓取账号。",
     "title": "先估算，再记录收入和成本",
-    "body": "可以先用免费计算器，也能手动记录到账。Pro 提供 CSV、Stripe 同步与订阅体检。App Store 报表同步即将推出。",
+    "body": "可以先用免费计算器，也能手动记录到账。Pro 提供 CSV、Stripe 同步与订阅检查。App Store 报表同步即将推出。",
     "yesTitle": "目前支持",
     "yes": [
-      "免费计算机、手动输入与 5 个订阅",
+      "免费计算器、手动输入与 5 个订阅",
       "Pro 的 CSV 导入与重复检测",
       "固定成本与每日底线",
       "Pro 的 Stripe 官方同步",
@@ -280,7 +280,7 @@
       "我们会保存 Google 账号标识符和可选的头像网址，便于你再次登录并访问工作区。登录期间，服务器会短暂保存待保存的估算数据，以便将它们关联到你的账号。",
       "若你连接 Stripe 或 App Store Connect，你提供的凭证会先加密再保存，且不会返回到浏览器。已导入的收入与同步状态会保留在工作区，直到你断开整合或删除账号。",
       "你可以在工作台导出已保存的账本。删除账号会移除 Google 账号记录、工作区、收入、固定成本、一次性支出、项目、订阅检查记录和加密的连接凭证。",
-      "未保存的估算只会留在目前页面，刷新或离开后即会清除。",
+      "未保存的估算只会留在当前页面，刷新或离开后即会清除。",
       "本上线前草稿在正式公开前，仍须补上法律实体、联络方式、保存期限、处理者与最终删除流程。"
     ],
     "disclaimerTitle": "税务免责声明",
@@ -336,7 +336,7 @@
       "runwayNotBurning": "当前收入能覆盖固定成本",
       "runwayWaiting": "需要至少一个完整月的收入记录才能计算平均值",
       "runwayNeedFloor": "添加固定成本后可计算现金能撑多久",
-      "runwayBasedOn": "依 {months} 个完整月份收入估算"
+      "runwayBasedOn": "按 {months} 个完整月的收入估算"
     },
     "taxNote": "仅供预估 · 非税务建议",
     "onboarding": {
@@ -443,7 +443,7 @@
       "nextBillingDate": "下次扣费日（可选）",
       "subscriptionTemplate": "订阅模板",
       "manualFixedCost": "手动输入",
-      "billingDateNote": "GigLedger 会依此日期与扣款周期推算后续日期。",
+      "billingDateNote": "GigLedger 会按这个日期和扣款周期推算后续扣款日。",
       "productUrl": "产品链接（可选）",
       "manageUrl": "管理订阅链接（可选）",
       "date": "日期",
@@ -504,16 +504,16 @@
       "recognition": "状态"
     },
     "empty": {
-      "fixed": "尚未加入固定成本。",
-      "income": "尚未加入收入。",
-      "expenses": "尚未加入一次性支出。"
+      "fixed": "还没有记录固定成本。",
+      "income": "还没有记录收入。",
+      "expenses": "还没有记录一次性支出。"
     },
     "disclaimer": "仅供预估。这不是税务建议，也不包含银行同步、抓取平台账号或代为报税。",
     "signIn": "登录",
     "saveGoogle": "用 Google 登录并保存",
-    "saveNote": "未保存的数据只会留在目前页面，刷新后会消失。",
+    "saveNote": "未保存的数据只会留在当前页面，刷新后会消失。",
     "saving": "正在准备登录…",
-    "saveFailed": "无法开始 Google 登录。你的数据仍在目前页面。",
+    "saveFailed": "无法开始 Google 登录。你的数据仍在当前页面。",
     "savedRedirect": "已登录，正在保存你的数据…",
     "taxRateLabel": "预留税款比例 %（可选）",
     "appleFeeLabel": "App Store 新销售的 Apple 手续费比例",
@@ -561,7 +561,7 @@
       "financeSynced": "已同步财务报表。请核对报表收益，并在款项到账后记录实收金额。",
       "noReport": "Apple 目前未提供该日期或会计月份的报表。",
       "reconcileTitle": "确认 App Store 到账",
-      "fiscalPeriod": "已导入的会计期间",
+      "fiscalPeriod": "已导入的会计周期",
       "reconcileNote": "下方是 Apple 报表上的金额。到账后请输入实收美元金额与日期。如果一笔款项涵盖多期，只需记录一次。",
       "receivedDate": "实际到账日",
       "receivedAmount": "实收金额（USD）",
@@ -658,7 +658,7 @@
       "taxTitle": "预留税款比例（可选）",
       "taxReference": "美国自雇人士常见参考：25%–30%。仅供预估，非税务建议。",
       "resultTitle": "估算结果",
-      "resultNote": "保存前，这次估算只留在目前页面。刷新或离开会清空。",
+      "resultNote": "保存前，这次估算只留在当前页面。刷新或离开会清空。",
       "comparison": "预估每日收入",
       "estimatedTaxReserve": "预估每月税款预留",
       "ahead": "你高于每日底线",
@@ -718,7 +718,7 @@
       "limitReached": "免费版最多 {limit} 个订阅。升级功能稍后开放；已输入的数据仍会保留。",
       "proRequiredCsv": "CSV 导入与导出是 Pro 功能，价格将在封闭测试后公布。",
       "proRequiredReview": "订阅提醒是 Pro 功能，价格将在封闭测试后公布。",
-      "upgradeNote": "价格将于封闭测试后公布。Pro 提供 CSV、Stripe 同步与订阅体检。"
+      "upgradeNote": "价格将于封闭测试后公布。Pro 提供 CSV、Stripe 同步与订阅检查。"
     },
     "projects": {
       "title": "项目一览",
@@ -732,7 +732,7 @@
       "actions": "操作",
       "archive": "归档",
       "archiveConfirm": "要归档这个项目吗？既有记录会保留项目标签。",
-      "empty": "尚未建立项目。",
+      "empty": "还没有项目。",
       "saveFailed": "无法保存项目，请再试一次。",
       "archiveFailed": "无法归档项目，请再试一次。",
       "exists": "这个项目已经存在。"
@@ -804,7 +804,7 @@
     "body": "不用登录就能估算。需要保留结果时，用 Google 登录并保存到账本。",
     "calculate": "计算每日底线",
     "signIn": "使用 Google 登录",
-    "note": "未保存的估算只会留在目前页面。",
+    "note": "未保存的估算只会留在当前页面。",
     "privacy": "隐私说明"
   },
   "productBlocks": {
@@ -812,7 +812,7 @@
     "kicker": "它能帮你做的判断",
     "title": "围绕四个真实决策而设计。",
     "ai": {
-      "tag": "订阅体检",
+      "tag": "订阅检查",
       "title": "看清 AI 工具的实际花费。",
       "body": "使用常见 AI 工具模板，扣费前标记常用、偶尔使用或未使用。连续两个月未使用会提醒你检查。每笔订阅都有产品和管理入口。"
     },
@@ -850,7 +850,7 @@
         "订阅数量不限",
         "CSV 导入与导出",
         "Stripe 官方同步",
-        "订阅体检与提醒"
+        "订阅检查与提醒"
       ],
       "price": "封闭测试后公布价格",
       "calculate": "三分钟计算每日底线",
@@ -860,7 +860,7 @@
   },
   "quickNav": {
     "label": "快速导航",
-    "hint": "直接前往需要的内容，或先从计算机开始。",
+    "hint": "直接前往需要的内容，或先从计算器开始。",
     "primary": "开始估算",
     "start": "开始",
     "features": "功能",
