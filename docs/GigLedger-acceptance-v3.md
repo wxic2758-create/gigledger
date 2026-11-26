@@ -1,8 +1,8 @@
 # GigLedger Acceptance Matrix v3
 
-Last updated: 2026-11-26
+Last updated: 2026-11-27
 
-Scope: English and Traditional Chinese (`zh-TW`) only for this release. This document records the acceptance coverage required by PRD section 5 and the implementation gaps that remain visible rather than silently passing.
+Scope: English (`en`), Traditional Chinese (`zh-TW`), and Simplified Chinese (`zh-CN`). This document records the acceptance coverage required by PRD section 5 and the implementation gaps that remain visible rather than silently passing.
 
 ## Test Environment
 
@@ -101,7 +101,7 @@ All product calculations use USD and allow a tolerance of `$0.01`.
 | AF-50 | 5.8 merge | Saving the same external reference twice does not duplicate | Pass | `ON CONFLICT DO NOTHING` and external references are used for both fixed costs and income. |
 | AF-51 | 5.8 session | Logged-in users go directly to the dashboard | Pass | Authenticated `/en/app` redirects to the dashboard. |
 | AF-52 | 5.8 no anonymous writes | Anonymous calculation does not create D1 records | Pass | No writes occur until Google save completes. |
-| AF-53 | 5.8 locale switch | `en` and `zh-TW` keep ledger values and format numbers/dates | Pass | Both locales render the same stored values; currency and date formatting switch. |
+| AF-53 | 5.8 locale switch | All three locales open the equivalent route and section | Pass | Existing English and Traditional Chinese checks covered stored values and formatting. Ego verified switching a production workspace from Traditional to Simplified Chinese, retaining the App Store settings section, connection state, and ledger record counts. Google login routed to the Simplified Chinese dashboard. |
 | AF-54 | 5.8 account deletion | Confirmation deletes user, workspace, ledger, subscriptions, keys, projects, and reviews | Pass | Production delete returned a 302, removed the old user/workspace and all dependent rows, and the same Google account then created a new empty workspace. |
 | AF-55 | 5.9 share card | AI spending card equals active software/subscription costs after business use | Pass | Fixed costs now carry an explicit AI/software flag. With `$20` AI/software plus `$900` non-software subscription, the share card showed `$20.00` while fixed costs stayed `$920.00`; the form defaults new subscriptions to software and lets users opt out. |
 | AF-56 | 5.9 share card | Daily Floor card equals the dashboard value | Pass | With a `$20` AI subscription and `$900` rent, the share card showed `$30.25/day`, matching the dashboard. |
@@ -174,3 +174,7 @@ Before treating this matrix as release evidence:
 - `git diff --check` must be clean.
 - The production deployment must be exercised with `ego-browser`, not Chrome.
 - The final commit must be pushed to `wxic2758-create/gigledger` on `main`.
+
+## Simplified Chinese verification
+
+On 2026-11-27, Codex separately drafted and AI-reviewed the Simplified Chinese resources against the English and Traditional Chinese copy at `8cc8788`. Review covered public pages, onboarding, ledger views, settings, legal text, and user messages. Structural checks validated 688 resource values and their placeholders, 24 localized pages, and all 18 sitemap entries. Ego confirmed the language menu at 320 and 390 px, the three-step calculator in Simplified Chinese, and that cancelling the language-switch confirmation preserves an unsaved calculation. The production Simplified Chinese overview and 320 px ledger loaded without horizontal overflow.
