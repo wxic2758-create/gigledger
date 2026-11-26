@@ -200,7 +200,7 @@ async function fetchAppStoreReport(url, token, kind) {
         : /timeout|abort/i.test(error?.name ?? "") ? "timeout" : "network";
       throw new AppStoreReportError("app_store_unreachable", 424, { reportKind: kind, transport });
     }
-    if (!redirectStatuses.has(response.status)) return response;
+    if (!redirectStatuses.has(response.status)) return { response, host: target.hostname, redirects: hops };
     await response.body?.cancel().catch(() => {});
 
     let next;
@@ -232,20 +232,26 @@ export async function downloadAppStoreReport(credential, kind, period) {
     url.searchParams.set(`filter[${key}]`, value);
   }
   const token = await appStoreReportToken(credential, kind);
-  const response = await fetchAppStoreReport(url, token, kind);
+  const { response, host, redirects } = await fetchAppStoreReport(url, token, kind);
   if (response.status === 404) return null;
-  if (response.status === 401) throw new AppStoreReportError("app_store_auth_failed", 400);
-  if (response.status === 403) throw new AppStoreReportError("app_store_permission_denied", 403);
-  if (response.status === 429) throw new AppStoreReportError("app_store_rate_limited", 429);
   if (!response.ok) {
     let appleCode;
+    let appleParameter;
     try {
       const bytes = await boundedBytes(response.body, 16_384);
-      const code = JSON.parse(new TextDecoder().decode(bytes)).errors?.[0]?.code;
+      const { code, source } = JSON.parse(new TextDecoder().decode(bytes)).errors?.[0] ?? {};
       if (typeof code === "string" && /^[A-Z][A-Z0-9_.-]{0,79}$/.test(code)) appleCode = code;
+      if (typeof source?.parameter === "string" && /^filter\[[a-zA-Z]{1,40}\]$/.test(source.parameter)) {
+        appleParameter = source.parameter;
+      }
     } catch {}
+    const context = { reportKind: kind, appleStatus: response.status, ...(appleCode ? { appleCode } : {}),
+      ...(appleParameter ? { appleParameter } : {}), ...(redirects ? { reportHost: host, redirects } : {}) };
+    if (response.status === 401) throw new AppStoreReportError("app_store_auth_failed", 400, context);
+    if (response.status === 403) throw new AppStoreReportError("app_store_permission_denied", 403, context);
+    if (response.status === 429) throw new AppStoreReportError("app_store_rate_limited", 429, context);
     throw new AppStoreReportError("app_store_download_failed", 424, {
-      reportKind: kind, appleStatus: response.status, ...(appleCode ? { appleCode } : {}),
+      ...context,
     });
   }
   try {

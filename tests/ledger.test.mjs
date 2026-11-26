@@ -203,7 +203,8 @@ test("App Store self-service verifies a team key, syncs each report, and only co
     assert.equal(await crypto.subtle.verify({ name: "ECDSA", hash: "SHA-256" }, pair.publicKey,
       Buffer.from(signature, "base64url"), Buffer.from(`${header}.${payload}`)), true);
     assert.equal(url.searchParams.get("filter[vendorNumber]"), key.vendorNumber);
-    if (appleMode === "denied") return Response.json({ details: "untrusted response body" }, { status: 403 });
+    if (appleMode === "denied") return endpoint === "/v1/salesReports" ? new Response(null, { status: 404 })
+      : Response.json({ details: "untrusted response body" }, { status: 403 });
     if (appleMode === "upstream") return endpoint === "/v1/salesReports" ? new Response(null, { status: 404 })
       : Response.json({ errors: [{ code: "PARAMETER_ERROR.INVALID", detail: "private diagnostic text" }] }, { status: 400 });
     if (appleMode === "missing") return new Response(null, { status: 404 });
@@ -253,7 +254,7 @@ test("App Store self-service verifies a team key, syncs each report, and only co
   appleMode = "denied";
   const denied = await call(connectIntegration, other, { body: key });
   assert.equal(denied.status, 403);
-  assert.deepEqual(await denied.json(), { error: "app_store_permission_denied" });
+  assert.deepEqual(await denied.json(), { error: "app_store_permission_denied", reportKind: "finance", appleStatus: 403 });
   assert.equal(sqlite.prepare("SELECT COUNT(*) AS count FROM integrations").get().count, 0);
   appleMode = "upstream";
   const upstream = await call(connectIntegration, other, { body: key });
