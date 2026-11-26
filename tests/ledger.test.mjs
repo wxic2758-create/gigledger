@@ -187,6 +187,12 @@ test("App Store self-service verifies a team key, syncs each report, and only co
   let appleRequests = 0;
   t.mock.method(globalThis, "fetch", async (url, options) => {
     appleRequests++;
+    if (url.hostname === "reports-cdn.apple.com") {
+      assert.equal(options.headers.Authorization, undefined);
+      const [year, month, day] = url.searchParams.get("day").split("-");
+      const date = `${month}/${day}/${year}`;
+      return new Response(gzipSync(`Begin Date\tEnd Date\tUnits\tCustomer Price\tCustomer Currency\n${date}\t${date}\t1\t1.00\tUSD\n`));
+    }
     assert.equal(url.origin, "https://api.appstoreconnect.apple.com");
     const endpoint = url.pathname;
     const [header, payload, signature] = options.headers.Authorization.slice(7).split(".");
@@ -202,6 +208,13 @@ test("App Store self-service verifies a team key, syncs each report, and only co
       : Response.json({ errors: [{ code: "PARAMETER_ERROR.INVALID", detail: "private diagnostic text" }] }, { status: 400 });
     if (appleMode === "missing") return new Response(null, { status: 404 });
     if (appleMode === "malformed") return new Response("unknown\theaders\n");
+    if (endpoint === "/v1/salesReports" && (appleMode === "redirect" || appleMode === "unsafe_redirect")) {
+      assert.equal(options.redirect, "manual");
+      const host = appleMode === "redirect" ? "reports-cdn.apple.com" : "untrusted.example";
+      return new Response(null, { status: 307, headers: {
+        location: `https://${host}/sales.gz?day=${url.searchParams.get("filter[reportDate]")}`,
+      } });
+    }
     let report;
     if (endpoint === "/v1/salesReports") {
       assert.equal(url.searchParams.get("filter[frequency]"), "DAILY");
@@ -248,12 +261,19 @@ test("App Store self-service verifies a team key, syncs each report, and only co
   assert.deepEqual(await upstream.json(), {
     error: "app_store_download_failed", reportKind: "finance", appleStatus: 400, appleCode: "PARAMETER_ERROR.INVALID",
   });
-  appleMode = "valid";
+  appleMode = "unsafe_redirect";
+  const unsafe = await call(connectIntegration, other, { body: key });
+  assert.equal(unsafe.status, 424);
+  assert.deepEqual(await unsafe.json(), {
+    error: "app_store_unreachable", reportKind: "sales", transport: "redirect", redirectHost: "untrusted.example",
+  });
+  appleMode = "redirect";
   const connected = await call(connectIntegration, owner, { body: key });
   assert.equal(connected.status, 200);
   assert.deepEqual(await connected.json(), { authenticated: true, status: "connected", vendorNumber: "80012345" });
   assert.ok(!sqlite.prepare("SELECT encrypted_credentials FROM integrations").get().encrypted_credentials.includes(raw));
   assert.equal((await loadWorkspace(env.DB, owner.workspace)).income.length, 0);
+  appleMode = "valid";
 
   const sync = (kind, period) => call(syncIntegration, owner, { url: "/sync?type=app_store", body: { kind, period } });
   for (let attempt = 0; attempt < 2; attempt++) {

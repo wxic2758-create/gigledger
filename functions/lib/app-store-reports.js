@@ -8,6 +8,7 @@ const allowedReportTypes = ["sales", "finance"];
 const appleZone = "America/Los_Angeles";
 const MAX_DOWNLOAD_BYTES = 4 * 1024 * 1024;
 const MAX_REPORT_BYTES = 8 * 1024 * 1024;
+const redirectStatuses = new Set([301, 302, 303, 307, 308]);
 
 export class AppStoreReportError extends Error {
   constructor(code, status, context) {
@@ -184,6 +185,41 @@ export function parseFinanceReport(text) {
   };
 }
 
+async function fetchAppStoreReport(url, token, kind) {
+  const signal = AbortSignal.timeout(12000);
+  let target = url;
+  for (let hops = 0; hops <= 3; hops++) {
+    let response;
+    try {
+      const headers = { Accept: "application/a-gzip" };
+      if (target.origin === url.origin) headers.Authorization = `Bearer ${token}`;
+      // Workers may forward headers when following redirects. Set them independently on each hop.
+      response = await fetch(target, { headers, redirect: "manual", signal });
+    } catch (error) {
+      const transport = /redirect/i.test(error?.message ?? "") ? "redirect"
+        : /timeout|abort/i.test(error?.name ?? "") ? "timeout" : "network";
+      throw new AppStoreReportError("app_store_unreachable", 424, { reportKind: kind, transport });
+    }
+    if (!redirectStatuses.has(response.status)) return response;
+    await response.body?.cancel().catch(() => {});
+
+    let next;
+    try {
+      const location = response.headers.get("location");
+      if (location) next = new URL(location, target);
+    } catch {}
+    const host = next?.hostname;
+    const trusted = next?.protocol === "https:" && !next.username && !next.password && !next.port
+      && (host.endsWith(".apple.com") || host.endsWith(".mzstatic.com"));
+    if (!trusted || hops === 3) {
+      throw new AppStoreReportError("app_store_unreachable", 424, {
+        reportKind: kind, transport: "redirect", ...(host ? { redirectHost: host } : {}),
+      });
+    }
+    target = next;
+  }
+}
+
 export async function downloadAppStoreReport(credential, kind, period) {
   if (!validReportPeriod(kind, period)) throw new AppStoreReportError("invalid_app_store_period", 400);
   const url = new URL(kind === "sales"
@@ -196,18 +232,7 @@ export async function downloadAppStoreReport(credential, kind, period) {
     url.searchParams.set(`filter[${key}]`, value);
   }
   const token = await appStoreReportToken(credential, kind);
-  let response;
-  try {
-    response = await fetch(url, {
-      headers: { Authorization: `Bearer ${token}`, Accept: "application/a-gzip" },
-      redirect: "error",
-      signal: AbortSignal.timeout(12000),
-    });
-  } catch (error) {
-    const transport = /redirect/i.test(error?.message ?? "") ? "redirect"
-      : /timeout|abort/i.test(error?.name ?? "") ? "timeout" : "network";
-    throw new AppStoreReportError("app_store_unreachable", 424, { reportKind: kind, transport });
-  }
+  const response = await fetchAppStoreReport(url, token, kind);
   if (response.status === 404) return null;
   if (response.status === 401) throw new AppStoreReportError("app_store_auth_failed", 400);
   if (response.status === 403) throw new AppStoreReportError("app_store_permission_denied", 403);
