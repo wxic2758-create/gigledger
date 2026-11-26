@@ -528,7 +528,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
   <meta name="robots" content="noindex">
   <link rel="icon" href="/assets/favicon-32.png" sizes="32x32">
   <link rel="stylesheet" href="/styles.css?v=20261121-03">
-  <link rel="stylesheet" href="/proto.css?v=20261126-01">
+  <link rel="stylesheet" href="/proto.css?v=20261126-03">
 </head>
 <body class="${bodyClass}">
   <script type="application/json" id="proto-messages">${JSON.stringify(mode === "dashboard" ? { ...t.app, dashboard: t.dashboard } : t.app).replaceAll("</", "<\\/")}</script>
@@ -669,13 +669,16 @@ const appPage = ({ locale, t, mode = "app" }) => {
           <div><dt class="chart-profit">${esc(w.chartProfit)}</dt><dd data-chart-profit>—</dd></div>
         </dl>
         <p class="workspace-pace" data-current-pace hidden><strong data-proto="metric-comparison"></strong> <span>${esc(w.requiredSoFar)} <strong data-proto="metric-required">—</strong></span></p>
+        <dl class="workspace-app-store" data-app-store-summary hidden>
+          <div><dt>${esc(t.app.appStore.soldLabel)}</dt><dd data-proto="metric-sold">—</dd></div>
+          <div><dt>${esc(t.app.appStore.receivedLabel)}</dt><dd data-proto="metric-app-store-received">—</dd></div>
+        </dl>
         <details class="workspace-secondary">
           <summary>${esc(w.moreNumbers)}</summary>
           <dl>
             <div><dt>${esc(t.app.metrics.gross)}</dt><dd data-proto="metric-gross">—</dd></div>
             <div><dt>${esc(t.app.metrics.fees)}</dt><dd data-proto="metric-fees">—</dd></div>
             <div><dt>${esc(t.app.metrics.tax)}</dt><dd data-proto="metric-tax">—</dd></div>
-            <div data-sold-card hidden><dt>${esc(t.app.metrics.sold)}</dt><dd data-proto="metric-sold">—</dd></div>
           </dl>
           <p class="app-note">${esc(t.app.taxNote)}</p>
         </details>
@@ -808,13 +811,52 @@ const appPage = ({ locale, t, mode = "app" }) => {
             </div>
           </div>
           <div class="workspace-provider" id="app-store-connect">
-            <h3>${esc(t.app.integrations.appStoreTitle)}</h3>
-            <p>${esc(w.appStoreComing)}</p>
-            <p class="form-message" data-app-store-message role="status" hidden></p>
-            <div class="integration-actions" data-app-store-controls hidden>
-              <small data-app-store-pending>${esc(w.appStoreSaved)}</small>
-              <button class="button button-danger" type="button" data-app-store-disconnect disabled>${esc(t.app.integrations.disconnect)}</button>
+            <div class="app-store-header">
+              <h3>${esc(t.app.integrations.appStoreTitle)}</h3>
+              <small data-app-store-state></small>
             </div>
+            <p class="app-note" data-app-store-plan hidden>${esc(t.app.integrations.appStoreProRequired)}</p>
+            <details data-app-store-setup hidden>
+              <summary>${esc(t.app.appStore.connect)}</summary>
+              <p>${esc(t.app.appStore.keyGuide)}</p>
+              <div class="integration-actions">
+                <a class="button button-ghost" href="https://appstoreconnect.apple.com/access/integrations/api" target="_blank" rel="noopener noreferrer">${esc(t.app.appStore.openApple)}</a>
+                <a class="button button-ghost" href="https://developer.apple.com/help/app-store-connect/getting-paid/view-payments-and-proceeds/" target="_blank" rel="noopener noreferrer">${esc(t.app.appStore.findVendor)}</a>
+              </div>
+              <form class="integration-form" data-app-store-form method="post" action="/api/workspace/integrations">
+                <label><span>${esc(t.app.appStore.upload)}</span><input type="file" accept=".p8" data-app-store-file required></label>
+                <label><span>Key ID</span><input name="keyId" autocomplete="off" autocapitalize="characters" maxlength="12" pattern="[A-Z0-9]{6,12}" required></label>
+                <label><span>Issuer ID</span><input name="issuerId" autocomplete="off" maxlength="36" required></label>
+                <label><span>${esc(t.app.appStore.vendorNumber)}</span><input name="vendorNumber" inputmode="numeric" autocomplete="off" pattern="[0-9]{5,20}" maxlength="20" required></label>
+                <p class="app-note">${esc(t.app.appStore.keyNote)}</p>
+                <button class="button button-dark" type="submit">${esc(t.app.appStore.testAndSave)}</button>
+              </form>
+            </details>
+            <p class="form-message" data-app-store-message role="status" hidden></p>
+            <div class="app-store-report-forms" data-app-store-controls hidden>
+              <form class="integration-form" data-app-store-sync="sales" method="post">
+                <label><span>${esc(t.app.appStore.salesDate)}</span><input name="period" type="date" required></label>
+                <button class="button button-dark" type="submit">${esc(t.app.appStore.syncSales)}</button>
+              </form>
+              <form class="integration-form" data-app-store-sync="finance" method="post">
+                <label><span>${esc(t.app.appStore.financeMonth)}</span><input name="period" type="month" placeholder="YYYY-MM" pattern="[0-9]{4}-(0[1-9]|1[0-2])" required></label>
+                <button class="button button-dark" type="submit">${esc(t.app.appStore.syncFinance)}</button>
+              </form>
+              <p class="app-note">${esc(t.app.appStore.syncNote)}</p>
+            </div>
+            <button class="button button-danger" type="button" data-app-store-disconnect hidden>${esc(t.app.integrations.disconnect)}</button>
+            <section class="app-store-finance" data-app-store-finance hidden aria-labelledby="app-store-finance-title">
+              <h4 id="app-store-finance-title">${esc(t.app.appStore.reconcileTitle)}</h4>
+              <p>${esc(t.app.appStore.reconcileNote)}</p>
+              <label><span>${esc(t.app.appStore.fiscalPeriod)}</span><select data-app-store-period></select></label>
+              <p data-app-store-finance-totals></p>
+              <form class="integration-form" data-app-store-payout method="post">
+                <label><span>${esc(t.app.appStore.receivedDate)}</span><input name="date" type="date" required></label>
+                <label><span>${esc(t.app.appStore.receivedAmount)}</span><input name="amount" type="number" min="0.01" step="0.01" required></label>
+                <button class="button button-dark" type="submit">${esc(t.app.appStore.recordPayout)}</button>
+                <p class="form-message" data-app-store-payout-message role="status" hidden></p>
+              </form>
+            </section>
           </div>
         </section>
       </section>
@@ -1002,7 +1044,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
       <a href="/${t.alternatePath}${workspace ? "dashboard" : "app"}">${esc(t.nav.switchTo)}</a>
     </div>
   </footer>
-  <script type="module" src="/app-ledger.js?v=20261126-02"></script>
+  <script type="module" src="/app-ledger.js?v=20261126-03"></script>
   <script src="/app.js?v=20261121-03" defer></script>
 </body>
 </html>`;
@@ -1161,7 +1203,7 @@ ${locales
 const dist = join(root, "dist");
 const publicFiles = [
   "_redirects", "index.html", "robots.txt", "sitemap.xml",
-  "app.js", "app-ledger.js", "billing-calendar.js", "ledger-report.js", "money.js", "styles.css", "proto.css",
+  "app.js", "app-ledger.js", "app-store.js", "billing-calendar.js", "ledger-report.js", "money.js", "styles.css", "proto.css",
   "assets/favicon-32.png", "assets/logo-mark-192.png", "assets/logo-mark-64.png", "assets/og.png",
   ...locales.flatMap(({ folder }) =>
     ["index.html", "privacy.html", "tax-disclaimer.html", "app/index.html", "dashboard/index.html", "product/index.html", "pricing/index.html", "faq/index.html"]

@@ -41,5 +41,5 @@ These items cannot be safely invented by Codex. They block replacing the pre-lau
 - Account deletion is immediate after confirmation; the dashboard offers JSON export before deletion.
 - Unsaved calculator entries remain in page memory only and are lost on refresh or navigation.
 - Stripe and App Store Connect credentials are encrypted before storage and are never returned to the browser.
-- App Store report sync is intentionally unavailable and returns `501 app_store_report_sync_not_configured`.
+- App Store Connect uses a dedicated Team API key and manual report sync. Sales and fiscal proceeds stay separate. Only a confirmed USD deposit enters received income. Real-account provider reconciliation remains a launch check.
 - Pricing remains TBD during private beta.

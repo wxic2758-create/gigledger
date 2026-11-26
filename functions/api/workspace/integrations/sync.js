@@ -1,3 +1,5 @@
+import { AppStoreReportError, downloadAppStoreReport, loadAppStoreFinance, saveAppStoreReport, validReportPeriod } from "../../../lib/app-store-reports.js";
+import { decryptCredential } from "../../../lib/integration-credentials.js";
 import { stripeTransactions } from "../../../lib/stripe.js";
 import { loadWorkspace, normalizeDraft, saveWorkspaceDraft } from "../../../lib/ledger.js";
 import { readAuthenticatedUserId } from "../../../lib/session.js";
@@ -8,39 +10,46 @@ const json = (data, status = 200) => new Response(JSON.stringify(data), {
   headers: { "content-type": "application/json; charset=utf-8" },
 });
 
-const base64UrlDecode = (value) => Uint8Array.from(atob(value.replaceAll("-", "+").replaceAll("_", "/")), (char) => char.charCodeAt(0));
-
-const decryptCredential = async (value, secret) => {
-  const [saltPart, ivPart, dataPart] = String(value).split(".");
-  if (!saltPart || !ivPart || !dataPart) throw new Error("invalid_credential");
-  const keyMaterial = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), "PBKDF2", false, ["deriveKey"]);
-  const key = await crypto.subtle.deriveKey(
-    { name: "PBKDF2", salt: base64UrlDecode(saltPart), iterations: 100000, hash: "SHA-256" },
-    keyMaterial,
-    { name: "AES-GCM", length: 256 },
-    false,
-    ["decrypt"],
-  );
-  const decrypted = await crypto.subtle.decrypt(
-    { name: "AES-GCM", iv: base64UrlDecode(ivPart) },
-    key,
-    base64UrlDecode(dataPart),
-  );
-  return new TextDecoder().decode(decrypted);
-};
+async function syncAppStore(env, workspace, request) {
+  const payload = await request.json().catch(() => null);
+  if (!validReportPeriod(payload?.kind, payload?.period)) return json({ error: "invalid_app_store_period" }, 400);
+  const integration = await env.DB.prepare(
+    "SELECT id, report_vendor_number, encrypted_credentials FROM integrations WHERE workspace_id = ? AND type = 'app_store'",
+  ).bind(workspace.id).first();
+  if (!integration?.report_vendor_number) return json({ error: "app_store_not_connected" }, 400);
+  try {
+    const credential = JSON.parse(await decryptCredential(integration.encrypted_credentials, env.SESSION_SECRET || env.GOOGLE_CLIENT_SECRET));
+    if (credential.vendorNumber !== integration.report_vendor_number) throw new Error("vendor_mismatch");
+    const report = await downloadAppStoreReport(credential, payload.kind, payload.period);
+    if (!report) return json({ available: false });
+    await saveAppStoreReport(env.DB, workspace, integration, payload.kind, payload.period, report);
+    if (payload.kind === "sales") return json({
+      available: true, salesRows: report.salesRows, skippedCurrencies: report.skippedCurrencies,
+      ledger: await loadWorkspace(env.DB, workspace.id),
+    });
+    return json({ available: true, financeReports: await loadAppStoreFinance(env.DB, workspace.id) });
+  } catch (error) {
+    const expected = error instanceof AppStoreReportError;
+    const code = expected ? error.message : "app_store_sync_failed";
+    await env.DB.prepare("UPDATE integrations SET last_error = ? WHERE id = ? AND encrypted_credentials = ?")
+      .bind(code, integration.id, integration.encrypted_credentials).run();
+    return json({ error: code }, expected ? error.status : 500);
+  }
+}
 
 export const onRequestPost = async ({ env, request }) => {
   const userId = await readAuthenticatedUserId(env, request.headers.get("cookie"));
   if (!userId) return json({ authenticated: false }, 401);
   const workspace = await env.DB.prepare(
-    "SELECT w.id, u.timezone FROM workspaces w JOIN users u ON u.id = w.owner_id WHERE u.id = ?",
+    "SELECT w.id, w.apple_fee_rate, u.timezone FROM workspaces w JOIN users u ON u.id = w.owner_id WHERE u.id = ?",
   ).bind(userId).first();
   if (!workspace) return json({ error: "workspace_not_found" }, 404);
   const record = await env.DB.prepare("SELECT plan FROM workspaces WHERE id = ?").bind(workspace.id).first();
-  if (!planFeatures(record?.plan).sync) return json({ error: "pro_required" }, 403);
+  const features = planFeatures(record?.plan);
   const type = new URL(request.url).searchParams.get("type") || "stripe";
+  if (!(type === "app_store" ? features.appStoreSync : features.sync)) return json({ error: "pro_required" }, 403);
   if (type === "app_store") {
-    return json({ error: "app_store_report_sync_not_configured" }, 501);
+    return syncAppStore(env, workspace, request);
   }
   if (type !== "stripe") return json({ error: "unsupported_integration" }, 400);
   const integration = await env.DB.prepare(

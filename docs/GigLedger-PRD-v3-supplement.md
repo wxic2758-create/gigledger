@@ -253,10 +253,10 @@ true_profit       = net_income - monthly_fixed_cost - one_time_expenses
 
 **App Store Connect**
 
-1. 用户提供 Issuer ID、Key ID、`.p8` 私钥。密钥**加密存储**，UI 建议使用权限最低的角色生成，并说明不要使用 Account Holder 过大权限。
-2. 销售报告与财务报告分开处理：销售报告用于「已售出」（通常隔天），财务报告用于「已到账」（约晚一个多月）。
-3. 两套数字同时可见，真实利润默认只算已到账。
-4. 用户可撤销并删除已存密钥；撤销后无法再拉新报告。
+1. 在「设置 → 数据来源」点开 Apple 官方 API Keys 页面，使用 Finance 角色创建专用 Team API key。用户回到 GigLedger 上传 `.p8`，填写 Issuer ID 和 Vendor Number；符合 Apple 文件命名格式的 Key ID 自动填入。苹果账号的登录操作在 Apple 完成。GigLedger 测试报表访问，私钥加密存储，调用只签发读取对应报表的短时令牌。[Apple 团队密钥与报表](https://developer.apple.com/documentation/appstoreconnectapi/sales-and-finance)
+2. 销售报告按太平洋时间选择单日，同步当日 USD 客户销售额并扣回退款。设置中的 15% 或 30% 只用于估算销售手续费。财务报告按 Apple 会计月份拉取合并报表，收益按原币分列。两类报告按 Vendor Number 和期间去重。[销售报表字段](https://developer.apple.com/help/app-store-connect/reference/reporting/summary-sales-report/) [财务报表字段](https://developer.apple.com/help/app-store-connect/reference/reporting/financial-report-fields/)
+3. 财务文件中的结算字段记录客户交易结算。核对银行后，在原报表下填写实收 USD 金额和实际到帐日，已确认款项按实收月份进利润。总览并排显示所选月份的「App Store 已售出」和「App Store 已到帐」。覆盖多个期间的同笔付款只记录一次。[Apple 付款信息](https://developer.apple.com/help/app-store-connect/reference/reporting/payment-information)
+4. 同步由用户手动触发。断开后删除密钥，已导入报表和已确认到帐保留。需要在 Apple 撤销密钥时，用户可以回到官方密钥管理页操作。
 
 **共同约束**
 
@@ -576,7 +576,7 @@ Codex 不要擅自替这几项做不可逆的产品承诺。实现时用本文�
 | 优先级 | 未完成项 | 下一次验收 |
 | --- | --- | --- |
 | 封测反馈后复核 | 当前仅保存 USD；CSV 会明确拒绝其他币别。§2 要求的原币金额与币别还未实现 | 封测先注明 USD 范围；扩展前确认原币和手填汇率的需求 |
-| 对外宣传同步前 | Stripe 受限密钥路径已有实现；App Store Connect 能保存密钥，无法拉取销售、财务报告。生产凭证日志尾流验收仍未完成 | 用授权账户分别对账实际销售和到账报告，并完成生产日志复核 |
+| 对外宣传同步前 | App Store Connect 已接入销售与财务官方端点，样例报表已验收。真实授权账号对账和生产凭证日志尾流验收待完成 | 用 Finance 团队密钥分别下载真实销售与财务报告，核对实际到帐并完成生产日志复核 |
 | 公开发售前 | 正式 Privacy 与 Terms、Pro 价格/计费和付款流程未定 | 确认经营主体、联系与数据保留信息；根据试用反馈确定价格并验收计费 |
 
 个人两周试用与 10–20 人封测是产品验证里程碑。以实际使用反馈和下一版取舍为验收结果，进度见验收矩阵。

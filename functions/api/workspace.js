@@ -3,6 +3,7 @@ import { planFeatures } from "../lib/plan.js";
 import { clearedSessionCookie, readAuthenticatedUserId } from "../lib/session.js";
 import { dayInTimeZone, subscriptionTiming, validTimeZone } from "../../billing-calendar.js";
 import { minorUnits } from "../../money.js";
+import { loadAppStoreFinance } from "../lib/app-store-reports.js";
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), {
   status,
@@ -22,12 +23,13 @@ export const onRequestExportGet = async ({ env, request }) => {
   if (!userId) return json({ authenticated: false }, 401);
   const workspace = await env.DB.prepare("SELECT id FROM workspaces WHERE owner_id = ?").bind(userId).first();
   if (!workspace) return json({ authenticated: true, export: null });
-  const [user, ledger] = await Promise.all([
+  const [user, ledger, appStoreFinanceReports] = await Promise.all([
     env.DB.prepare("SELECT id, email, name, created_at, updated_at FROM users WHERE id = ?").bind(userId).first(),
     loadWorkspace(env.DB, workspace.id),
+    loadAppStoreFinance(env.DB, workspace.id),
   ]);
   const filename = `gigledger-export-${new Date().toISOString().slice(0, 10)}.json`;
-  return new Response(JSON.stringify({ exportedAt: new Date().toISOString(), user, ledger }, null, 2), {
+  return new Response(JSON.stringify({ exportedAt: new Date().toISOString(), user, ledger, appStoreFinanceReports }, null, 2), {
     headers: {
       "content-type": "application/json; charset=utf-8",
       "content-disposition": `attachment; filename="${filename}"`,
@@ -186,6 +188,7 @@ export const onRequestDelete = async ({ env, request }) => {
       env.DB.prepare("DELETE FROM fixed_cost_versions WHERE fixed_cost_id IN (SELECT id FROM fixed_costs WHERE workspace_id IN (SELECT id FROM workspaces WHERE owner_id = ?))").bind(userId),
       env.DB.prepare("DELETE FROM fixed_costs WHERE workspace_id IN (SELECT id FROM workspaces WHERE owner_id = ?)").bind(userId),
       env.DB.prepare("DELETE FROM projects WHERE workspace_id IN (SELECT id FROM workspaces WHERE owner_id = ?)").bind(userId),
+      env.DB.prepare("DELETE FROM app_store_financial_reports WHERE workspace_id IN (SELECT id FROM workspaces WHERE owner_id = ?)").bind(userId),
       env.DB.prepare("DELETE FROM integrations WHERE workspace_id IN (SELECT id FROM workspaces WHERE owner_id = ?)").bind(userId),
       env.DB.prepare("DELETE FROM workspaces WHERE owner_id = ?").bind(userId),
       env.DB.prepare("DELETE FROM users WHERE id = ?").bind(userId),

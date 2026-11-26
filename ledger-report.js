@@ -69,8 +69,16 @@ export function buildReport(ledger, today, month = today.slice(0, 7)) {
   let gross = 0n;
   let fees = 0n;
   let sold = 0n;
+  let appStoreReceived = 0n;
+  let hasAppStore = false;
   for (const item of ledger.income.filter(inMonth)) {
-    if (item.recognition === "sold") sold += cents(item.amount);
+    if (item.source === "app_store") {
+      hasAppStore = true;
+      if (item.recognition !== "sold") appStoreReceived += netCents(item);
+    }
+    if (item.recognition === "sold") {
+      if (item.source === "app_store") sold += cents(item.amount);
+    }
     else {
       gross += cents(item.amount);
       fees += cents(item.platformFee);
@@ -94,6 +102,8 @@ export function buildReport(ledger, today, month = today.slice(0, 7)) {
     monthlyFixedCosts: usd(fixedTotal),
     monthlyExpenses: usd(expenses),
     soldIncome: usd(sold),
+    appStoreReceived: usd(appStoreReceived),
+    hasAppStore,
     trueProfit: usd(net - fixedTotal - expenses),
     taxReserve: ledger.taxReserveRate === "" ? null : roundedUsd(percent(exact(net), ledger.taxReserveRate)),
     requiredToDate: usd(required),

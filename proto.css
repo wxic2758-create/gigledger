@@ -562,6 +562,26 @@
 .workspace-provider { border-top: 1px solid var(--line); padding-top: 13px; margin-top: 16px; }
 .workspace-provider p { color: var(--ink-soft); font-size: 14px; }
 .workspace-provider .integration-actions { flex-wrap: wrap; }
+.app-store-header { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 12px; margin-bottom: 8px; }
+.app-store-header small { color: var(--ink-soft); }
+[data-app-store-setup] { margin-bottom: 9px; }
+[data-app-store-setup] summary { font-weight: 800; cursor: pointer; margin-bottom: 8px; }
+#app-store-connect, #stripe-connect { scroll-margin-top: 80px; }
+[data-app-store-form] { margin-top: 10px; }
+[data-app-store-form] input[type="file"] { padding-block: 9px; }
+.app-store-report-forms { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-block: 10px; }
+.app-store-report-forms > p { grid-column: 1 / -1; margin: 0; }
+.app-store-finance { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); display: grid; gap: 7px; }
+.app-store-finance label { display: grid; gap: 3px; font-size: 12px; font-weight: 800; }
+.app-store-finance select { max-width: 100%; min-height: 40px; padding-inline: 8px; border: 1px solid var(--line); border-radius: 9px; background: var(--white); color: var(--ink); font: inherit; }
+[data-app-store-payout] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+[data-app-store-payout] button, [data-app-store-payout] p { grid-column: 1 / -1; justify-self: start; }
+.workspace-app-store { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border-top: 1px solid var(--line); padding-top: 8px; margin-top: 10px; }
+.workspace-app-store dt { color: var(--ink-soft); font-size: 12px; }
+.workspace-app-store dd { margin: 0; font-weight: 800; font-variant-numeric: tabular-nums; }
+@media (max-width: 520px) {
+  .app-store-report-forms, [data-app-store-payout] { grid-template-columns: 1fr; }
+}
 .dashboard-page #sources .sources-grid { grid-template-columns: 1fr; }
 @media (max-width: 580px) {
   .dashboard-page .header-inner { height: 58px; }

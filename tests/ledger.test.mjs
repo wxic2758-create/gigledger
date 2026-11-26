@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
+import { gzipSync } from "node:zlib";
 import { test } from "node:test";
 import { onRequestPost as startGoogleSave } from "../functions/api/auth/google.js";
 import { onRequestGet as googleCallback } from "../functions/api/auth/google/callback.js";
@@ -13,6 +14,9 @@ import { answerForPeriod, consecutiveUnused, dayInTimeZone, subscriptionTiming }
 import { buildReport, projectTotals } from "../ledger-report.js";
 import { minorUnits } from "../money.js";
 import { stripeTransactions } from "../functions/lib/stripe.js";
+import { onRequestGet as getIntegrations, onRequestPost as connectIntegration, onRequestDelete as disconnectIntegration } from "../functions/api/workspace/integrations.js";
+import { onRequestPost as syncIntegration } from "../functions/api/workspace/integrations/sync.js";
+import { onRequestPost as confirmPayout } from "../functions/api/workspace/integrations/app-store-payout.js";
 
 const origin = "https://gigledger.xyz";
 
@@ -166,6 +170,130 @@ async function account(sqlite, env, name) {
   const token = await createSessionToken(name, env.SESSION_SECRET);
   return { workspace, cookie: sessionCookie(token).split(";")[0] };
 }
+
+test("App Store self-service verifies a team key, syncs each report, and only counts a confirmed payment", async (t) => {
+  t.mock.timers.enable({ apis: ["Date"], now: new Date("2026-11-26T09:00:00Z") });
+  const { env, sqlite } = fixture(t);
+  const owner = await account(sqlite, env, "app-store-owner");
+  const other = await account(sqlite, env, "unrelated");
+  const free = await account(sqlite, env, "free");
+  sqlite.prepare("UPDATE workspaces SET plan = 'free' WHERE id = ?").run(free.workspace);
+  sqlite.prepare("UPDATE workspaces SET apple_fee_rate = 0.15 WHERE id = ?").run(owner.workspace);
+  const pair = await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign", "verify"]);
+  const raw = Buffer.from(await crypto.subtle.exportKey("pkcs8", pair.privateKey)).toString("base64");
+  const privateKey = `-----BEGIN PRIVATE KEY-----\n${raw}\n-----END PRIVATE KEY-----`;
+  const key = { type: "app_store", privateKey, issuerId: "11111111-1111-4111-8111-111111111111", keyId: "TESTKEY123", vendorNumber: "80012345" };
+  let appleMode = "valid";
+  let appleRequests = 0;
+  t.mock.method(globalThis, "fetch", async (url, options) => {
+    appleRequests++;
+    assert.equal(url.origin, "https://api.appstoreconnect.apple.com");
+    const endpoint = url.pathname;
+    const [header, payload, signature] = options.headers.Authorization.slice(7).split(".");
+    const token = JSON.parse(Buffer.from(payload, "base64url").toString());
+    assert.deepEqual(token.scope, [`GET ${endpoint}`]);
+    assert.equal(token.iss, key.issuerId);
+    assert.equal(token.exp - token.iat, 300);
+    assert.equal(await crypto.subtle.verify({ name: "ECDSA", hash: "SHA-256" }, pair.publicKey,
+      Buffer.from(signature, "base64url"), Buffer.from(`${header}.${payload}`)), true);
+    assert.equal(url.searchParams.get("filter[vendorNumber]"), key.vendorNumber);
+    if (appleMode === "denied") return Response.json({ details: "untrusted response body" }, { status: 403 });
+    if (appleMode === "missing") return new Response(null, { status: 404 });
+    if (appleMode === "malformed") return new Response("unknown\theaders\n");
+    let report;
+    if (endpoint === "/v1/salesReports") {
+      assert.equal(url.searchParams.get("filter[frequency]"), "DAILY");
+      const [year, month, day] = url.searchParams.get("filter[reportDate]").split("-");
+      const date = `${month}/${day}/${year}`;
+      report = [
+        "Begin Date\tEnd Date\tUnits\tCustomer Price\tCustomer Currency",
+        `${date}\t${date}\t1\t99.99\tUSD`,
+        `${date}\t${date}\t-1\t-.99\tUSD`,
+        `${date}\t${date}\t0\t-.11\tUSD`,
+        `${date}\t${date}\t1\t12\tEUR`,
+      ].join("\n");
+    } else {
+      assert.equal(endpoint, "/v1/financeReports");
+      assert.equal(url.searchParams.get("filter[regionCode]"), "ZZ");
+      assert.equal(url.searchParams.get("filter[reportType]"), "FINANCIAL");
+      report = [
+        "Fiscal report",
+        "Start Date\tEnd Date\tExtended Partner Share\tPartner Share Currency",
+        "09/27/2026\t10/31/2026\t80.51\tUSD",
+        "09/27/2026\t10/31/2026\t-3.02\tUSD",
+        "09/27/2026\t10/31/2026\t30\tEUR",
+      ].join("\r\n");
+    }
+    return new Response(gzipSync(report), { headers: { "content-type": "application/a-gzip" } });
+  });
+  const call = (handler, actor, { url = "", method = "POST", body } = {}) => handler({
+    env,
+    request: new Request(`${origin}/api/workspace/integrations${url}`, {
+      method, headers: { cookie: actor.cookie, "content-type": "application/json" },
+      ...(body ? { body: JSON.stringify(body) } : {}),
+    }),
+  });
+  assert.equal((await call(connectIntegration, free, { body: key })).status, 403);
+  assert.equal(appleRequests, 0);
+  appleMode = "denied";
+  const denied = await call(connectIntegration, other, { body: key });
+  assert.equal(denied.status, 403);
+  assert.deepEqual(await denied.json(), { error: "app_store_permission_denied" });
+  assert.equal(sqlite.prepare("SELECT COUNT(*) AS count FROM integrations").get().count, 0);
+  appleMode = "valid";
+  const connected = await call(connectIntegration, owner, { body: key });
+  assert.equal(connected.status, 200);
+  assert.deepEqual(await connected.json(), { authenticated: true, status: "connected", vendorNumber: "80012345" });
+  assert.ok(!sqlite.prepare("SELECT encrypted_credentials FROM integrations").get().encrypted_credentials.includes(raw));
+  assert.equal((await loadWorkspace(env.DB, owner.workspace)).income.length, 0);
+
+  const sync = (kind, period) => call(syncIntegration, owner, { url: "/sync?type=app_store", body: { kind, period } });
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const sales = await sync("sales", "2026-11-16");
+    assert.equal(sales.status, 200);
+    const saleData = await sales.json();
+    assert.equal(saleData.salesRows, 3);
+    assert.equal(saleData.skippedCurrencies, 1);
+    assert.equal(saleData.ledger.income.length, 1);
+    assert.equal(saleData.ledger.income[0].recognition, "sold");
+    assert.equal(saleData.ledger.income[0].platformFee, 14.83);
+    const finance = await sync("finance", "2026-10");
+    assert.equal(finance.status, 200);
+    const { financeReports } = await finance.json();
+    assert.equal(financeReports.length, 1);
+    assert.deepEqual(financeReports[0].proceeds, [{ currency: "EUR", cents: 3000 }, { currency: "USD", cents: 7749 }]);
+    assert.equal(financeReports[0].receivedOn, null);
+  }
+  const soldOnly = buildReport({ ...(await loadWorkspace(env.DB, owner.workspace)), cashOnHand: "", taxReserveRate: "" }, "2026-11-26");
+  assert.equal(soldOnly.soldIncome, 98.89);
+  assert.equal(soldOnly.appStoreReceived, 0);
+  assert.equal(soldOnly.trueProfit, 0);
+  appleMode = "malformed";
+  assert.equal((await sync("sales", "2026-11-16")).status, 422);
+  appleMode = "missing";
+  assert.deepEqual(await (await sync("finance", "2026-11")).json(), { available: false });
+
+  const payout = { vendorNumber: key.vendorNumber, period: "2026-10", date: "2026-11-19", amount: "76.00" };
+  assert.equal((await call(confirmPayout, other, { url: "/app-store-payout", body: payout })).status, 404);
+  assert.equal((await call(confirmPayout, owner, { url: "/app-store-payout", body: { ...payout, date: "2026-12-01" } })).status, 400);
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const confirmed = await call(confirmPayout, owner, { url: "/app-store-payout", body: payout });
+    assert.equal(confirmed.status, 200);
+    const { ledger, financeReports } = await confirmed.json();
+    assert.equal(financeReports[0].receivedCents, 7600);
+    assert.equal(ledger.income.length, 2);
+    const withDeposit = buildReport({ ...ledger, cashOnHand: "", taxReserveRate: "" }, "2026-11-26");
+    assert.equal(withDeposit.soldIncome, 98.89);
+    assert.equal(withDeposit.appStoreReceived, 76);
+    assert.equal(withDeposit.trueProfit, 76);
+  }
+  assert.equal((await call(disconnectIntegration, owner, { method: "DELETE", url: "?type=app_store" })).status, 200);
+  assert.equal((await sync("sales", "2026-11-16")).status, 400);
+  const retained = await (await call(getIntegrations, owner, { method: "GET" })).json();
+  assert.equal(retained.integrations.length, 0);
+  assert.equal(retained.financeReports[0].receivedCents, 7600);
+  assert.equal((await loadWorkspace(env.DB, owner.workspace)).income.length, 2);
+});
 
 test("fixed-cost deletion is scoped to the owner and removes that owner's child rows", async (t) => {
   const { env, sqlite } = fixture(t);

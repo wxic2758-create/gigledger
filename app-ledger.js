@@ -1,5 +1,6 @@
+import { setupAppStore } from "./app-store.js?v=20261126-03";
 import { answerForPeriod, consecutiveUnused, dayInTimeZone, monthOffset, shiftDay, subscriptionTiming, validTimeZone, weekStart } from "./billing-calendar.js?v=20261126-02";
-import { annualCost, annualCycles, buildReport, effectiveVersionAt, expenseCents, netCents, projectTotals, roundedUsd } from "./ledger-report.js?v=20261126-02";
+import { annualCost, annualCycles, buildReport, effectiveVersionAt, expenseCents, netCents, projectTotals, roundedUsd } from "./ledger-report.js?v=20261126-03";
 import { daysCovered, exact, minorUnits, percent, roundCents, scale, usd } from "./money.js?v=20261126-02";
 
 (() => {
@@ -13,7 +14,6 @@ import { daysCovered, exact, minorUnits, percent, roundCents, scale, usd } from 
   let editingExpense = null;
   let subscriptionToFocus = null;
   let stripeIntegration = null;
-  let appStoreIntegration = null;
   let integrationsLoaded = false;
   let reportPeriod = "current";
   let workspaceReady = false;
@@ -110,8 +110,8 @@ import { daysCovered, exact, minorUnits, percent, roundCents, scale, usd } from 
     set("metric-daily", dayMoney(result.dailyFloor));
     set("metric-gross", money(result.grossIncome));
     set("metric-sold", money(result.soldIncome));
-    const soldCard = document.querySelector("[data-sold-card]");
-    if (soldCard) soldCard.hidden = result.soldIncome <= 0;
+    set("metric-app-store-received", money(result.appStoreReceived));
+    document.querySelector("[data-app-store-summary]").hidden = !result.hasAppStore;
     set("metric-fees", money(result.platformFees));
     set("metric-net", money(result.netIncome));
     set("metric-profit", money(result.trueProfit));
@@ -215,9 +215,9 @@ import { daysCovered, exact, minorUnits, percent, roundCents, scale, usd } from 
         warning: true,
       });
     }
-    if (integrationsLoaded && ["pending", "connected"].includes(appStoreIntegration?.status)) {
+    if (integrationsLoaded && appStore?.needsAttention()) {
       items.push({
-        text: messages.attentionQueue.appStorePending,
+        text: messages.appStore.attention,
         href: "#app-store-connect",
       });
     }
@@ -1564,6 +1564,12 @@ import { daysCovered, exact, minorUnits, percent, roundCents, scale, usd } from 
         return;
       }
     }
+    if (hash === "app-store-connect" || hash === "stripe-connect") {
+      const section = document.getElementById(hash);
+      section?.scrollIntoView({ block: "start" });
+      focusHeading(section?.querySelector("h3"));
+      return;
+    }
     const target = hash === "cash-settings"
       ? document.getElementById(hash)
       : document.getElementById(ledgerSection || settingsSection)?.querySelector("h2")
@@ -1653,11 +1659,13 @@ import { daysCovered, exact, minorUnits, percent, roundCents, scale, usd } from 
       sync: document.querySelector("[data-stripe-sync]"),
       disconnect: document.querySelector("[data-stripe-disconnect]"),
     },
-    appStore: {
-      message: document.querySelector("[data-app-store-message]"),
-      disconnect: document.querySelector("[data-app-store-disconnect]"),
-    },
   });
+  const appStore = setupAppStore({
+    copy: messages.appStore, locale, canSync: () => state.features.appStoreSync, day: today,
+    onLedger: (ledger) => { applyLedger(ledger); render(); },
+    onChange: renderAttentionQueue,
+  });
+
   const renderIntegration = () => {
     const nodes = integrationNodes();
     if (!nodes.ready) return;
@@ -1680,16 +1688,12 @@ import { daysCovered, exact, minorUnits, percent, roundCents, scale, usd } from 
     const formInputs = stripeNodes.form ? [...stripeNodes.form.elements] : [];
     formInputs.forEach((node) => { node.disabled = !state.features.sync; });
 
-    const appStoreConnected = ["connected", "pending"].includes(appStoreIntegration?.status);
-    const appStoreNodes = nodes.appStore;
-    const appStoreControls = document.querySelector("[data-app-store-controls]");
-    if (appStoreControls) appStoreControls.hidden = !appStoreConnected;
-    if (appStoreNodes.disconnect) appStoreNodes.disconnect.disabled = !appStoreConnected;
-    renderAttentionQueue(calculate());
+    if (appStore) appStore.render();
+    else renderAttentionQueue();
   };
 
-  const showIntegrationMessage = (message, isError = false, provider = "stripe") => {
-    const node = integrationNodes()[provider]?.message;
+  const showIntegrationMessage = (message, isError = false) => {
+    const node = integrationNodes().stripe.message;
     if (!node) return;
     node.textContent = message;
     node.hidden = false;
@@ -1704,13 +1708,12 @@ import { daysCovered, exact, minorUnits, percent, roundCents, scale, usd } from 
       if (!response.ok) throw new Error(data?.error || "load_failed");
       if (data.features) state.features = data.features;
       stripeIntegration = (data.integrations || []).find((item) => item.type === "stripe") || null;
-      appStoreIntegration = (data.integrations || []).find((item) => item.type === "app_store") || null;
+      appStore?.load(data);
       integrationsLoaded = true;
       renderPlanLimits();
       if (integrationNodes().ready) renderIntegration();
-      else renderAttentionQueue(calculate());
+      else renderAttentionQueue();
       if (stripeIntegration?.lastError) showIntegrationMessage(messages.integrations.syncFailed.replace("{error}", stripeIntegration.lastError), true);
-      if (appStoreIntegration?.lastError) showIntegrationMessage(messages.integrations.appStoreSyncUnavailable, true, "appStore");
     } catch {
       integrationsLoaded = true;
       renderIntegration();
@@ -1806,27 +1809,6 @@ import { daysCovered, exact, minorUnits, percent, roundCents, scale, usd } from 
     } catch {
       button.disabled = false;
       showIntegrationMessage(messages.integrations.disconnectFailed, true);
-    }
-  });
-
-  document.querySelector("[data-app-store-disconnect]")?.addEventListener("click", async (event) => {
-    if (!window.confirm(messages.integrations.appStoreDisconnectConfirm)) return;
-    const button = event.currentTarget;
-    button.disabled = true;
-    try {
-      const response = await fetch("/api/workspace/integrations?type=app_store", {
-        method: "DELETE",
-        credentials: "same-origin",
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data?.error || "disconnect_failed");
-      appStoreIntegration = null;
-      const message = integrationNodes().appStore.message;
-      if (message) message.hidden = true;
-      renderIntegration();
-    } catch {
-      button.disabled = false;
-      showIntegrationMessage(messages.integrations.appStoreDisconnectFailed, true, "appStore");
     }
   });
 
