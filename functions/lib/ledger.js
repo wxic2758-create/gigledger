@@ -652,16 +652,15 @@ export const loadWorkspace = async (db, workspaceId) => {
   const reviewsByCost = new Map();
   for (const row of subscriptionReviews.results || []) {
     const reviews = reviewsByCost.get(row.fixed_cost_id) || [];
-    if (reviews.length < 2) reviews.push({ period: row.period, answer: row.answer });
+    if (reviews.length < 4) reviews.push({ period: row.period, answer: row.answer });
     reviewsByCost.set(row.fixed_cost_id, reviews);
   }
   const fixedCostRows = fixedCosts.results || [];
   const versionRows = fixedCostRows.length ? await db.prepare(
-    `SELECT fixed_cost_id, effective_from, effective_to, amount, cycle, business_use, allocation_json
-     FROM fixed_cost_versions
-     WHERE fixed_cost_id IN (${fixedCostRows.map(() => "?").join(",")})
-     ORDER BY effective_from ASC`,
-  ).bind(...fixedCostRows.map((item) => item.id)).all() : { results: [] };
+    `SELECT v.fixed_cost_id, v.effective_from, v.effective_to, v.amount, v.cycle, v.business_use, v.allocation_json
+     FROM fixed_cost_versions AS v JOIN fixed_costs AS fc ON fc.id = v.fixed_cost_id
+     WHERE fc.workspace_id = ? ORDER BY v.effective_from ASC`,
+  ).bind(workspaceId).all() : { results: [] };
   const versionsByCost = new Map();
   for (const row of versionRows.results || []) {
     const versions = versionsByCost.get(row.fixed_cost_id) || [];

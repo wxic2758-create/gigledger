@@ -1,3 +1,5 @@
+import { answerForPeriod, consecutiveUnused, subscriptionTiming } from "./billing-calendar.js?v=20261126-01";
+
 (() => {
   const root = document.documentElement;
   const locale = root.lang === "zh-Hant-TW" ? "zh-TW" : "en";
@@ -7,6 +9,7 @@
   let monthlyIncomeEstimateChanged = false;
   let editingFixedCostId = null;
   let editingExpense = null;
+  let subscriptionToFocus = null;
   let stripeIntegration = null;
   let appStoreIntegration = null;
   let integrationsLoaded = false;
@@ -68,16 +71,6 @@
     return monthKey(previous);
   };
 
-  const consecutiveUnused = (reviews = []) => {
-    const sorted = [...reviews]
-      .filter((review) => review?.period && review?.answer)
-      .sort((left, right) => String(right.period).localeCompare(String(left.period)));
-    if (sorted.length < 2) return false;
-    const [latest, previous] = sorted;
-    if (latest.answer !== "not_used" || previous.answer !== "not_used") return false;
-    return previousMonthKey(new Date(`${latest.period}-15T12:00:00`)) === previous.period;
-  };
-
   const fullMonthDailyIncome = () => {
     const now = new Date();
     const currentMonth = monthKey(now);
@@ -125,6 +118,18 @@
   const versionAllocation = (item) => {
     const version = currentVersion(item);
     return version?.allocation?.length ? version.allocation : (item.allocation || []);
+  };
+
+  const subscriptionStatus = (item, date = today()) => {
+    const cycle = effectiveVersionForItem(item, date).cycle;
+    const schedule = { ...item, cycle };
+    const timing = subscriptionTiming(schedule, date);
+    return {
+      ...timing,
+      answer: answerForPeriod(item.reviews || [], timing.reviewPeriod, cycle),
+      suggestedCancel: (!item.startDate || item.startDate <= date) && (!item.endDate || item.endDate >= date)
+        && consecutiveUnused(schedule),
+    };
   };
 
   const monthlyAmountForVersion = (version) => {
@@ -222,7 +227,6 @@
         ? null
         : netBurn <= 0 ? null : Math.floor(savings / netBurn),
       cashNotBurning: netBurn !== null && netBurn <= 0,
-      subscriptionSummary: subscriptionSummary(),
       aiMonthlyCosts: state.fixedCosts.filter((item) => item.isSubscription && item.isSoftware && active(item)).reduce(
         (sum, item) => sum + (Number(versionValue(item, "amount", item.amount)) || 0)
           * (Number(cycles.find((cycle) => cycle.value === versionValue(item, "cycle", item.cycle))?.multiplier) || 0) / 12
@@ -230,29 +234,6 @@
       ),
     };
   };
-
-  function subscriptionSummary() {
-    const subscriptions = state.fixedCosts.filter((item) => item.isSubscription);
-    const todayValue = today();
-    const upcoming = subscriptions
-      .filter((item) => item.nextBillingDate && item.nextBillingDate >= todayValue)
-      .sort((left, right) => left.nextBillingDate.localeCompare(right.nextBillingDate));
-    const next = upcoming[0] || null;
-    const daysUntil = next
-      ? Math.round((new Date(`${next.nextBillingDate}T00:00:00`) - new Date(`${todayValue}T00:00:00`)) / 86400000)
-      : null;
-    const suggested = subscriptions.filter((item) => consecutiveUnused(item.reviews));
-    return {
-      total: subscriptions.length,
-      dueSoon: upcoming.filter((item) => {
-        const days = Math.round((new Date(`${item.nextBillingDate}T00:00:00`) - new Date(`${todayValue}T00:00:00`)) / 86400000);
-        return days >= 0 && days <= 3;
-      }),
-      next,
-      daysUntil,
-      suggestedCancel: suggested,
-    };
-  }
 
   const renderWorkspaceChart = (result) => {
     const bar = document.querySelector("[data-chart-bar]");
@@ -340,60 +321,39 @@
     document.querySelector("[data-floor-setup]").hidden = state.fixedCosts.length > 0;
     document.querySelector("[data-cash-setup]").hidden = state.cashOnHand !== "";
     renderWorkspaceChart(result);
-    renderSubscriptionSummary(current.subscriptionSummary);
-    renderAttentionQueue(current);
+    renderAttentionQueue();
     renderWeeklySummary(current);
   };
 
-  const renderSubscriptionSummary = (summary) => {
-    const panel = document.querySelector("[data-subscription-summary]");
-    if (!panel || !dashboardMode) return;
-    const countNode = panel.querySelector("[data-subscription-count]");
-    if (countNode) countNode.textContent = String(summary.total);
-    const upcomingNode = panel.querySelector("[data-subscription-upcoming]");
-    if (upcomingNode) {
-      upcomingNode.textContent = summary.next
-        ? messages.subscriptionReview.summaryNext
-          .replace("{name}", summary.next.name)
-          .replace("{date}", summary.next.nextBillingDate)
-          .replace("{amount}", money(Number(summary.next.amount)))
-        : messages.subscriptionReview.summaryNone;
-    }
-    const suggestedNode = panel.querySelector("[data-subscription-suggested]");
-    if (suggestedNode) {
-      suggestedNode.textContent = summary.suggestedCancel.length
-        ? messages.subscriptionReview.summaryCancel
-          .replace("{count}", String(summary.suggestedCancel.length))
-        : messages.subscriptionReview.summaryNone;
-      suggestedNode.classList.toggle("is-warning", summary.suggestedCancel.length > 0);
-    }
-  };
-
-  const renderAttentionQueue = (result) => {
+  const renderAttentionQueue = () => {
     const list = document.querySelector("[data-attention-list]");
     const empty = document.querySelector("[data-attention-empty]");
     if (!list || !empty || !dashboardMode) return;
     const items = [];
-    const suggestedIds = new Set(result.subscriptionSummary.suggestedCancel.map((item) => item.id));
     if (state.features.subscriptionReview) {
-      result.subscriptionSummary.dueSoon
-        .filter((item) => !suggestedIds.has(item.id))
-        .forEach((item) => {
+      const date = today();
+      const subscriptions = state.fixedCosts.filter((item) => item.isSubscription)
+        .map((item) => ({ item, status: subscriptionStatus(item, date) }))
+        .sort((a, b) => (a.status.daysUntil ?? Infinity) - (b.status.daysUntil ?? Infinity));
+      for (const { item, status } of subscriptions) {
+        if (status.suggestedCancel) {
+          items.push({
+            text: messages.attentionQueue.suggestedCancel.replace("{name}", item.name),
+            href: "#fixed-costs",
+            fixedCostId: item.id,
+            warning: true,
+          });
+        } else if (status.date && status.reviewPeriod && !status.answer) {
           items.push({
             text: messages.attentionQueue.subscriptionReview
               .replace("{name}", item.name)
-              .replace("{date}", item.nextBillingDate),
+              .replace("{date}", status.date),
             href: "#fixed-costs",
+            fixedCostId: item.id,
             warning: true,
           });
-        });
-      result.subscriptionSummary.suggestedCancel.forEach((item) => {
-        items.push({
-          text: messages.attentionQueue.suggestedCancel.replace("{name}", item.name),
-          href: "#fixed-costs",
-          warning: true,
-        });
-      });
+        }
+      }
     }
     if (!state.fixedCosts.length) {
       items.push({ text: messages.attentionQueue.noFixedCosts, href: "#fixed-cost-entry" });
@@ -427,6 +387,7 @@
       const action = document.createElement("a");
       action.className = "attention-action";
       action.href = item.href;
+      if (item.fixedCostId) action.dataset.subscriptionFocus = item.fixedCostId;
       action.textContent = messages.attentionQueue.review;
       row.append(copy, action);
       list.appendChild(row);
@@ -654,6 +615,7 @@
     }
     state.fixedCosts.forEach((item) => {
       const row = document.createElement("tr");
+      if (item.id) row.dataset.fixedCostRow = item.id;
       if (editingFixedCostId === item.id) row.classList.add("is-editing");
       const isSubscription = Boolean(item.isSubscription);
       const currentCycle = versionValue(item, "cycle", item.cycle);
@@ -674,48 +636,48 @@
       const project = projectCell(item);
       const actions = document.createElement("td");
       if (isSubscription) {
+        const status = subscriptionStatus(item);
         const review = document.createElement("div");
         review.className = "subscription-review";
-        const answers = ["often", "sometimes", "not_used"];
-        const currentAnswer = item.reviews?.find((reviewItem) => reviewItem.period === monthKey())?.answer;
-        const suggestedCancel = consecutiveUnused(item.reviews);
-        if (suggestedCancel) {
+        const canReview = state.features.subscriptionReview && status.reviewPeriod;
+        if (state.features.subscriptionReview && status.suggestedCancel) {
           const badge = document.createElement("span");
           badge.className = "cancel-badge";
           badge.textContent = messages.subscriptionReview.suggestedCancel;
+          row.classList.add("subscription-unused");
           review.append(badge);
-        } else if (item.nextBillingDate) {
-          const todayDate = new Date(`${today()}T00:00:00`);
-          const billingDate = new Date(`${item.nextBillingDate}T00:00:00`);
-          const daysUntil = Math.round((billingDate - todayDate) / 86400000);
-          if (daysUntil >= 0 && daysUntil <= 3) {
-            const reminder = document.createElement("span");
-            reminder.className = "review-hint";
-            reminder.textContent = messages.subscriptionReview.upcoming
-              .replace("{date}", item.nextBillingDate)
-              .replace("{amount}", money(currentAmount));
-            review.append(reminder);
+        }
+        if (status.date || canReview) {
+          const prompt = document.createElement("span");
+          prompt.className = "review-hint";
+          const copy = canReview
+            ? status.date
+              ? messages.subscriptionReview[status.answer ? "reviewed" : "upcoming"]
+              : messages.subscriptionReview.review
+            : messages.subscriptionReview.nextDate;
+          const chargeAmount = status.date ? effectiveVersionForItem(item, status.date).amount : currentAmount;
+          prompt.textContent = copy.replace("{date}", status.date || "").replace("{amount}", money(Number(chargeAmount)));
+          review.append(prompt);
+          if (canReview) {
+            const answerGroup = document.createElement("div");
+            answerGroup.className = "review-actions";
+            answerGroup.setAttribute("role", "group");
+            answerGroup.setAttribute("aria-label", prompt.textContent);
+            for (const value of ["often", "sometimes", "not_used"]) {
+              const button = document.createElement("button");
+              button.type = "button";
+              button.className = "review-button" + (status.answer === value ? " active" : "");
+              button.setAttribute("aria-pressed", String(status.answer === value));
+              button.dataset.reviewAnswer = value;
+              button.dataset.billingPeriod = status.reviewPeriod;
+              button.dataset.entryId = item.id;
+              button.textContent = messages.subscriptionReview[value === "not_used" ? "notUsed" : value];
+              answerGroup.append(button);
+            }
+            review.append(answerGroup);
           }
         }
-        const answerGroup = document.createElement("div");
-        answerGroup.className = "review-actions";
-        answers.forEach((value) => {
-          const button = document.createElement("button");
-          button.type = "button";
-          button.className = "review-button" + (currentAnswer === value ? " active" : "");
-          const label = value === "not_used" ? messages.subscriptionReview.notUsed : messages.subscriptionReview[value];
-          const labelNode = document.createElement("span");
-          labelNode.textContent = label;
-          button.setAttribute("data-review-answer", value);
-          button.setAttribute("data-entry-id", item.id);
-          button.append(labelNode);
-          answerGroup.append(button);
-        });
-        review.append(answerGroup);
-        const hint = document.createElement("small");
-        hint.textContent = messages.subscriptionReview.reviewHint;
-        review.append(hint);
-        actions.append(review);
+        if (review.childElementCount) actions.append(review);
       }
       const controls = document.createElement("td");
       controls.className = "entry-controls";
@@ -1004,8 +966,11 @@
     const submitButton = fixedForm.querySelector("[data-fixed-submit]");
     const cancelButton = fixedForm.querySelector("[data-fixed-cancel]");
     const dialogTitle = fixedForm.closest("dialog")?.querySelector("h3");
+    const templateSelect = fixedForm.querySelector("[data-fixed-template]");
+    const billingInput = fixedForm.elements.nextBillingDate;
     const setRevisionMode = (item = null) => {
       editingFixedCostId = item?.id || null;
+      templateSelect.closest("label").hidden = Boolean(item);
       revisionDate.hidden = !item;
       cancelButton.hidden = !item;
       submitButton.textContent = item ? messages.fixedRevision.save : messages.fixed.add;
@@ -1018,7 +983,8 @@
         fixedForm.elements.businessUse.value = String(versionValue(item, "businessUse", item.businessUse));
         fixedForm.elements.startDate.value = item.startDate || today();
         fixedForm.elements.endDate.value = item.endDate || "";
-        fixedForm.elements.nextBillingDate.value = item.nextBillingDate || "";
+        billingInput.value = subscriptionStatus(item).date || item.nextBillingDate || "";
+        billingInput.dataset.initialDate = billingInput.value;
         fixedForm.elements.productUrl.value = item.productUrl || "";
         fixedForm.elements.manageUrl.value = item.manageUrl || "";
         fixedForm.elements.isSubscription.checked = Boolean(item.isSubscription);
@@ -1038,6 +1004,18 @@
       const subscriptionFields = fixedForm.querySelector("[data-subscription-fields]");
       if (subscriptionFields) subscriptionFields.hidden = !fixedForm.elements.isSubscription.checked;
     };
+    templateSelect.addEventListener("change", () => {
+      const template = messages.flow.templates.find((item) => item.key === templateSelect.value);
+      if (!template) return;
+      fixedForm.elements.name.value = template.label;
+      fixedForm.elements.amount.value = template.amount ?? "";
+      fixedForm.elements.cycle.value = template.cycle || "monthly";
+      fixedForm.elements.isSoftware.checked = template.isSoftware ?? true;
+      fixedForm.elements.isSubscription.checked = true;
+      fixedForm.elements.isSubscription.dispatchEvent(new Event("change"));
+      fixedForm.elements.productUrl.value = template.productUrl || "";
+      fixedForm.elements.manageUrl.value = template.manageUrl || "";
+    });
     fixedForm.elements.isSubscription?.addEventListener("change", () => {
       const subscriptionFields = fixedForm.querySelector("[data-subscription-fields]");
       if (subscriptionFields) subscriptionFields.hidden = !fixedForm.elements.isSubscription.checked;
@@ -1053,7 +1031,12 @@
     cancelButton?.addEventListener("click", () => setRevisionMode());
     fixedForm.addEventListener("submit", async (event) => {
       event.preventDefault();
-      if (!fixedForm.reportValidity()) return;
+      if (!fixedForm.checkValidity()) {
+        const details = fixedForm.querySelector("details:has(:invalid)");
+        if (details) details.open = true;
+        fixedForm.reportValidity();
+        return;
+      }
       const data = new FormData(fixedForm);
       const selected = cycles.find((cycle) => cycle.value === data.get("cycle"));
       const startDate = String(data.get("startDate") || today());
@@ -1066,6 +1049,9 @@
       if (editingFixedCostId) {
         const effectiveFrom = String(data.get("effectiveFrom") || "");
         const item = state.fixedCosts.find((cost) => cost.id === editingFixedCostId);
+        const billingDate = data.get("isSubscription") === "on"
+          ? (billingInput.value === billingInput.dataset.initialDate ? item?.nextBillingDate : billingInput.value) || null
+          : null;
         if (!effectiveFrom || (item?.startDate && effectiveFrom < item.startDate)) {
           revisionMessage.textContent = messages.fixedRevision.invalidDate;
           revisionMessage.classList.add("is-error");
@@ -1084,7 +1070,7 @@
               isSoftware: data.get("isSoftware") === "on",
               productUrl: String(data.get("productUrl") || "") || null,
               manageUrl: String(data.get("manageUrl") || "") || null,
-              nextBillingDate: String(data.get("nextBillingDate") || "") || null,
+              nextBillingDate: billingDate,
               projects: allocation.map((entry) => entry.name),
               allocation,
             });
@@ -1115,7 +1101,7 @@
                 isSoftware: data.get("isSoftware") === "on",
                 productUrl: String(data.get("productUrl") || "") || null,
                 manageUrl: String(data.get("manageUrl") || "") || null,
-                nextBillingDate: String(data.get("nextBillingDate") || "") || null,
+                nextBillingDate: billingDate,
                 allocation,
               },
             }),
@@ -1162,9 +1148,10 @@
         endDate: String(data.get("endDate") || "") || null,
         isSubscription: data.get("isSubscription") === "on",
         isSoftware: data.get("isSoftware") === "on",
+        templateKey: data.get("isSubscription") === "on" ? templateSelect.value || null : null,
         productUrl: String(data.get("productUrl") || "") || null,
         manageUrl: String(data.get("manageUrl") || "") || null,
-        nextBillingDate: String(data.get("nextBillingDate") || "") || null,
+        nextBillingDate: data.get("isSubscription") === "on" ? billingInput.value || null : null,
         projects: allocation.map((entry) => entry.name),
         allocation,
       };
@@ -1497,20 +1484,6 @@
     });
     document.querySelectorAll("[data-stripe-form] input, [data-stripe-form] button")
       .forEach((node) => { node.disabled = !state.features.sync; });
-    const reviewPanel = document.querySelector("[data-subscription-summary]");
-    const reviewLocked = !state.features.subscriptionReview;
-    reviewPanel?.classList.toggle("is-pro-locked", reviewLocked);
-    document.querySelectorAll("[data-review-answer]").forEach((button) => {
-      button.disabled = reviewLocked;
-      if (reviewLocked) button.title = messages.plan.proRequiredReview;
-      else button.removeAttribute("title");
-    });
-    if (reviewPanel && reviewLocked) {
-      const upcoming = reviewPanel.querySelector("[data-subscription-upcoming]");
-      const suggested = reviewPanel.querySelector("[data-subscription-suggested]");
-      if (upcoming) upcoming.textContent = messages.plan.proRequiredReview;
-      if (suggested) suggested.textContent = messages.plan.proRequiredReview;
-    }
   };
 
   const csvMessage = (node, message, isError = false) => {
@@ -1773,6 +1746,17 @@
     if (!workspaceReady) return;
     if (showEntryDialog(hash) || !moveFocus) return;
     window.scrollTo({ top: 0, behavior: "instant" });
+    if (hash === "fixed-costs" && subscriptionToFocus) {
+      const id = subscriptionToFocus;
+      subscriptionToFocus = null;
+      const row = document.querySelector(`[data-fixed-cost-row="${CSS.escape(id)}"]`);
+      const action = row?.querySelector(".review-button") || row?.querySelector(".entry-links a:last-child");
+      if (action) {
+        action.scrollIntoView({ block: "nearest", inline: "center" });
+        action.focus({ preventScroll: true });
+        return;
+      }
+    }
     const target = hash === "cash-settings"
       ? document.getElementById(hash)
       : document.getElementById(ledgerSection || settingsSection)?.querySelector("h2")
@@ -2101,24 +2085,28 @@
   const flowCash = document.querySelector("[data-flow-cash]");
   const flowTax = document.querySelector("[data-flow-tax]");
   let flowStep = 1;
+  let flowFixedCosts = [];
 
-  const selectedTemplates = () => [...document.querySelectorAll("[data-template-key]:checked")]
-    .map((checkbox) => {
-      const key = checkbox.dataset.templateKey;
-      const amountNode = document.querySelector(`[data-template-amount="${key}"]`);
+  const selectedTemplateAmounts = () => [...document.querySelectorAll("[data-template-key]:checked")]
+    .map((checkbox) => document.querySelector(`[data-template-amount="${checkbox.dataset.templateKey}"]`));
+
+  const selectedTemplates = () => selectedTemplateAmounts()
+    .map((amountInput) => {
+      const key = amountInput.dataset.templateAmount;
       const template = messages.flow.templates.find((item) => item.key === key);
+      const cycle = cycles.find((entry) => entry.value === (template.cycle || "monthly"));
       return {
-        name: template?.label || key,
-        amount: Number(amountNode?.value || template?.amount || 0),
-        cycle: "monthly",
-        multiplier: 12,
+        name: template.label,
+        amount: amountInput.valueAsNumber,
+        cycle: cycle.value,
+        multiplier: cycle.multiplier,
         businessUse: 100,
         startDate: today(),
         isSubscription: true,
-        isSoftware: true,
+        isSoftware: template.isSoftware ?? true,
         templateKey: key,
-        productUrl: template?.productUrl || null,
-        manageUrl: template?.manageUrl || null,
+        productUrl: template.productUrl || null,
+        manageUrl: template.manageUrl || null,
       };
     });
 
@@ -2170,7 +2158,9 @@
   const applyFlowToLedger = () => {
     const templateCosts = selectedTemplates();
     const otherCost = otherFixedCost();
-    state.fixedCosts = [...templateCosts, ...(otherCost ? [otherCost] : [])];
+    const manualCosts = state.fixedCosts.filter((item) => !flowFixedCosts.includes(item));
+    flowFixedCosts = [...templateCosts, ...(otherCost ? [otherCost] : [])];
+    state.fixedCosts = [...flowFixedCosts, ...manualCosts];
     state.monthlyIncomeEstimate = flowIncome.value;
     monthlyIncomeEstimateChanged = flowIncome.value !== "";
     state.taxReserveRate = flowTax.value;
@@ -2206,6 +2196,15 @@
   flowNext?.addEventListener("click", () => {
     if (flowStep === 2 && ![flowIncome, flowCash, flowTax].every((input) => input.reportValidity())) return;
     if (flowStep === 1) {
+      for (const amount of selectedTemplateAmounts()) {
+        amount.required = true;
+        if (!amount.checkValidity()) {
+          const more = amount.closest("details");
+          if (more) more.open = true;
+          amount.reportValidity();
+          return;
+        }
+      }
       const warning = document.querySelector("[data-skip-warning]");
       if (warning) warning.hidden = Boolean(selectedTemplates().length || otherFixedCost());
     }
@@ -2215,32 +2214,32 @@
   document.addEventListener("click", async (event) => {
     const button = event.target.closest("[data-review-answer]");
     if (!button || button.disabled) return;
-    button.disabled = true;
+    const group = button.closest(".review-actions");
+    const buttons = [...group.querySelectorAll("button")];
+    buttons.forEach((action) => { action.disabled = true; });
     try {
-      const response = await fetch("/api/workspace", {
+      await updateWorkspace("/api/workspace", {
         method: "PUT",
         headers: { "content-type": "application/json" },
-        credentials: "same-origin",
-        body: JSON.stringify({ fixedCostId: button.dataset.entryId, answer: button.dataset.reviewAnswer }),
+        body: JSON.stringify({
+          fixedCostId: button.dataset.entryId,
+          answer: button.dataset.reviewAnswer,
+          billingPeriod: button.dataset.billingPeriod,
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        }),
       });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok || !data.ledger) throw new Error("review_failed");
-      applyLedger(data.ledger);
-      const currentSettings = document.querySelector('[data-proto-form="settings"]');
-      if (currentSettings) {
-        currentSettings.elements.cashOnHand.value = state.cashOnHand;
-        currentSettings.elements.appleFeeRate.value = state.appleFeeRate;
-      }
-      refreshTaxInputs();
-      render();
+      const updated = [...document.querySelectorAll("[data-review-answer]")].find((candidate) =>
+        candidate.dataset.entryId === button.dataset.entryId && candidate.dataset.reviewAnswer === button.dataset.reviewAnswer);
+      updated?.focus({ preventScroll: true });
     } catch {
-      button.disabled = false;
-      window.alert(messages.deleteEntryFailed);
+      buttons.forEach((action) => { action.disabled = false; });
+      window.alert(messages.subscriptionReview.failed);
     }
   });
   flowSave?.addEventListener("click", saveDraft);
   document.querySelector("[data-template-grid]")?.addEventListener("input", (event) => {
     if (!event.target.matches("[type=checkbox]")) return;
+    event.target.closest(".template-card").querySelector("[data-template-amount]").required = event.target.checked;
     const warning = document.querySelector("[data-skip-warning]");
     if (warning) warning.hidden = Boolean(selectedTemplates().length || otherFixedCost());
   });
@@ -2253,6 +2252,10 @@
   const route = dashboardMode ? workspaceRoute : guestRoute;
   window.addEventListener("hashchange", () => route());
   document.addEventListener("click", (event) => {
+    const subscriptionLink = event.target.closest("[data-subscription-focus]");
+    if (subscriptionLink && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) {
+      subscriptionToFocus = subscriptionLink.dataset.subscriptionFocus;
+    }
     const quickLink = event.target.closest("[data-add-menu] a, .entry-link-button");
     if (quickLink?.hash === window.location.hash) route();
   });
@@ -2289,6 +2292,14 @@
     });
   });
   if (!dashboardMode) route(Boolean(window.location.hash));
+  let billingDay = today();
+  document.addEventListener("visibilitychange", () => {
+    const date = today();
+    if (document.hidden || date === billingDay) return;
+    billingDay = date;
+    renderFixedCosts();
+    renderMetrics();
+  });
 
   loadDashboard().finally(() => {
     window.__gigledgerLoaded = true;

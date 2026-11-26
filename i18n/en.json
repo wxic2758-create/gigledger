@@ -418,7 +418,7 @@
       "noIncome": "Add this month's income to compare with your Daily Floor.",
       "noCash": "Add cash on hand to calculate your no-new-work runway.",
       "subscriptionReview": "{name} renews on {date}. Review it before the charge.",
-      "suggestedCancel": "{name} has been marked unused for two months. Review or cancel.",
+      "suggestedCancel": "{name} was marked unused in two consecutive billing periods. Review or cancel.",
       "stripeNotConnected": "Connect a Stripe restricted key to import official income.",
       "appStorePending": "Your App Store key is saved, but report sync is still not configured.",
       "stripeError": "Stripe sync failed. Check the connection status.",
@@ -443,6 +443,9 @@
       "startDate": "Start date",
       "endDate": "End date (optional)",
       "nextBillingDate": "Next billing date (optional)",
+      "subscriptionTemplate": "Subscription template",
+      "manualFixedCost": "Enter manually",
+      "billingDateNote": "GigLedger projects future dates using this date and the billing cycle.",
       "productUrl": "Open product URL (optional)",
       "manageUrl": "Manage subscription URL (optional)",
       "date": "Date",
@@ -582,8 +585,8 @@
       "subtitle": "Choose what you already pay for, add one rough income number, then save only if it helps.",
       "step": "Step",
       "stepOf": "of 3",
-      "templatesTitle": "Monthly subscriptions and tools",
-      "templatesNote": "Check what you use and adjust the price if needed.",
+      "templatesTitle": "Recurring costs and subscriptions",
+      "templatesNote": "Pick what you pay for. Enter your actual amount when none is shown.",
       "otherTitle": "Other fixed cost",
       "otherNote": "Rent, insurance, hosting, or anything recurring.",
       "skipWarning": "Daily Floor will be $0 unless you add at least one fixed cost.",
@@ -606,52 +609,17 @@
       "unset": "Not set",
       "save": "Save with Google",
       "continueFull": "Continue to full ledger",
-      "templates": [
-        {
-          "key": "chatgpt",
-          "label": "ChatGPT Plus",
-          "amount": 20
-        },
-        {
-          "key": "claude",
-          "label": "Claude Pro",
-          "amount": 20
-        },
-        {
-          "key": "cursor",
-          "label": "Cursor Pro",
-          "amount": 20
-        },
-        {
-          "key": "notion",
-          "label": "Notion",
-          "amount": 10
-        },
-        {
-          "key": "figma",
-          "label": "Figma",
-          "amount": 15
-        },
-        {
-          "key": "copilot",
-          "label": "GitHub Copilot",
-          "amount": 10
-        },
-        {
-          "key": "app_store",
-          "label": "App Store subscription",
-          "amount": 0,
-          "productUrl": "https://apps.apple.com/",
-          "manageUrl": "https://apps.apple.com/account/subscriptions"
-        }
-      ]
+      "templateLabels": {}
     },
     "subscriptionReview": {
       "review": "This month used",
       "often": "Often",
       "sometimes": "Sometimes",
       "notUsed": "Unused",
-      "upcoming": "Next charge {date}: {amount}",
+      "upcoming": "Renews {date} for {amount}. Did you use it this cycle?",
+      "nextDate": "Next charge: {date}",
+      "reviewed": "Usage recorded for {date}",
+      "failed": "Could not save this review. Refresh the page if the billing date changed.",
       "suggestedCancel": "Suggested cancel",
       "reviewHint": "You tell GigLedger; it never detects usage automatically.",
       "summaryKicker": "Subscription check",

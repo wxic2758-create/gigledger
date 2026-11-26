@@ -1,6 +1,7 @@
 import { countNewSubscriptions, normalizeDraft, saveFixedCostRevision, saveWorkspaceDraft, loadWorkspace, updateExpense } from "../lib/ledger.js";
 import { planFeatures } from "../lib/plan.js";
 import { clearedSessionCookie, readAuthenticatedUserId } from "../lib/session.js";
+import { dayInTimeZone, subscriptionTiming } from "../../billing-calendar.js";
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), {
   status,
@@ -121,35 +122,33 @@ export const onRequestPut = async ({ env, request }) => {
   }
   const workspaceRecord = await env.DB.prepare("SELECT plan FROM workspaces WHERE id = ?").bind(workspace.id).first();
   if (!planFeatures(workspaceRecord?.plan).subscriptionReview) return json({ error: "pro_required" }, 403);
+  const now = new Date();
+  const today = dayInTimeZone(now, payload.timeZone);
   const fixedCost = await env.DB.prepare(
-    "SELECT id, next_billing_date, cycle FROM fixed_costs WHERE id = ? AND workspace_id = ?",
-  ).bind(fixedCostId, workspace.id).first();
+    `SELECT fc.updated_at AS updatedAt, fc.next_billing_date AS nextBillingDate,
+      fc.start_date AS startDate, fc.end_date AS endDate,
+      COALESCE((
+        SELECT cycle FROM fixed_cost_versions WHERE fixed_cost_id = fc.id
+          AND effective_from <= ? AND (effective_to IS NULL OR effective_to >= ?)
+        ORDER BY effective_from DESC LIMIT 1
+      ), fc.cycle) AS cycle
+     FROM fixed_costs AS fc WHERE fc.id = ? AND fc.workspace_id = ? AND fc.is_subscription = 1`,
+  ).bind(today, today, fixedCostId, workspace.id).first();
   if (!fixedCost) return json({ error: "fixed_cost_not_found" }, 404);
 
-  const timestamp = new Date().toISOString();
-  const today = timestamp.slice(0, 10);
-  const period = today.slice(0, 7);
-  await env.DB.prepare(
+  const { reviewPeriod } = subscriptionTiming(fixedCost, today);
+  if (!reviewPeriod || (payload.billingPeriod && payload.billingPeriod !== reviewPeriod)) {
+    return json({ error: "review_period_changed" }, 409);
+  }
+  const timestamp = now.toISOString();
+  const saved = await env.DB.prepare(
     `INSERT INTO subscription_reviews
       (id, fixed_cost_id, workspace_id, period, answer, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?)
+     SELECT ?, id, workspace_id, ?, ?, ?, ?
+     FROM fixed_costs WHERE id = ? AND workspace_id = ? AND updated_at = ?
      ON CONFLICT(fixed_cost_id, period) DO UPDATE SET answer = excluded.answer, updated_at = excluded.updated_at`,
-  ).bind(crypto.randomUUID(), fixedCostId, workspace.id, period, answer, timestamp, timestamp).run();
-
-  const multipliers = { daily: 1, weekly: 7, biweekly: 14, monthly: 1, quarterly: 3, yearly: 12 };
-  let nextBillingDate = fixedCost.next_billing_date;
-  if (nextBillingDate && nextBillingDate <= today) {
-    const billingDate = new Date(`${nextBillingDate}T00:00:00Z`);
-    if (!Number.isNaN(billingDate.getTime())) {
-      if (fixedCost.cycle === "monthly") billingDate.setUTCMonth(billingDate.getUTCMonth() + 1);
-      else if (fixedCost.cycle === "quarterly") billingDate.setUTCMonth(billingDate.getUTCMonth() + 3);
-      else if (fixedCost.cycle === "yearly") billingDate.setUTCFullYear(billingDate.getUTCFullYear() + 1);
-      else billingDate.setUTCDate(billingDate.getUTCDate() + (multipliers[fixedCost.cycle] || 30));
-      nextBillingDate = billingDate.toISOString().slice(0, 10);
-      await env.DB.prepare("UPDATE fixed_costs SET next_billing_date = ?, updated_at = ? WHERE id = ?")
-        .bind(nextBillingDate, timestamp, fixedCostId).run();
-    }
-  }
+  ).bind(crypto.randomUUID(), reviewPeriod, answer, timestamp, timestamp, fixedCostId, workspace.id, fixedCost.updatedAt).run();
+  if (!saved.meta.changes) return json({ error: "review_period_changed" }, 409);
   return json({ authenticated: true, ledger: await loadWorkspace(env.DB, workspace.id) });
 };
 

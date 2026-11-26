@@ -1,6 +1,7 @@
 import { copyFile, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import subscriptionTemplates from "../config/subscription-templates.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const siteUrl = "https://gigledger.xyz";
@@ -15,6 +16,11 @@ for (const locale of locales) {
   messages[locale.code] = JSON.parse(
     await readFile(join(root, "i18n", `${locale.code}.json`), "utf8"),
   );
+  const flow = messages[locale.code].app.flow;
+  flow.templates = subscriptionTemplates.map((item) => ({
+    ...item, label: flow.templateLabels[item.key] || item.label,
+  }));
+  delete flow.templateLabels;
 }
 
 const esc = (value = "") =>
@@ -505,8 +511,8 @@ const appPage = ({ locale, t, mode = "app" }) => {
   const templateCard = (item) => `
     <label class="template-card">
       <input type="checkbox" name="template" value="${esc(item.key)}" data-template-key="${esc(item.key)}">
-      <span>${esc(item.label)}</span>
-      <span class="template-price"><b>$</b><input type="number" min="0" step="0.01" value="${Number(item.amount) || 0}" data-template-amount="${esc(item.key)}" aria-label="${esc(item.label)} · ${esc(t.app.fields.amount)}"></span>
+      <span>${esc(item.label)}${item.cycle ? ` <small>· ${esc(t.app.cycles[item.cycle])}</small>` : ""}</span>
+      <span class="template-price"><b>$</b><input type="number" min="0" step="0.01" value="${item.amount ?? ""}" data-template-amount="${esc(item.key)}" aria-label="${esc(item.label)} · ${esc(t.app.fields.amount)}"></span>
     </label>`;
   const isGuest = !workspace;
   const option = (value) => `<option value="${value}"${value === "monthly" ? " selected" : ""}>${esc(t.app.cycles[value])}</option>`;
@@ -522,7 +528,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
   <meta name="robots" content="noindex">
   <link rel="icon" href="/assets/favicon-32.png" sizes="32x32">
   <link rel="stylesheet" href="/styles.css?v=20261121-03">
-  <link rel="stylesheet" href="/proto.css?v=20261121-04">
+  <link rel="stylesheet" href="/proto.css?v=20261126-01">
 </head>
 <body class="${bodyClass}">
   <script type="application/json" id="proto-messages">${JSON.stringify(mode === "dashboard" ? { ...t.app, dashboard: t.dashboard } : t.app).replaceAll("</", "<\\/")}</script>
@@ -857,6 +863,13 @@ const appPage = ({ locale, t, mode = "app" }) => {
       <div class="app-grid ledger-list">
         ${entryDialog("fixed-cost-entry", t.app.fixed.add)}
         <form class="app-form" data-proto-form="fixed" id="fixed-cost-entry" novalidate>
+          <label data-fixed-template-field>
+            <span>${esc(t.app.fields.subscriptionTemplate)}</span>
+            <select data-fixed-template>
+              <option value="">${esc(t.app.fields.manualFixedCost)}</option>
+              ${t.app.flow.templates.map((item) => `<option value="${esc(item.key)}">${esc(item.label)}</option>`).join("")}
+            </select>
+          </label>
           <label><span>${esc(t.app.fields.name)}</span><input name="name" required></label>
           <label><span>${esc(t.app.fields.amount)}</span><input name="amount" type="number" min="0" step="0.01" required></label>
           <label><span>${esc(t.app.fields.cycle)}</span><select name="cycle">${["daily","weekly","biweekly","monthly","quarterly","yearly"].map(option).join("")}</select></label>
@@ -869,7 +882,8 @@ const appPage = ({ locale, t, mode = "app" }) => {
             <label><span>${esc(t.app.fields.startDate)}</span><input name="startDate" type="date" required></label>
             <label><span>${esc(t.app.fields.endDate)}</span><input name="endDate" type="date"></label>
             <div class="subscription-fields" data-subscription-fields hidden>
-              <label><span>${esc(t.app.fields.nextBillingDate)}</span><input name="nextBillingDate" type="date"></label>
+              <label><span>${esc(t.app.fields.nextBillingDate)}</span><input name="nextBillingDate" type="date" aria-describedby="billing-date-note"></label>
+              <p id="billing-date-note" class="app-note">${esc(t.app.fields.billingDateNote)}</p>
               <label><span>${esc(t.app.fields.productUrl)}</span><input name="productUrl" type="url" placeholder="https://"></label>
               <label><span>${esc(t.app.fields.manageUrl)}</span><input name="manageUrl" type="url" placeholder="https://"></label>
             </div>
@@ -985,7 +999,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
       <a href="/${t.alternatePath}${workspace ? "dashboard" : "app"}">${esc(t.nav.switchTo)}</a>
     </div>
   </footer>
-  <script src="/app-ledger.js?v=20261121-04" defer></script>
+  <script type="module" src="/app-ledger.js?v=20261126-01"></script>
   <script src="/app.js?v=20261121-03" defer></script>
 </body>
 </html>`;
@@ -1144,7 +1158,7 @@ ${locales
 const dist = join(root, "dist");
 const publicFiles = [
   "_redirects", "index.html", "robots.txt", "sitemap.xml",
-  "app.js", "app-ledger.js", "styles.css", "proto.css",
+  "app.js", "app-ledger.js", "billing-calendar.js", "styles.css", "proto.css",
   "assets/favicon-32.png", "assets/logo-mark-192.png", "assets/logo-mark-64.png", "assets/og.png",
   ...locales.flatMap(({ folder }) =>
     ["index.html", "privacy.html", "tax-disclaimer.html", "app/index.html", "dashboard/index.html", "product/index.html", "pricing/index.html", "faq/index.html"]

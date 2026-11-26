@@ -9,6 +9,7 @@ import { onRequestDelete as removeEntry, onRequestPost as updateWorkspace, onReq
 import { onRequestGet as exportCsv, onRequestPost as importCsv } from "../functions/api/workspace/csv.js";
 import { loadWorkspace, normalizeDraft, saveWorkspaceDraft } from "../functions/lib/ledger.js";
 import { createSessionToken, sessionCookie } from "../functions/lib/session.js";
+import { answerForPeriod, consecutiveUnused, subscriptionTiming } from "../billing-calendar.js";
 
 const origin = "https://gigledger.xyz";
 
@@ -83,6 +84,68 @@ test("fixed-cost deletion is scoped to the owner and removes that owner's child 
   assert.equal((await remove(owner.cookie)).status, 200);
   assert.equal(sqlite.prepare("SELECT COUNT(*) AS total FROM fixed_cost_versions").get().total, 0);
   assert.equal(sqlite.prepare("SELECT COUNT(*) AS total FROM subscription_reviews").get().total, 0);
+});
+
+test("billing dates catch up while preserving the original day across short months and leap years", () => {
+  const february = subscriptionTiming({ cycle: "monthly", nextBillingDate: "2027-01-31" }, "2027-02-25");
+  assert.deepEqual(february, { date: "2027-02-28", daysUntil: 3, reviewPeriod: "2027-02-28" });
+  const march = subscriptionTiming({ cycle: "monthly", nextBillingDate: "2027-01-31" }, "2027-03-01");
+  assert.equal(march.date, "2027-03-31");
+  assert.equal(march.reviewPeriod, null);
+  const leap = subscriptionTiming({ cycle: "monthly", nextBillingDate: "2027-01-31" }, "2028-02-29");
+  assert.equal(leap.date, "2028-02-29");
+  const quarterly = subscriptionTiming({ cycle: "quarterly", nextBillingDate: "2027-01-31" }, "2028-04-01");
+  assert.equal(quarterly.date, "2028-04-30");
+  const yearly = { cycle: "yearly", nextBillingDate: "2024-02-29" };
+  assert.equal(subscriptionTiming(yearly, "2027-02-01").date, "2027-02-28");
+  assert.equal(subscriptionTiming(yearly, "2027-03-01").date, "2028-02-29");
+  assert.equal(subscriptionTiming({ cycle: "biweekly", nextBillingDate: "2026-01-01" }, "2026-01-30").date, "2026-02-12");
+  assert.equal(subscriptionTiming({ cycle: "weekly", nextBillingDate: "2026-01-01", endDate: "2026-01-07" }, "2026-01-05").date, null);
+  assert.equal(subscriptionTiming({ cycle: "daily", nextBillingDate: "2026-01-01", startDate: "2026-01-06" }, "2026-01-05").reviewPeriod, null);
+});
+
+test("reviews are saved against the billing date in the browser time zone and can be corrected", async (t) => {
+  t.mock.timers.enable({ apis: ["Date"], now: new Date("2028-02-25T16:30:00Z") });
+  const { env, sqlite } = fixture(t);
+  const owner = await account(sqlite, env, "owner");
+  const other = await account(sqlite, env, "other");
+  await saveWorkspaceDraft(env, owner.workspace, await normalizeDraft({
+    fixedCosts: [
+      { name: "Monthly SaaS", amount: 20, cycle: "monthly", isSubscription: true, startDate: "2027-01-01", nextBillingDate: "2027-01-31" },
+      { name: "Rent", amount: 20, cycle: "monthly", startDate: "2027-01-01" },
+    ],
+  }));
+  const { fixedCosts } = await loadWorkspace(env.DB, owner.workspace);
+  const subscription = fixedCosts.find(({ name }) => name === "Monthly SaaS");
+  const rent = fixedCosts.find(({ name }) => name === "Rent");
+  sqlite.prepare(
+    "INSERT INTO subscription_reviews (id, fixed_cost_id, workspace_id, period, answer, created_at, updated_at) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
+  ).run("legacy-review", subscription.id, owner.workspace, "2028-01", "not_used");
+  const review = (actor, changes = {}) => editEntry({
+    env,
+    request: new Request(`${origin}/api/workspace`, {
+      method: "PUT",
+      headers: { cookie: actor.cookie, "content-type": "application/json" },
+      body: JSON.stringify({
+        fixedCostId: subscription.id, answer: "not_used", billingPeriod: "2028-02-29", timeZone: "Asia/Shanghai", ...changes,
+      }),
+    }),
+  });
+  assert.equal((await review(owner, { timeZone: "America/Los_Angeles" })).status, 409);
+  assert.equal((await review(owner, { billingPeriod: "2028-02-28" })).status, 409);
+  assert.equal((await review(other)).status, 404);
+  assert.equal((await review(owner, { fixedCostId: rent.id })).status, 404);
+  for (let attempt = 0; attempt < 2; attempt++) assert.equal((await review(owner)).status, 200);
+  const latest = async () => (await loadWorkspace(env.DB, owner.workspace)).fixedCosts.find((item) => item.id === subscription.id);
+  const saved = await latest();
+  assert.equal(saved.nextBillingDate, "2027-01-31");
+  assert.equal(answerForPeriod(saved.reviews, "2028-01-31", "monthly"), "not_used");
+  assert.deepEqual(saved.reviews.map(({ period }) => period), ["2028-02-29", "2028-01"]);
+  assert.equal(consecutiveUnused(saved), true);
+  assert.equal((await review(owner, { answer: "often" })).status, 200);
+  assert.equal(consecutiveUnused(await latest()), false);
+  sqlite.prepare("UPDATE workspaces SET plan = 'free' WHERE id = ?").run(owner.workspace);
+  assert.equal((await review(owner)).status, 403);
 });
 
 test("Google save preserves the planning estimate and equal manual payments survive reload and retry", async (t) => {

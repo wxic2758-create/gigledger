@@ -1,6 +1,6 @@
 # GigLedger Acceptance Matrix v3
 
-Last updated: 2026-11-21
+Last updated: 2026-11-26
 
 Scope: English and Traditional Chinese (`zh-TW`) only for this release. This document records the acceptance coverage required by PRD section 5 and the implementation gaps that remain visible rather than silently passing.
 
@@ -126,6 +126,8 @@ All product calculations use USD and allow a tolerance of `$0.01`.
 | AF-75 | 2.1 expenses | A one-time expense can be corrected in the existing form without creating another row | Fixture | Ego at 320 px verified the expense Edit action without table scrolling. An expense changed from $240 at 100% to $300 at 50%, persisted after reload, moved profit from $1,400 to $1,490, and left Daily Floor at $11.84. The API test checks ownership, validation, a retry, and clearing optional fields. Traditional Chinese guest editing was also exercised. |
 | AF-76 | 5.3 CSV | Export a selected month of received income, with an all-time option | Fixture | Ego downloaded the previous month's CSV, which contained one matching payment. The API test covers month boundaries, empty months and exclusion of sold-only entries. The existing export/reimport deduplication check remains in place. |
 | AF-77 | 7 compact workspace | Phone trial buttons and the profit chart are visible in the first viewport | Fixture | Ego at 390 × 844 CSS px found the trial's Next and Save buttons in the first viewport and the profit chart above the fold. The public landing pages are byte-identical to the prior release. |
+| AF-78 | 5.5 templates | The calculator and fixed-cost form use the complete catalog, including generic renewals | Fixture | Both locales load 18 templates from one catalog. Ego verified the Traditional Chinese calculator initially shows three and blocks a selected template with a blank amount. An annual USD 120 domain renewal produced a $0.33 Daily Floor. The English fixed-cost form saved a Cursor template with product and billing links that open in new tabs. Public endpoints and vendor instructions were checked; access inside vendor accounts was not exercised. [Cursor billing](https://cursor.com/help/account-and-billing/billing), [Midjourney billing](https://docs.midjourney.com/hc/en-us/articles/28014179406861-Managing-Your-Subscription), [Perplexity billing](https://www.perplexity.ai/help-center/en/articles/10354283-canceling-a-subscription). |
+| AF-79 | 5.5 billing dates | Active subscriptions roll over without losing their original billing day | Fixture | Tests cover Jan 31 → Feb 28/29 → Mar 31, quarterly and yearly month ends, multiple missed periods, and the end date. With Shanghai set three days before Feb 29, Ego followed the dashboard task to the correct subscription, saved an answer, saw the unused badge, corrected the answer, and confirmed that it persisted after reload. The API verifies ownership, Pro access, the requested period and local-day boundaries. |
 
 ## Known Gaps To Track
 
@@ -136,7 +138,7 @@ These are real PRD gaps, not accepted excuses. They are listed here so the next 
 3. Marketing copy and SEO metadata should be rechecked against `docs/GigLedger-website-optimization.md` after every deployment.
 4. The legal pages still need the operating entity, contact details, retention period, processors, and final deletion workflow before general launch. Product data categories and deletion behavior are already disclosed from the implemented schema.
 5. AF-71 deployment-log capture is blocked by the local network path to Cloudflare tailing. The code-level audit and production canary behavior are recorded above, but release sign-off still requires a tail session from a working network or the Cloudflare dashboard.
-6. See PRD §15 for the remaining template, billing date, fixed-point monetary arithmetic, time zone, and non-USD acceptance gaps. The two-week personal trial and closed-beta recruitment have no completion record here.
+6. See PRD §15 for the remaining fixed-point monetary arithmetic, workspace time zone, and non-USD acceptance gaps. The two-week personal trial and closed-beta recruitment have no completion record here.
 
 ## Manual Regression Checklist
 

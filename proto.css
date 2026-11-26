@@ -172,6 +172,7 @@
 }
 .app-table-wrap th { font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); }
 .app-table-wrap tbody tr.is-editing { background: #fff8df; }
+.app-table-wrap tbody tr.subscription-unused { background: #fff2ee; }
 .app-table-wrap td:last-child { font-family: var(--display); font-weight: 800; }
 .app-table-wrap td:has(.entry-delete) { font-family: inherit; font-weight: 600; }
 .app-table-wrap td:last-child:has(.entry-delete) { font-family: inherit; font-weight: 600; }
@@ -264,6 +265,7 @@
   padding: 15px; background: var(--paper); border: 1px solid var(--line); border-radius: 13px; cursor: pointer;
 }
 .template-card input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--orange-dark); }
+.template-card small { color: var(--ink-soft); }
 .template-price { display: inline-flex; align-items: center; gap: 4px; font-weight: 800; }
 .template-price input { width: 76px; min-height: 38px; padding: 0 9px; border: 1px solid var(--line); border-radius: 9px; background: var(--white); }
 .flow-other { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 18px; }
@@ -299,7 +301,7 @@
   font-size: 11px; font-weight: 800; cursor: pointer;
 }
 .review-button.active { background: var(--ink); border-color: var(--ink); color: var(--white); }
-.review-hint { font-size: 11px; font-weight: 800; color: var(--orange-dark); }
+.review-hint { max-width: 34ch; white-space: normal; font-size: 11px; font-weight: 800; color: var(--orange-dark); }
 .cancel-badge {
   display: inline-flex; justify-self: start; padding: 4px 8px;
   border-radius: 999px; background: #fdecec; color: #b42318;

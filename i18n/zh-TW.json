@@ -418,7 +418,7 @@
       "noIncome": "新增本月收入，才能和每日底線比較。",
       "noCash": "新增手頭現金，才能計算不接新單的跑道。",
       "subscriptionReview": "{name} 將於 {date} 扣款，請先確認是否續用。",
-      "suggestedCancel": "{name} 已連續兩個月標為沒用，請檢查或取消。",
+      "suggestedCancel": "「{name}」連續兩個扣款週期標為未使用，可檢查或取消。",
       "stripeNotConnected": "連結 Stripe 受限金鑰，即可匯入官方收入。",
       "appStorePending": "你的 App Store 金鑰已保存，但報告同步尚未設定。",
       "stripeError": "Stripe 同步失敗，請檢查連接狀態。",
@@ -443,6 +443,9 @@
       "startDate": "開始日期",
       "endDate": "結束日期（可選）",
       "nextBillingDate": "下次扣費日（可選）",
+      "subscriptionTemplate": "訂閱範本",
+      "manualFixedCost": "手動輸入",
+      "billingDateNote": "GigLedger 會依此日期與扣款週期推算後續日期。",
       "productUrl": "開啟產品連結（可選）",
       "manageUrl": "管理訂閱連結（可選）",
       "date": "日期",
@@ -582,8 +585,8 @@
       "subtitle": "先選擇你已經在付的項目，填一個大概收入，覺得有幫助再保存。",
       "step": "步驟",
       "stepOf": "共 3 步",
-      "templatesTitle": "每月訂閱與工具",
-      "templatesNote": "勾選你正在使用的項目，並視需要修改金額。",
+      "templatesTitle": "週期性成本與訂閱",
+      "templatesNote": "勾選你有付費的項目。金額留白時，請填入實際費用。",
       "otherTitle": "其他固定成本",
       "otherNote": "租金、保險、主機或其他週期性成本。",
       "skipWarning": "如果沒有加入任何固定成本，每日底線會是 $0。",
@@ -606,52 +609,22 @@
       "unset": "未設定",
       "save": "用 Google 保存",
       "continueFull": "繼續使用完整帳本",
-      "templates": [
-        {
-          "key": "chatgpt",
-          "label": "ChatGPT Plus",
-          "amount": 20
-        },
-        {
-          "key": "claude",
-          "label": "Claude Pro",
-          "amount": 20
-        },
-        {
-          "key": "cursor",
-          "label": "Cursor Pro",
-          "amount": 20
-        },
-        {
-          "key": "notion",
-          "label": "Notion",
-          "amount": 10
-        },
-        {
-          "key": "figma",
-          "label": "Figma",
-          "amount": 15
-        },
-        {
-          "key": "copilot",
-          "label": "GitHub Copilot",
-          "amount": 10
-        },
-        {
-          "key": "app_store",
-          "label": "App Store 訂閱",
-          "amount": 0,
-          "productUrl": "https://apps.apple.com/",
-          "manageUrl": "https://apps.apple.com/account/subscriptions"
-        }
-      ]
+      "templateLabels": {
+        "app_store": "App Store 訂閱",
+        "domain": "網域續約",
+        "hosting": "網站主機",
+        "email": "商務電子郵件"
+      }
     },
     "subscriptionReview": {
       "review": "本月使用情況",
       "often": "常用",
       "sometimes": "偶爾",
       "notUsed": "未使用",
-      "upcoming": "{date} 即將扣 {amount}",
+      "upcoming": "{date} 將扣款 {amount}。這期有使用嗎？",
+      "nextDate": "下次扣款：{date}",
+      "reviewed": "已記錄 {date} 的使用情況",
+      "failed": "無法儲存這次回覆。如果扣款日期已變更，請重新整理頁面。",
       "suggestedCancel": "建議取消",
       "reviewHint": "由你手動回報；GigLedger 不會自動偵測使用情況。",
       "summaryKicker": "訂閱檢查",
