@@ -197,7 +197,12 @@ test("App Store self-service verifies a team key, syncs each report, and only co
     const endpoint = url.pathname;
     const [header, payload, signature] = options.headers.Authorization.slice(7).split(".");
     const token = JSON.parse(Buffer.from(payload, "base64url").toString());
-    assert.deepEqual(token.scope, [`GET ${endpoint}`]);
+    assert.equal(token.scope.length, 1);
+    const [method, resource] = token.scope[0].split(" ");
+    const scoped = new URL(resource, url.origin);
+    assert.equal(method, "GET");
+    assert.equal(scoped.pathname, endpoint);
+    assert.deepEqual([...scoped.searchParams].sort(), [...url.searchParams].sort());
     assert.equal(token.iss, key.issuerId);
     assert.equal(token.exp - token.iat, 300);
     assert.equal(await crypto.subtle.verify({ name: "ECDSA", hash: "SHA-256" }, pair.publicKey,

@@ -53,7 +53,9 @@ export function readAppStoreCredential(payload) {
   return { issuerId, keyId, vendorNumber, privateKey };
 }
 
-export async function appStoreReportToken(credential, kind) {
+async function appStoreReportToken(credential, url) {
+  const query = [...url.searchParams].map(([key, value]) => `${key}=${encodeURIComponent(value)}`).join("&");
+  const scope = `GET ${url.pathname}?${query}`;
   const pem = credential.privateKey
     .replace("-----BEGIN PRIVATE KEY-----", "").replace("-----END PRIVATE KEY-----", "").replace(/\s+/g, "");
   try {
@@ -63,11 +65,10 @@ export async function appStoreReportToken(credential, kind) {
     );
     const encode = (value) => base64Url(new TextEncoder().encode(JSON.stringify(value)));
     const now = Math.floor(Date.now() / 1000);
-    const endpoint = kind === "sales" ? "salesReports" : "financeReports";
     const header = encode({ alg: "ES256", kid: credential.keyId, typ: "JWT" });
     const payload = encode({
       iss: credential.issuerId, iat: now, exp: now + 300, aud: "appstoreconnect-v1",
-      scope: [`GET /v1/${endpoint}`],
+      scope: [scope],
     });
     const signature = await crypto.subtle.sign(
       { name: "ECDSA", hash: "SHA-256" }, key, new TextEncoder().encode(`${header}.${payload}`),
@@ -231,7 +232,7 @@ export async function downloadAppStoreReport(credential, kind, period) {
   for (const [key, value] of Object.entries({ ...filters, vendorNumber: credential.vendorNumber, reportDate: period })) {
     url.searchParams.set(`filter[${key}]`, value);
   }
-  const token = await appStoreReportToken(credential, kind);
+  const token = await appStoreReportToken(credential, url);
   const { response, host, redirects } = await fetchAppStoreReport(url, token, kind);
   if (response.status === 404) return null;
   if (!response.ok) {
@@ -250,9 +251,7 @@ export async function downloadAppStoreReport(credential, kind, period) {
     if (response.status === 401) throw new AppStoreReportError("app_store_auth_failed", 400, context);
     if (response.status === 403) throw new AppStoreReportError("app_store_permission_denied", 403, context);
     if (response.status === 429) throw new AppStoreReportError("app_store_rate_limited", 429, context);
-    throw new AppStoreReportError("app_store_download_failed", 424, {
-      ...context,
-    });
+    throw new AppStoreReportError("app_store_download_failed", 424, context);
   }
   try {
     const text = await reportText(response);
