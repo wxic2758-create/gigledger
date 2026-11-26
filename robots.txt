@@ -2,7 +2,9 @@ User-agent: *
 Allow: /
 Disallow: /en/app/
 Disallow: /zh-TW/app/
+Disallow: /zh-CN/app/
 Disallow: /en/dashboard/
 Disallow: /zh-TW/dashboard/
+Disallow: /zh-CN/dashboard/
 
 Sitemap: https://gigledger.xyz/sitemap.xml

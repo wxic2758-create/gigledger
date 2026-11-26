@@ -2,14 +2,12 @@ import { copyFile, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import subscriptionTemplates from "../config/subscription-templates.mjs";
+import { locales } from "../config/locales.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const siteUrl = "https://gigledger.xyz";
 
-const locales = [
-  { code: "en", folder: "en", htmlLang: "en", dir: "ltr", other: "zh-TW" },
-  { code: "zh-TW", folder: "zh-TW", htmlLang: "zh-Hant-TW", dir: "ltr", other: "en" },
-];
+const localePath = (locale, suffix = "") => `/${locale.folder}/${suffix}`;
 
 const messages = {};
 for (const locale of locales) {
@@ -53,19 +51,28 @@ const icon = (name) => {
 };
 
 const logo = (locale) => `
-  <a class="brand" href="${locale === "en" ? "/en/" : "/zh-TW/"}">
+  <a class="brand" href="/${locale}/">
     <img class="brand-mark" src="/assets/logo-mark-192.png" alt="" width="42" height="42">
     <span class="brand-word"><b>Gig</b>Ledger</span>
   </a>`;
 
-const languageSwitch = (t, current, suffix = "") => {
-  const next = locales.find((l) => l.code !== current.code);
-  return `
-    <a class="lang-switch" href="/${next.folder}/${suffix}" hreflang="${next.htmlLang}" lang="${next.htmlLang}">
-      <span class="lang-full">${esc(t.nav.switchTo)}</span>
-      <span class="lang-short">${esc(t.nav.switchShort)}</span>
-    </a>`;
-};
+const languageLinks = (current, suffix = "") => locales
+  .filter(({ code }) => code !== current.code)
+  .map((locale) => `<a data-language-link href="${localePath(locale, suffix)}" hreflang="${locale.htmlLang}" lang="${locale.htmlLang}">${esc(locale.label)}</a>`)
+  .join("");
+
+const languageSwitch = (t, current, suffix = "") => `
+  <details class="lang-switch" data-language-switch>
+    <summary aria-label="${esc(t.nav.language)} · ${esc(current.label)}">${esc(current.label)}</summary>
+    <nav class="lang-options" aria-label="${esc(t.nav.language)}">${languageLinks(current, suffix)}</nav>
+  </details>`;
+
+const alternateUrls = (suffix) => [
+  ...locales.map((locale) => [locale.htmlLang, siteUrl + localePath(locale, suffix)]),
+  ["x-default", `${siteUrl}/en/${suffix}`],
+];
+const alternateLinks = (suffix) => alternateUrls(suffix).map(([lang, href]) =>
+  `<link rel="alternate" hreflang="${lang}" href="${href}">`).join("\n  ");
 
 const nav = (t, current, route) => {
   const links = [
@@ -109,7 +116,7 @@ const landingNav = (t, current) => {
       <div class="header-actions">
         ${languageSwitch(t, current)}
         <a class="button button-small button-orange" href="/${current.folder}/app">${esc(t.nav.cta)}</a>
-        <button class="menu-button" type="button" aria-expanded="false" aria-controls="mobileNav" aria-label="${esc(t.nav.menuOpen)}">
+        <button class="menu-button" type="button" aria-expanded="false" aria-controls="mobileNav" aria-label="${esc(t.nav.menuOpen)}" data-menu-open="${esc(t.nav.menuOpen)}" data-menu-close="${esc(t.nav.menuClose)}">
           <span></span><span></span>
         </button>
       </div>
@@ -117,7 +124,6 @@ const landingNav = (t, current) => {
     <nav class="mobile-nav" id="mobileNav" aria-label="${esc(t.nav.aria)}">
       ${navLinks}
       <a href="/${current.folder}/app">${esc(t.nav.cta)}</a>
-      ${languageSwitch(t, current)}
     </nav>
   </header>`;
 };
@@ -417,7 +423,7 @@ const footer = (t) => `
     </div>
   </footer>`;
 
-const landingFooter = (t, route = "") => `
+const landingFooter = (t, locale) => `
   </main>
   <footer class="site-footer">
     <div class="shell footer-top">
@@ -442,12 +448,13 @@ const landingFooter = (t, route = "") => `
     </div>
     <div class="shell footer-bottom">
       <p>${esc(t.footer.copyright.replace("{year}", String(new Date().getFullYear())))}</p>
-      <a href="/${t.alternatePath}${route ? route + "/" : ""}">${esc(t.nav.switchTo)}</a>
+      <nav class="footer-languages" aria-label="${esc(t.nav.language)}">${languageLinks(locale)}</nav>
     </div>
   </footer>`;
 
 const legalPage = ({ locale, t, type }) => {
   const isPrivacy = type === "privacy";
+  const suffix = isPrivacy ? "privacy" : "tax-disclaimer";
   const title = isPrivacy ? t.legal.privacyTitle : t.legal.disclaimerTitle;
   const body = isPrivacy ? t.legal.privacyBody : t.legal.disclaimerBody;
   const description = isPrivacy ? t.legal.privacyDescription : t.legal.disclaimerDescription;
@@ -460,17 +467,15 @@ const legalPage = ({ locale, t, type }) => {
   <title>${esc(title)} — GigLedger</title>
   <meta name="description" content="${esc(description)}">
   <link rel="icon" href="/assets/favicon-32.png" sizes="32x32">
-  <link rel="canonical" href="${siteUrl}/${locale.folder}/${isPrivacy ? "privacy" : "tax-disclaimer"}">
-  <link rel="alternate" hreflang="en" href="${siteUrl}/en/${isPrivacy ? "privacy" : "tax-disclaimer"}">
-  <link rel="alternate" hreflang="zh-Hant-TW" href="${siteUrl}/zh-TW/${isPrivacy ? "privacy" : "tax-disclaimer"}">
-  <link rel="alternate" hreflang="x-default" href="${siteUrl}/en/${isPrivacy ? "privacy" : "tax-disclaimer"}">
-  <link rel="stylesheet" href="/styles.css?v=20261121-03">
+  <link rel="canonical" href="${siteUrl}${localePath(locale, suffix)}">
+  ${alternateLinks(suffix)}
+  <link rel="stylesheet" href="/styles.css?v=20261127-01">
 </head>
 <body>
   <header class="site-header">
     <div class="shell header-inner">
       ${logo(locale.folder)}
-      <a class="text-link" href="/${locale.folder}/">${esc(t.legal.back)}</a>
+      <div class="header-actions">${languageSwitch(t, locale, suffix)}</div>
     </div>
   </header>
   <main class="legal-main shell">
@@ -480,6 +485,7 @@ const legalPage = ({ locale, t, type }) => {
     ${body.map((p) => `<p>${esc(p)}</p>`).join("")}
     <a class="button button-orange" href="/${locale.folder}/">${esc(t.legal.back)}</a>
   </main>
+  <script src="/app.js?v=20261127-01" defer></script>
 </body>
 </html>`;
 };
@@ -527,11 +533,11 @@ const appPage = ({ locale, t, mode = "app" }) => {
   <title>${esc(title)} — GigLedger</title>
   <meta name="robots" content="noindex">
   <link rel="icon" href="/assets/favicon-32.png" sizes="32x32">
-  <link rel="stylesheet" href="/styles.css?v=20261121-03">
+  <link rel="stylesheet" href="/styles.css?v=20261127-01">
   <link rel="stylesheet" href="/proto.css?v=20261126-03">
 </head>
 <body class="${bodyClass}">
-  <script type="application/json" id="proto-messages">${JSON.stringify(mode === "dashboard" ? { ...t.app, dashboard: t.dashboard } : t.app).replaceAll("</", "<\\/")}</script>
+  <script type="application/json" id="proto-messages">${JSON.stringify({ ...t.app, locale: locale.code, ...(workspace ? { dashboard: t.dashboard } : {}) }).replaceAll("</", "<\\/")}</script>
   <header class="site-header">
     <div class="shell header-inner">
       ${logo(locale.folder)}
@@ -1041,11 +1047,11 @@ const appPage = ({ locale, t, mode = "app" }) => {
   <footer class="site-footer">
     <div class="shell footer-bottom">
       <p>${esc(t.footer.copyright.replace("{year}", String(new Date().getFullYear())))}</p>
-      <a href="/${t.alternatePath}${workspace ? "dashboard" : "app"}">${esc(t.nav.switchTo)}</a>
+      <nav class="footer-languages" aria-label="${esc(t.nav.language)}">${languageLinks(locale, mode)}</nav>
     </div>
   </footer>
-  <script type="module" src="/app-ledger.js?v=20261126-03"></script>
-  <script src="/app.js?v=20261121-03" defer></script>
+  <script type="module" src="/app-ledger.js?v=20261127-01"></script>
+  <script src="/app.js?v=20261127-01" defer></script>
 </body>
 </html>`;
 };
@@ -1091,9 +1097,7 @@ const page = ({ locale, t, route = "" }) => {
   <title>${esc(title)}</title>
   <meta name="description" content="${esc(copy.description)}">
   <link rel="canonical" href="${siteUrl}/${locale.folder}/${suffix}">
-  <link rel="alternate" hreflang="en" href="${siteUrl}/en/${suffix}">
-  <link rel="alternate" hreflang="zh-Hant-TW" href="${siteUrl}/zh-TW/${suffix}">
-  <link rel="alternate" hreflang="x-default" href="${siteUrl}/en/${suffix}">
+  ${alternateLinks(suffix)}
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="GigLedger">
   <meta property="og:title" content="${esc(copy.ogTitle || copy.title)}">
@@ -1111,7 +1115,7 @@ const page = ({ locale, t, route = "" }) => {
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="preload" href="/assets/logo-mark-192.png" as="image">
-  <link rel="stylesheet" href="/styles.css?v=20261121-03">
+  <link rel="stylesheet" href="/styles.css?v=20261127-01">
   <script type="application/ld+json">
   ${JSON.stringify({
     "@context": "https://schema.org",
@@ -1127,8 +1131,8 @@ const page = ({ locale, t, route = "" }) => {
   <a class="skip-link" href="#main">${esc(t.skip)}</a>
   ${route ? nav(t, locale, route) : landingNav(t, locale)}
   ${content}
-  ${route ? footer(t) : landingFooter(t)}
-  <script src="/app.js?v=20261121-03" defer></script>
+  ${route ? footer(t) : landingFooter(t, locale)}
+  <script src="/app.js?v=20261127-01" defer></script>
 </body>
 </html>`;
 };
@@ -1144,11 +1148,11 @@ for (const locale of locales) {
   }
   await writeFile(
     join(folder, "privacy.html"),
-    legalPage({ locale, t, type: "privacy" }),
+    cleanHtml(legalPage({ locale, t, type: "privacy" })),
   );
   await writeFile(
     join(folder, "tax-disclaimer.html"),
-    legalPage({ locale, t, type: "disclaimer" }),
+    cleanHtml(legalPage({ locale, t, type: "disclaimer" })),
   );
   await mkdir(join(folder, "app"), { recursive: true });
   await writeFile(join(folder, "app", "index.html"), cleanHtml(appPage({ locale, t })));
@@ -1163,20 +1167,14 @@ await writeFile(
 
 await writeFile(
   join(root, "robots.txt"),
-  `User-agent: *\nAllow: /\nDisallow: /en/app/\nDisallow: /zh-TW/app/\nDisallow: /en/dashboard/\nDisallow: /zh-TW/dashboard/\n\nSitemap: ${siteUrl}/sitemap.xml\n`,
+  `User-agent: *\nAllow: /\n${["app/", "dashboard/"].flatMap((suffix) =>
+    locales.map((locale) => `Disallow: ${localePath(locale, suffix)}`)).join("\n")}\n\nSitemap: ${siteUrl}/sitemap.xml\n`,
 );
 
 await writeFile(
   join(root, "_redirects"),
-  `/en/thanks.html /en/ 308
-/zh-TW/thanks.html /zh-TW/ 308
-/en/app.html /en/app 308
-/zh-TW/app.html /zh-TW/app 308
-/en/privacy.html /en/privacy 308
-/zh-TW/privacy.html /zh-TW/privacy 308
-/en/tax-disclaimer.html /en/tax-disclaimer 308
-/zh-TW/tax-disclaimer.html /zh-TW/tax-disclaimer 308
-`,
+  ["thanks", "app", "privacy", "tax-disclaimer"].flatMap((page) => locales.map((locale) =>
+    `${localePath(locale, page + ".html")} ${localePath(locale, page === "thanks" ? "" : page)} 308\n`)).join(""),
 );
 
 const indexablePages = ["", "product/", "pricing/", "faq/", "privacy", "tax-disclaimer"];
@@ -1189,9 +1187,7 @@ ${locales
     indexablePages.map(
       (file) => `  <url>
     <loc>${siteUrl}/${locale.folder}/${file}</loc>
-    <xhtml:link rel="alternate" hreflang="en" href="${siteUrl}/en/${file}"/>
-    <xhtml:link rel="alternate" hreflang="zh-Hant-TW" href="${siteUrl}/zh-TW/${file}"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="${siteUrl}/en/${file}"/>
+    ${alternateUrls(file).map(([lang, href]) => `<xhtml:link rel="alternate" hreflang="${lang}" href="${href}"/>`).join("\n    ")}
   </url>`,
     ),
   )
@@ -1217,7 +1213,7 @@ for (const name of publicFiles) {
   await copyFile(join(root, name), destination);
 }
 await writeFile(join(dist, "404.html"),
-  '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Page not found | GigLedger</title><link rel="stylesheet" href="/styles.css?v=20261121-03"></head><body><main class="shell"><h1>404</h1><p>Page not found. <span lang="zh-Hant-TW">找不到頁面。</span></p><p><a class="text-link" href="/en/">Home</a> · <a class="text-link" href="/zh-TW/" lang="zh-Hant-TW">回首頁</a></p></main></body></html>\n',
+  '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Page not found | GigLedger</title><link rel="stylesheet" href="/styles.css?v=20261127-01"></head><body><main class="shell"><h1>404</h1><p>Page not found. <span lang="zh-Hant-TW">找不到頁面。</span> <span lang="zh-Hans-CN">找不到页面。</span></p><p><a class="text-link" href="/en/">Home</a> · <a class="text-link" href="/zh-TW/" lang="zh-Hant-TW">回首頁</a> · <a class="text-link" href="/zh-CN/" lang="zh-Hans-CN">返回首页</a></p></main></body></html>\n',
 );
 
 console.log(

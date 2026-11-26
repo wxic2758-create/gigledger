@@ -8,6 +8,7 @@
   <link rel="canonical" href="https://gigledger.xyz/en/">
   <link rel="alternate" hreflang="en" href="https://gigledger.xyz/en/">
   <link rel="alternate" hreflang="zh-Hant-TW" href="https://gigledger.xyz/zh-TW/">
+  <link rel="alternate" hreflang="zh-Hans-CN" href="https://gigledger.xyz/zh-CN/">
   <link rel="alternate" hreflang="x-default" href="https://gigledger.xyz/en/">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="GigLedger">
@@ -26,7 +27,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="preload" href="/assets/logo-mark-192.png" as="image">
-  <link rel="stylesheet" href="/styles.css?v=20261121-03">
+  <link rel="stylesheet" href="/styles.css?v=20261127-01">
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"WebSite","name":"GigLedger","url":"https://gigledger.xyz/","inLanguage":["en"],"description":"A ledger for one-person companies. Turn fixed costs and subscriptions into a Daily Floor, then see net income, true profit, tax reserve, and cash runway."}
   </script>
@@ -44,12 +45,12 @@
       <nav class="desktop-nav" aria-label="Primary navigation"><a href="/en/product/">Features</a><a href="/en/pricing/">Pricing</a><a href="/en/#faq">FAQ</a></nav>
       <div class="header-actions">
 
-    <a class="lang-switch" href="/zh-TW/" hreflang="zh-Hant-TW" lang="zh-Hant-TW">
-      <span class="lang-full">繁體中文</span>
-      <span class="lang-short">繁中</span>
-    </a>
+  <details class="lang-switch" data-language-switch>
+    <summary aria-label="Language · English">English</summary>
+    <nav class="lang-options" aria-label="Language"><a data-language-link href="/zh-TW/" hreflang="zh-Hant-TW" lang="zh-Hant-TW">繁體中文</a><a data-language-link href="/zh-CN/" hreflang="zh-Hans-CN" lang="zh-Hans-CN">简体中文</a></nav>
+  </details>
         <a class="button button-small button-orange" href="/en/app">Open calculator</a>
-        <button class="menu-button" type="button" aria-expanded="false" aria-controls="mobileNav" aria-label="Open menu">
+        <button class="menu-button" type="button" aria-expanded="false" aria-controls="mobileNav" aria-label="Open menu" data-menu-open="Open menu" data-menu-close="Close menu">
           <span></span><span></span>
         </button>
       </div>
@@ -57,11 +58,6 @@
     <nav class="mobile-nav" id="mobileNav" aria-label="Primary navigation">
       <a href="/en/product/">Features</a><a href="/en/pricing/">Pricing</a><a href="/en/#faq">FAQ</a>
       <a href="/en/app">Open calculator</a>
-
-    <a class="lang-switch" href="/zh-TW/" hreflang="zh-Hant-TW" lang="zh-Hant-TW">
-      <span class="lang-full">繁體中文</span>
-      <span class="lang-short">繁中</span>
-    </a>
     </nav>
   </header>
 
@@ -259,9 +255,9 @@
     </div>
     <div class="shell footer-bottom">
       <p>© 2026 GigLedger. All rights reserved.</p>
-      <a href="/zh-TW/">繁體中文</a>
+      <nav class="footer-languages" aria-label="Language"><a data-language-link href="/zh-TW/" hreflang="zh-Hant-TW" lang="zh-Hant-TW">繁體中文</a><a data-language-link href="/zh-CN/" hreflang="zh-Hans-CN" lang="zh-Hans-CN">简体中文</a></nav>
     </div>
   </footer>
-  <script src="/app.js?v=20261121-03" defer></script>
+  <script src="/app.js?v=20261127-01" defer></script>
 </body>
 </html>

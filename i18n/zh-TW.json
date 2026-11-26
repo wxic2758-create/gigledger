@@ -4,7 +4,6 @@
   "dir": "ltr",
   "skip": "跳至主要內容",
   "path": "zh-TW/",
-  "alternatePath": "en/",
   "meta": {
     "title": "GigLedger — 每日成本、真實利潤、現金跑道",
     "description": "為一人公司而做的帳本。把固定成本與訂閱換算成每日底線，再看淨收入、實際利潤、預留稅款與現金跑道。",
@@ -18,8 +17,6 @@
     "faq": "常見問題",
     "cta": "開啟計算器",
     "language": "語言",
-    "switchTo": "English",
-    "switchShort": "EN",
     "menuOpen": "開啟選單",
     "menuClose": "關閉選單",
     "features": "功能",
@@ -296,6 +293,7 @@
     "back": "回到 GigLedger"
   },
   "app": {
+    "languageDraftWarning": "切換語言會重新載入頁面，並清除尚未儲存的試算。要切換嗎？",
     "title": "帳本",
     "badge": "互動帳本 · 帳號資料儲存在 Cloudflare D1",
     "heading": "三個步驟，看清你的真實帳本。",
@@ -709,6 +707,7 @@
       "daily": "每日底線",
       "download": "下載圖片",
       "shareX": "分享到 X",
+      "copied": "已複製",
       "copyText": "複製文案",
       "aiText": "我每月的 AI 花費是 {amount}。",
       "dailyText": "我的每日底線是每天 {amount}。"

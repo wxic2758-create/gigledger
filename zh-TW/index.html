@@ -8,6 +8,7 @@
   <link rel="canonical" href="https://gigledger.xyz/zh-TW/">
   <link rel="alternate" hreflang="en" href="https://gigledger.xyz/en/">
   <link rel="alternate" hreflang="zh-Hant-TW" href="https://gigledger.xyz/zh-TW/">
+  <link rel="alternate" hreflang="zh-Hans-CN" href="https://gigledger.xyz/zh-CN/">
   <link rel="alternate" hreflang="x-default" href="https://gigledger.xyz/en/">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="GigLedger">
@@ -26,7 +27,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="preload" href="/assets/logo-mark-192.png" as="image">
-  <link rel="stylesheet" href="/styles.css?v=20261121-03">
+  <link rel="stylesheet" href="/styles.css?v=20261127-01">
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"WebSite","name":"GigLedger","url":"https://gigledger.xyz/","inLanguage":["zh-Hant-TW"],"description":"為一人公司而做的帳本。把固定成本與訂閱換算成每日底線，再看淨收入、實際利潤、預留稅款與現金跑道。"}
   </script>
@@ -44,12 +45,12 @@
       <nav class="desktop-nav" aria-label="主要導覽"><a href="/zh-TW/product/">功能</a><a href="/zh-TW/pricing/">方案</a><a href="/zh-TW/#faq">常見問題</a></nav>
       <div class="header-actions">
 
-    <a class="lang-switch" href="/en/" hreflang="en" lang="en">
-      <span class="lang-full">English</span>
-      <span class="lang-short">EN</span>
-    </a>
+  <details class="lang-switch" data-language-switch>
+    <summary aria-label="語言 · 繁體中文">繁體中文</summary>
+    <nav class="lang-options" aria-label="語言"><a data-language-link href="/en/" hreflang="en" lang="en">English</a><a data-language-link href="/zh-CN/" hreflang="zh-Hans-CN" lang="zh-Hans-CN">简体中文</a></nav>
+  </details>
         <a class="button button-small button-orange" href="/zh-TW/app">開啟計算器</a>
-        <button class="menu-button" type="button" aria-expanded="false" aria-controls="mobileNav" aria-label="開啟選單">
+        <button class="menu-button" type="button" aria-expanded="false" aria-controls="mobileNav" aria-label="開啟選單" data-menu-open="開啟選單" data-menu-close="關閉選單">
           <span></span><span></span>
         </button>
       </div>
@@ -57,11 +58,6 @@
     <nav class="mobile-nav" id="mobileNav" aria-label="主要導覽">
       <a href="/zh-TW/product/">功能</a><a href="/zh-TW/pricing/">方案</a><a href="/zh-TW/#faq">常見問題</a>
       <a href="/zh-TW/app">開啟計算器</a>
-
-    <a class="lang-switch" href="/en/" hreflang="en" lang="en">
-      <span class="lang-full">English</span>
-      <span class="lang-short">EN</span>
-    </a>
     </nav>
   </header>
 
@@ -259,9 +255,9 @@
     </div>
     <div class="shell footer-bottom">
       <p>© 2026 GigLedger. 保留所有權利。</p>
-      <a href="/en/">English</a>
+      <nav class="footer-languages" aria-label="語言"><a data-language-link href="/en/" hreflang="en" lang="en">English</a><a data-language-link href="/zh-CN/" hreflang="zh-Hans-CN" lang="zh-Hans-CN">简体中文</a></nav>
     </div>
   </footer>
-  <script src="/app.js?v=20261121-03" defer></script>
+  <script src="/app.js?v=20261127-01" defer></script>
 </body>
 </html>

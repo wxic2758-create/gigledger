@@ -4,10 +4,19 @@ import { annualCost, annualCycles, buildReport, effectiveVersionAt, expenseCents
 import { daysCovered, exact, minorUnits, percent, roundCents, scale, usd } from "./money.js?v=20261126-02";
 
 (() => {
-  const root = document.documentElement;
-  const locale = root.lang === "zh-Hant-TW" ? "zh-TW" : "en";
   const messages = JSON.parse(document.getElementById("proto-messages").textContent);
+  const locale = messages.locale;
   const dashboardMode = Boolean(document.querySelector("[data-dashboard]"));
+  if (!dashboardMode) {
+    let draftEdited = false;
+    document.querySelector("main").addEventListener("input", () => { draftEdited = true; });
+    document.querySelectorAll("[data-language-link]").forEach((link) => {
+      link.addEventListener("click", (event) => {
+        if (draftEdited && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey
+          && !window.confirm(messages.languageDraftWarning)) event.preventDefault();
+      });
+    });
+  }
   const state = { timeZone: null, projects: [], fixedCosts: [], income: [], expenses: [], taxReserveRate: "", appleFeeRate: "", cashOnHand: "", monthlyIncomeEstimate: "", features: { plan: "free", subscriptionLimit: 5, csv: false, sync: false, appStoreSync: false, subscriptionReview: false } };
   let monthlyIncomeEstimateChanged = false;
   let editingFixedCostId = null;
@@ -19,12 +28,12 @@ import { daysCovered, exact, minorUnits, percent, roundCents, scale, usd } from 
   let workspaceReady = false;
   let renderedDate = "";
 
-  const currency = new Intl.NumberFormat(locale === "zh-TW" ? "zh-TW" : "en-US", {
+  const currency = new Intl.NumberFormat(locale, {
     style: "currency", currency: "USD", maximumFractionDigits: 2,
     currencyDisplay: "narrowSymbol",
   });
   const money = (value) => currency.format(Number.isFinite(value) ? value : 0);
-  const day = new Intl.NumberFormat(locale === "zh-TW" ? "zh-TW" : "en-US", {
+  const day = new Intl.NumberFormat(locale, {
     minimumFractionDigits: 2, maximumFractionDigits: 2,
   });
   const dayMoney = (value) => `$${day.format(Number.isFinite(value) ? value : 0)}`;
@@ -1458,7 +1467,7 @@ import { daysCovered, exact, minorUnits, percent, roundCents, scale, usd } from 
     context.fillRect(0, 0, canvas.width, 14);
     context.fillStyle = "#2b1b12";
     context.font = "700 28px system-ui, sans-serif";
-    context.fillText(locale === "zh-TW" ? messages.share[card === "ai" ? "ai" : "daily"] : messages.share[card], 64, 140);
+    context.fillText(messages.share[card], 64, 140);
     context.font = "800 96px system-ui, sans-serif";
     context.fillText(amount, 64, 262);
     context.font = "600 26px system-ui, sans-serif";
@@ -1493,7 +1502,7 @@ import { daysCovered, exact, minorUnits, percent, roundCents, scale, usd } from 
     const text = messages.share[card === "ai" ? "aiText" : "dailyText"].replace("{amount}", amount);
     await navigator.clipboard.writeText(text);
     const original = button.textContent;
-    button.textContent = locale === "zh-TW" ? "已複製" : "Copied";
+    button.textContent = messages.share.copied;
     setTimeout(() => { button.textContent = original; }, 1800);
   });
 

@@ -1,5 +1,6 @@
 import { createSessionToken, sessionCookie, sessionSecret } from "../../../lib/session.js";
 import { saveWorkspaceDraft } from "../../../lib/ledger.js";
+import { supportedLocale } from "../../../../config/locales.mjs";
 
 const SITE_URL = "https://gigledger.xyz";
 
@@ -97,7 +98,7 @@ export const onRequestGet = async ({ env, request }) => {
   }
 
   const tokenValue = await createSessionToken(userId, sessionSecret(env));
-  const destination = `${SITE_URL}/${authState.locale === "zh-TW" ? "zh-TW" : "en"}/dashboard`;
+  const destination = `${SITE_URL}/${supportedLocale(authState.locale)}/dashboard`;
   return new Response(null, {
     status: 302,
     headers: { location: destination, "set-cookie": sessionCookie(tokenValue) },

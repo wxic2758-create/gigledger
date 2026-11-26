@@ -1,6 +1,7 @@
 import { readAuthenticatedUserId } from "../../lib/session.js";
 import { countNewSubscriptions, normalizeDraft, saveWorkspaceDraft } from "../../lib/ledger.js";
 import { planFeatures } from "../../lib/plan.js";
+import { supportedLocale } from "../../../config/locales.mjs";
 
 const SITE_URL = "https://gigledger.xyz";
 const AUTH_STATE_COOKIE = "gigledger_oauth_state";
@@ -13,10 +14,7 @@ const json = (data, status = 200, headers = {}) => new Response(JSON.stringify(d
 const authCookie = (value) =>
   `${AUTH_STATE_COOKIE}=${encodeURIComponent(value)}; Max-Age=600; HttpOnly; Secure; SameSite=Lax; Path=/`;
 
-const locale = (request) => {
-  const value = new URL(request.url).searchParams.get("locale");
-  return value === "zh-TW" ? "zh-TW" : "en";
-};
+const locale = (request) => supportedLocale(new URL(request.url).searchParams.get("locale"));
 
 const now = () => new Date().toISOString();
 const newId = () => crypto.randomUUID();

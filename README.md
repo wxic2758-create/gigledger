@@ -1,6 +1,6 @@
 # GigLedger
 
-English + Traditional Chinese (`zh-TW`) income, cost, and true-profit ledger for one-person companies at `gigledger.xyz`.
+Income, cost, and true-profit ledger for one-person companies at `gigledger.xyz`, available in English, Traditional Chinese, and Simplified Chinese.
 
 ## Structure
 
@@ -8,9 +8,9 @@ English + Traditional Chinese (`zh-TW`) income, cost, and true-profit ledger for
 assets/          Local brand assets and social share image
 en/              Generated English pages
 zh-TW/           Generated Traditional Chinese pages
-en/app/          Generated English onboarding and ledger
-zh-TW/app/       Generated Traditional Chinese onboarding and ledger
-i18n/            Source copy for both locales
+zh-CN/           Generated Simplified Chinese pages
+config/locales.mjs
+i18n/            Copy for all three locales
 scripts/build.mjs
 styles.css
 proto.css        Ledger and dashboard styles
@@ -41,8 +41,10 @@ Open:
 
 - `http://localhost:4174/en/`
 - `http://localhost:4174/zh-TW/`
+- `http://localhost:4174/zh-CN/`
 - `http://localhost:4174/en/app/`
 - `http://localhost:4174/zh-TW/app/`
+- `http://localhost:4174/zh-CN/app/`
 
 ## Deploy
 
@@ -62,7 +64,7 @@ Apply pending D1 migrations before deploying a build that uses them. Run `wrangl
 - Three-step onboarding, fixed costs, subscriptions, projects, one-time expenses, CSV import/export, subscription review, runway, and share cards are implemented.
 - Stripe sync imports balance transactions with a restricted key.
 - App Store Connect stores an encrypted API key and validates its JWT signing shape. Report parsing/sync remains intentionally unavailable and returns a clear error instead of pretending to import data.
-- English and Traditional Chinese are the only published locales in this version.
+- This version supports English, Traditional Chinese, and Simplified Chinese.
 
 ## Before Launch
 
@@ -74,7 +76,6 @@ Apply pending D1 migrations before deploying a build that uses them. Run `wrangl
 ## Localization
 
 - Source language: English (`en`)
-- Traditional Chinese: `zh-TW`, using Taiwan terminology and Traditional Chinese characters.
-- Page language attribute: `lang="zh-Hant-TW"`.
-- Generated alternates: `hreflang="en"`, `hreflang="zh-Hant-TW"`, and `x-default`.
-- The language switch is manual. It does not overwrite user data, currency, or saved records.
+- Locale routes are `en`, `zh-TW` (Traditional Chinese for Taiwan), and `zh-CN` (Simplified Chinese).
+- The matching HTML language tags are `en`, `zh-Hant-TW`, and `zh-Hans-CN`. English is the `x-default` alternate.
+- The page URL determines the language. The switch keeps the current route and section, and warns visitors before discarding unsaved calculations.

@@ -4,7 +4,6 @@
   "dir": "ltr",
   "skip": "Skip to content",
   "path": "en/",
-  "alternatePath": "zh-TW/",
   "meta": {
     "title": "GigLedger — Daily cost, real profit, cash runway",
     "description": "A ledger for one-person companies. Turn fixed costs and subscriptions into a Daily Floor, then see net income, true profit, tax reserve, and cash runway.",
@@ -18,8 +17,6 @@
     "faq": "FAQ",
     "cta": "Open calculator",
     "language": "Language",
-    "switchTo": "繁體中文",
-    "switchShort": "繁中",
     "menuOpen": "Open menu",
     "menuClose": "Close menu",
     "features": "Features",
@@ -296,6 +293,7 @@
     "back": "Back to GigLedger"
   },
   "app": {
+    "languageDraftWarning": "Switching languages reloads this page and clears your unsaved calculation. Switch anyway?",
     "title": "Ledger",
     "badge": "Interactive ledger · Account data is stored in Cloudflare D1",
     "heading": "Your real ledger, in three steps.",
@@ -704,6 +702,7 @@
       "daily": "Daily floor",
       "download": "Download image",
       "shareX": "Share on X",
+      "copied": "Copied",
       "copyText": "Copy text",
       "aiText": "My monthly AI spending is {amount}.",
       "dailyText": "My Daily Floor is {amount} per day."

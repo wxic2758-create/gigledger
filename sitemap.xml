@@ -4,72 +4,126 @@
     <loc>https://gigledger.xyz/en/</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://gigledger.xyz/en/"/>
     <xhtml:link rel="alternate" hreflang="zh-Hant-TW" href="https://gigledger.xyz/zh-TW/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans-CN" href="https://gigledger.xyz/zh-CN/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://gigledger.xyz/en/"/>
   </url>
   <url>
     <loc>https://gigledger.xyz/en/product/</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://gigledger.xyz/en/product/"/>
     <xhtml:link rel="alternate" hreflang="zh-Hant-TW" href="https://gigledger.xyz/zh-TW/product/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans-CN" href="https://gigledger.xyz/zh-CN/product/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://gigledger.xyz/en/product/"/>
   </url>
   <url>
     <loc>https://gigledger.xyz/en/pricing/</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://gigledger.xyz/en/pricing/"/>
     <xhtml:link rel="alternate" hreflang="zh-Hant-TW" href="https://gigledger.xyz/zh-TW/pricing/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans-CN" href="https://gigledger.xyz/zh-CN/pricing/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://gigledger.xyz/en/pricing/"/>
   </url>
   <url>
     <loc>https://gigledger.xyz/en/faq/</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://gigledger.xyz/en/faq/"/>
     <xhtml:link rel="alternate" hreflang="zh-Hant-TW" href="https://gigledger.xyz/zh-TW/faq/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans-CN" href="https://gigledger.xyz/zh-CN/faq/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://gigledger.xyz/en/faq/"/>
   </url>
   <url>
     <loc>https://gigledger.xyz/en/privacy</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://gigledger.xyz/en/privacy"/>
     <xhtml:link rel="alternate" hreflang="zh-Hant-TW" href="https://gigledger.xyz/zh-TW/privacy"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans-CN" href="https://gigledger.xyz/zh-CN/privacy"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://gigledger.xyz/en/privacy"/>
   </url>
   <url>
     <loc>https://gigledger.xyz/en/tax-disclaimer</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://gigledger.xyz/en/tax-disclaimer"/>
     <xhtml:link rel="alternate" hreflang="zh-Hant-TW" href="https://gigledger.xyz/zh-TW/tax-disclaimer"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans-CN" href="https://gigledger.xyz/zh-CN/tax-disclaimer"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://gigledger.xyz/en/tax-disclaimer"/>
   </url>
   <url>
     <loc>https://gigledger.xyz/zh-TW/</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://gigledger.xyz/en/"/>
     <xhtml:link rel="alternate" hreflang="zh-Hant-TW" href="https://gigledger.xyz/zh-TW/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans-CN" href="https://gigledger.xyz/zh-CN/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://gigledger.xyz/en/"/>
   </url>
   <url>
     <loc>https://gigledger.xyz/zh-TW/product/</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://gigledger.xyz/en/product/"/>
     <xhtml:link rel="alternate" hreflang="zh-Hant-TW" href="https://gigledger.xyz/zh-TW/product/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans-CN" href="https://gigledger.xyz/zh-CN/product/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://gigledger.xyz/en/product/"/>
   </url>
   <url>
     <loc>https://gigledger.xyz/zh-TW/pricing/</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://gigledger.xyz/en/pricing/"/>
     <xhtml:link rel="alternate" hreflang="zh-Hant-TW" href="https://gigledger.xyz/zh-TW/pricing/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans-CN" href="https://gigledger.xyz/zh-CN/pricing/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://gigledger.xyz/en/pricing/"/>
   </url>
   <url>
     <loc>https://gigledger.xyz/zh-TW/faq/</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://gigledger.xyz/en/faq/"/>
     <xhtml:link rel="alternate" hreflang="zh-Hant-TW" href="https://gigledger.xyz/zh-TW/faq/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans-CN" href="https://gigledger.xyz/zh-CN/faq/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://gigledger.xyz/en/faq/"/>
   </url>
   <url>
     <loc>https://gigledger.xyz/zh-TW/privacy</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://gigledger.xyz/en/privacy"/>
     <xhtml:link rel="alternate" hreflang="zh-Hant-TW" href="https://gigledger.xyz/zh-TW/privacy"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans-CN" href="https://gigledger.xyz/zh-CN/privacy"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://gigledger.xyz/en/privacy"/>
   </url>
   <url>
     <loc>https://gigledger.xyz/zh-TW/tax-disclaimer</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://gigledger.xyz/en/tax-disclaimer"/>
     <xhtml:link rel="alternate" hreflang="zh-Hant-TW" href="https://gigledger.xyz/zh-TW/tax-disclaimer"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans-CN" href="https://gigledger.xyz/zh-CN/tax-disclaimer"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://gigledger.xyz/en/tax-disclaimer"/>
+  </url>
+  <url>
+    <loc>https://gigledger.xyz/zh-CN/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://gigledger.xyz/en/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant-TW" href="https://gigledger.xyz/zh-TW/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans-CN" href="https://gigledger.xyz/zh-CN/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://gigledger.xyz/en/"/>
+  </url>
+  <url>
+    <loc>https://gigledger.xyz/zh-CN/product/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://gigledger.xyz/en/product/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant-TW" href="https://gigledger.xyz/zh-TW/product/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans-CN" href="https://gigledger.xyz/zh-CN/product/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://gigledger.xyz/en/product/"/>
+  </url>
+  <url>
+    <loc>https://gigledger.xyz/zh-CN/pricing/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://gigledger.xyz/en/pricing/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant-TW" href="https://gigledger.xyz/zh-TW/pricing/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans-CN" href="https://gigledger.xyz/zh-CN/pricing/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://gigledger.xyz/en/pricing/"/>
+  </url>
+  <url>
+    <loc>https://gigledger.xyz/zh-CN/faq/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://gigledger.xyz/en/faq/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant-TW" href="https://gigledger.xyz/zh-TW/faq/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans-CN" href="https://gigledger.xyz/zh-CN/faq/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://gigledger.xyz/en/faq/"/>
+  </url>
+  <url>
+    <loc>https://gigledger.xyz/zh-CN/privacy</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://gigledger.xyz/en/privacy"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant-TW" href="https://gigledger.xyz/zh-TW/privacy"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans-CN" href="https://gigledger.xyz/zh-CN/privacy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://gigledger.xyz/en/privacy"/>
+  </url>
+  <url>
+    <loc>https://gigledger.xyz/zh-CN/tax-disclaimer</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://gigledger.xyz/en/tax-disclaimer"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant-TW" href="https://gigledger.xyz/zh-TW/tax-disclaimer"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans-CN" href="https://gigledger.xyz/zh-CN/tax-disclaimer"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://gigledger.xyz/en/tax-disclaimer"/>
   </url>
 </urlset>

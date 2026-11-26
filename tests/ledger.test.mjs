@@ -3,7 +3,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 import { gzipSync } from "node:zlib";
 import { test } from "node:test";
-import { onRequestPost as startGoogleSave } from "../functions/api/auth/google.js";
+import { onRequestGet as startGoogleSignIn, onRequestPost as startGoogleSave } from "../functions/api/auth/google.js";
 import { onRequestGet as googleCallback } from "../functions/api/auth/google/callback.js";
 import { onRequestGet as getMe } from "../functions/api/me.js";
 import { onRequestDelete as removeEntry, onRequestPost as updateWorkspace, onRequestPut as editEntry } from "../functions/api/workspace.js";
@@ -424,7 +424,7 @@ test("Google save preserves the planning estimate and equal manual payments surv
   });
   const save = (payload, cookie = "") => startGoogleSave({
     env,
-    request: new Request(`${origin}/api/auth/google?locale=zh-TW`, {
+    request: new Request(`${origin}/api/auth/google?locale=zh-CN`, {
       method: "POST",
       headers: { cookie, "content-type": "application/json" },
       body: JSON.stringify(payload),
@@ -441,8 +441,14 @@ test("Google save preserves the planning estimate and equal manual payments surv
     }),
   });
   assert.equal(callback.status, 302);
-  assert.equal(callback.headers.get("location"), `${origin}/zh-TW/dashboard`);
+  assert.equal(callback.headers.get("location"), `${origin}/zh-CN/dashboard`);
   const cookie = callback.headers.get("set-cookie").split(";")[0];
+  for (const [requested, expected] of [["zh-CN", "zh-CN"], ["zh-TW", "zh-TW"], ["en", "en"], ["unsupported", "en"]]) {
+    const signedIn = await startGoogleSignIn({
+      env, request: new Request(`${origin}/api/auth/google?locale=${requested}`, { headers: { cookie } }),
+    });
+    assert.equal(signedIn.headers.get("location"), `${origin}/${expected}/dashboard`);
+  }
   const reload = async () => {
     const res = await getMe({ env, request: new Request(`${origin}/api/me`, { headers: { cookie } }) });
     assert.equal(res.status, 200);

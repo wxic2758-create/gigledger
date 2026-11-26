@@ -2,30 +2,36 @@
   const menuButton = document.querySelector(".menu-button");
   const mobileNav = document.querySelector(".mobile-nav");
 
+  const languageSwitch = document.querySelector("[data-language-switch]");
+  if (languageSwitch) {
+    const languageLinks = document.querySelectorAll("[data-language-link]");
+    const preserveSection = () => {
+      for (const link of languageLinks) link.hash = location.hash;
+    };
+    preserveSection();
+    window.addEventListener("hashchange", preserveSection);
+    document.addEventListener("click", (event) => {
+      if (!languageSwitch.contains(event.target)) languageSwitch.open = false;
+    });
+    languageSwitch.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape" || !languageSwitch.open) return;
+      languageSwitch.open = false;
+      languageSwitch.querySelector("summary").focus();
+    });
+  }
+
   if (menuButton && mobileNav) {
     const closeMenu = () => {
       mobileNav.classList.remove("open");
       menuButton.setAttribute("aria-expanded", "false");
-      menuButton.setAttribute(
-        "aria-label",
-        document.documentElement.lang === "en" ? "Open menu" : "開啟選單",
-      );
+      menuButton.setAttribute("aria-label", menuButton.dataset.menuOpen);
     };
 
     menuButton.addEventListener("click", () => {
       const open = menuButton.getAttribute("aria-expanded") !== "true";
       menuButton.setAttribute("aria-expanded", String(open));
       mobileNav.classList.toggle("open", open);
-      menuButton.setAttribute(
-        "aria-label",
-        open
-          ? document.documentElement.lang === "en"
-            ? "Close menu"
-            : "關閉選單"
-          : document.documentElement.lang === "en"
-            ? "Open menu"
-            : "開啟選單",
-      );
+      menuButton.setAttribute("aria-label", open ? menuButton.dataset.menuClose : menuButton.dataset.menuOpen);
     });
 
     mobileNav.addEventListener("click", (event) => {
