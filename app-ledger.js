@@ -1,11 +1,13 @@
-import { answerForPeriod, consecutiveUnused, subscriptionTiming } from "./billing-calendar.js?v=20261126-01";
+import { answerForPeriod, consecutiveUnused, dayInTimeZone, monthOffset, shiftDay, subscriptionTiming, validTimeZone, weekStart } from "./billing-calendar.js?v=20261126-02";
+import { annualCost, annualCycles, buildReport, effectiveVersionAt, expenseCents, netCents, projectTotals, roundedUsd } from "./ledger-report.js?v=20261126-02";
+import { daysCovered, exact, minorUnits, percent, roundCents, scale, usd } from "./money.js?v=20261126-02";
 
 (() => {
   const root = document.documentElement;
   const locale = root.lang === "zh-Hant-TW" ? "zh-TW" : "en";
   const messages = JSON.parse(document.getElementById("proto-messages").textContent);
   const dashboardMode = Boolean(document.querySelector("[data-dashboard]"));
-  const state = { projects: [], fixedCosts: [], income: [], expenses: [], taxReserveRate: "", appleFeeRate: "", cashOnHand: "", monthlyIncomeEstimate: "", features: { plan: "free", subscriptionLimit: 5, csv: false, sync: false, appStoreSync: false, subscriptionReview: false } };
+  const state = { timeZone: null, projects: [], fixedCosts: [], income: [], expenses: [], taxReserveRate: "", appleFeeRate: "", cashOnHand: "", monthlyIncomeEstimate: "", features: { plan: "free", subscriptionLimit: 5, csv: false, sync: false, appStoreSync: false, subscriptionReview: false } };
   let monthlyIncomeEstimateChanged = false;
   let editingFixedCostId = null;
   let editingExpense = null;
@@ -15,6 +17,7 @@ import { answerForPeriod, consecutiveUnused, subscriptionTiming } from "./billin
   let integrationsLoaded = false;
   let reportPeriod = "current";
   let workspaceReady = false;
+  let renderedDate = "";
 
   const currency = new Intl.NumberFormat(locale === "zh-TW" ? "zh-TW" : "en-US", {
     style: "currency", currency: "USD", maximumFractionDigits: 2,
@@ -25,79 +28,19 @@ import { answerForPeriod, consecutiveUnused, subscriptionTiming } from "./billin
     minimumFractionDigits: 2, maximumFractionDigits: 2,
   });
   const dayMoney = (value) => `$${day.format(Number.isFinite(value) ? value : 0)}`;
-  const localDate = (value = new Date()) => {
-    const date = value instanceof Date ? value : new Date(value);
-    if (Number.isNaN(date.getTime())) return "";
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-  };
-  const today = () => localDate();
-  const previousDate = (value) => {
-    const parsed = new Date(`${value}T00:00:00Z`);
-    if (Number.isNaN(parsed.getTime())) return "";
-    parsed.setUTCDate(parsed.getUTCDate() - 1);
-    return parsed.toISOString().slice(0, 10);
-  };
-  const nextDate = (value) => {
-    const parsed = new Date(`${value}T00:00:00Z`);
-    if (Number.isNaN(parsed.getTime())) return "";
-    parsed.setUTCDate(parsed.getUTCDate() + 1);
-    return parsed.toISOString().slice(0, 10);
-  };
+  const browserTimeZone = validTimeZone(Intl.DateTimeFormat().resolvedOptions().timeZone) || "UTC";
+  const workspaceTimeZone = () => state.timeZone || browserTimeZone;
+  const today = () => dayInTimeZone(new Date(), workspaceTimeZone());
+  const monthKey = () => today().slice(0, 7);
+  const previousMonthKey = () => monthOffset(monthKey(), -1);
+  const selectedMonth = () => reportPeriod === "previous" ? previousMonthKey() : monthKey();
+  const formatMonth = new Intl.DateTimeFormat(locale, { year: "numeric", month: "short", timeZone: "UTC" });
+  const monthLabel = (month) => formatMonth.format(new Date(`${month}-01T00:00:00Z`));
   const set = (key, value) => {
     const node = document.querySelector(`[data-proto="${key}"]`);
     if (node) node.textContent = value;
   };
-  const cycles = [
-    { value: "daily", multiplier: 365 },
-    { value: "weekly", multiplier: 52 },
-    { value: "biweekly", multiplier: 26 },
-    { value: "monthly", multiplier: 12 },
-    { value: "quarterly", multiplier: 4 },
-    { value: "yearly", multiplier: 1 },
-  ];
-  const monthDayCount = (date = new Date()) =>
-    new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-
-  const inclusiveDays = (start, end) =>
-    (Date.parse(end) - Date.parse(start)) / 86400000 + 1;
-
-  const monthDaysElapsed = (date = new Date()) => date.getDate();
-
-  const monthKey = (date = new Date()) =>
-    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-
-  const previousMonthKey = (date = new Date()) => {
-    const previous = new Date(date.getFullYear(), date.getMonth() - 1, 1);
-    return monthKey(previous);
-  };
-
-  const fullMonthDailyIncome = () => {
-    const now = new Date();
-    const currentMonth = monthKey(now);
-    const buckets = new Map();
-    for (const item of state.income) {
-      if (item.recognition === "sold") continue;
-      const key = String(item.date || "").slice(0, 7);
-      if (!/^\d{4}-\d{2}$/.test(key) || key >= currentMonth) continue;
-      buckets.set(key, (buckets.get(key) || 0) + (Number(item.amount) || 0) - (Number(item.platformFee) || 0));
-    }
-    const earliest = [...buckets.keys()].sort()[0];
-    if (!earliest) return null;
-    const months = [3, 2, 1].map((offset) => monthKey(new Date(now.getFullYear(), now.getMonth() - offset, 1)))
-      .filter((key) => key >= earliest);
-    let total = 0;
-    let days = 0;
-    for (const key of months) {
-      const [year, month] = key.split("-").map(Number);
-      total += buckets.get(key) || 0;
-      days += monthDayCount(new Date(year, month - 1, 1));
-    }
-    return days ? { average: total / days, monthCount: months.length } : null;
-  };
-
-  const effectiveVersionAt = (versions, value) => [...(versions || [])]
-    .filter((version) => version.effectiveFrom <= value)
-    .sort((left, right) => right.effectiveFrom.localeCompare(left.effectiveFrom))[0] || null;
+  const cycles = Object.entries(annualCycles).map(([value, multiplier]) => ({ value, multiplier }));
 
   const effectiveVersionForItem = (item, value = today()) => effectiveVersionAt(item.versions, value) || {
     effectiveFrom: item.startDate || value,
@@ -132,108 +75,8 @@ import { answerForPeriod, consecutiveUnused, subscriptionTiming } from "./billin
     };
   };
 
-  const monthlyAmountForVersion = (version) => {
-    const multiplier = cycles.find((cycle) => cycle.value === version?.cycle)?.multiplier || 0;
-    return (Number(version?.amount) || 0) * multiplier / 12
-      * (Number(version?.businessUse) || 0) / 100;
-  };
-
-  const activeDaysInPeriod = (item, date = new Date(), selectedMonth = monthKey(date)) => {
-    const daysInMonth = monthDayCount(date);
-    const first = `${selectedMonth}-01`;
-    const last = `${selectedMonth}-${String(daysInMonth).padStart(2, "0")}`;
-    const start = item.startDate && item.startDate > first ? item.startDate : first;
-    const end = item.endDate && item.endDate < last ? item.endDate : last;
-    if (start > end) return 0;
-    return inclusiveDays(start, end);
-  };
-
-  const monthlyCostInMonth = (item, selectedMonth) => {
-    const daysInMonth = monthDayCount(new Date(`${selectedMonth}-01T12:00:00`));
-    const monthStart = `${selectedMonth}-01`;
-    const monthEnd = `${selectedMonth}-${String(daysInMonth).padStart(2, "0")}`;
-    const versionFallback = effectiveVersionForItem(item, monthEnd);
-    const baseVersion = {
-      ...versionFallback,
-      effectiveFrom: item.startDate || versionFallback.effectiveFrom,
-      effectiveTo: item.endDate || versionFallback.effectiveTo,
-    };
-    const overlap = (item.versions || []).filter((version) => version.effectiveFrom <= monthEnd
-      && (!version.effectiveTo || version.effectiveTo >= monthStart));
-    if (!item.versions?.length) {
-      return monthlyAmountForVersion(baseVersion)
-        * activeDaysInPeriod(item, new Date(`${selectedMonth}-01T12:00:00`), selectedMonth) / daysInMonth;
-    }
-    return overlap.reduce((versionSum, version) => {
-      const versionStart = version.effectiveFrom > monthStart ? version.effectiveFrom : monthStart;
-      const versionEnd = version.effectiveTo && version.effectiveTo < monthEnd ? version.effectiveTo : monthEnd;
-      if (versionStart > versionEnd) return versionSum;
-      const days = inclusiveDays(versionStart, versionEnd);
-      return versionSum + monthlyAmountForVersion(version) * days / daysInMonth;
-    }, 0);
-  };
-
-  const isInCurrentMonth = (value) => String(value || "").slice(0, 7) === monthKey();
-
-  const calculate = (period = monthKey()) => {
-    const active = (item) => {
-      const current = today();
-      return (!item.startDate || item.startDate <= current) && (!item.endDate || item.endDate >= current);
-    };
-    const dailyFloor = state.fixedCosts.reduce((sum, item) => sum + (
-      active(item)
-        ? monthlyAmountForVersion(effectiveVersionForItem(item)) * 12 / 365
-        : 0
-    ), 0);
-    const inPeriod = (item) => String(item.date || "").slice(0, 7) === period;
-    const monthIncomeEntries = state.income.filter((item) => inPeriod(item) && item.recognition !== "sold");
-    const soldIncome = state.income
-      .filter((item) => inPeriod(item) && item.recognition === "sold")
-      .reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
-    const grossIncome = monthIncomeEntries.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
-    const platformFees = monthIncomeEntries.reduce((sum, item) => sum + (Number(item.platformFee) || 0), 0);
-    const netIncome = grossIncome - platformFees;
-    const monthlyFixedCosts = state.fixedCosts.reduce(
-      (sum, item) => sum + monthlyCostInMonth(item, period),
-      0,
-    );
-    const monthlyExpenses = state.expenses
-      .filter(inPeriod)
-      .reduce((sum, item) => sum + (Number(item.amount) || 0) * (Number(item.businessUse) || 0) / 100, 0);
-    const monthIncome = netIncome;
-    const rate = Number(state.taxReserveRate) / 100;
-    const requiredToDate = dailyFloor * monthDaysElapsed();
-    const savings = state.cashOnHand === "" ? null : Number(state.cashOnHand);
-    const incomeAverage = fullMonthDailyIncome();
-    const netBurn = incomeAverage && dailyFloor > 0 ? dailyFloor - incomeAverage.average : null;
-    return {
-      dailyFloor, grossIncome, platformFees, netIncome, monthlyFixedCosts,
-      monthlyExpenses,
-      soldIncome,
-      trueProfit: netIncome - monthlyFixedCosts - monthlyExpenses,
-      taxReserve: Number.isFinite(rate) && state.taxReserveRate !== "" && rate >= 0
-        ? netIncome * rate
-        : null,
-      requiredToDate,
-      monthIncome,
-      comparison: monthIncome - requiredToDate,
-      savings,
-      noNewWorkRunway: savings !== null && Number.isFinite(savings) && savings >= 0 && dailyFloor > 0
-        ? Math.floor(savings / dailyFloor)
-        : null,
-      incomeAverage,
-      netBurn,
-      averageRunway: netBurn === null || savings === null || !Number.isFinite(savings) || savings < 0
-        ? null
-        : netBurn <= 0 ? null : Math.floor(savings / netBurn),
-      cashNotBurning: netBurn !== null && netBurn <= 0,
-      aiMonthlyCosts: state.fixedCosts.filter((item) => item.isSubscription && item.isSoftware && active(item)).reduce(
-        (sum, item) => sum + (Number(versionValue(item, "amount", item.amount)) || 0)
-          * (Number(cycles.find((cycle) => cycle.value === versionValue(item, "cycle", item.cycle))?.multiplier) || 0) / 12
-          * (Number(versionValue(item, "businessUse", item.businessUse)) || 0) / 100, 0,
-      ),
-    };
-  };
+  const isInCurrentMonth = (value) => value?.slice(0, 7) === monthKey();
+  const calculate = (month) => buildReport(state, today(), month);
 
   const renderWorkspaceChart = (result) => {
     const bar = document.querySelector("[data-chart-bar]");
@@ -263,6 +106,7 @@ import { answerForPeriod, consecutiveUnused, subscriptionTiming } from "./billin
   const renderMetrics = () => {
     const current = calculate();
     const result = reportPeriod === "previous" ? calculate(previousMonthKey()) : current;
+    set("report-context", dashboardMode ? `USD · ${workspaceTimeZone()}` : "USD");
     set("metric-daily", dayMoney(result.dailyFloor));
     set("metric-gross", money(result.grossIncome));
     set("metric-sold", money(result.soldIncome));
@@ -279,7 +123,7 @@ import { answerForPeriod, consecutiveUnused, subscriptionTiming } from "./billin
     const comparisonNode = document.querySelector("[data-proto='metric-comparison']");
     if (comparisonNode) {
       const hasFloor = current.dailyFloor > 0;
-      const comparison = Math.round(current.comparison * 100) / 100;
+      const comparison = current.comparison;
       comparisonNode.textContent = !hasFloor
         ? messages.metrics.comparisonUnavailable
         : comparison > 0
@@ -401,12 +245,7 @@ import { answerForPeriod, consecutiveUnused, subscriptionTiming } from "./billin
     }
   };
 
-  const weekKey = () => {
-    const now = new Date();
-    const date = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    date.setDate(date.getDate() - ((date.getDay() + 6) % 7) - 7);
-    return localDate(date);
-  };
+  const weekKey = () => shiftDay(weekStart(today()), -7);
 
   const renderWeeklySummary = (result) => {
     const wrapper = document.querySelector("[data-weekly-summary]");
@@ -416,25 +255,22 @@ import { answerForPeriod, consecutiveUnused, subscriptionTiming } from "./billin
       wrapper.hidden = true;
       return;
     }
-    const weekStart = new Date(`${weekKey()}T00:00:00`);
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekEnd.getDate() + 7);
-    const weekIncome = state.income.filter((item) => {
-      if (item.recognition === "sold") return false;
-      const date = new Date(`${item.date}T00:00:00`);
-      return date >= weekStart && date < weekEnd;
-    }).reduce((sum, item) => sum + (Number(item.amount) - Number(item.platformFee)), 0);
+    const first = weekKey();
+    const end = shiftDay(first, 7);
+    const weekIncome = state.income
+      .filter((item) => item.recognition !== "sold" && item.date >= first && item.date < end)
+      .reduce((sum, item) => sum + netCents(item), 0n);
     if (!state.income.length && !state.fixedCosts.length) {
       wrapper.hidden = true;
       return;
     }
-    textNode.textContent = weekIncome > 0 && result.dailyFloor > 0
+    textNode.textContent = weekIncome > 0n && result.dailyRate.numerator > 0n
       ? messages.weeklySummary.body
-        .replace("{income}", money(weekIncome))
-        .replace("{days}", String(Math.floor(weekIncome / result.dailyFloor)))
+        .replace("{income}", money(usd(weekIncome)))
+        .replace("{days}", String(daysCovered(weekIncome, result.dailyRate)))
         .replace("{share}", String(Math.round((result.aiMonthlyCosts / Math.max(result.monthlyFixedCosts, 1)) * 100)))
-      : weekIncome > 0
-        ? messages.weeklySummary.bodyNoFloor.replace("{income}", money(weekIncome))
+      : weekIncome > 0n
+        ? messages.weeklySummary.bodyNoFloor.replace("{income}", money(usd(weekIncome)))
         : messages.weeklySummary.bodyNoIncome.replace("{daily}", dayMoney(result.dailyFloor));
     wrapper.hidden = false;
   };
@@ -517,53 +353,12 @@ import { answerForPeriod, consecutiveUnused, subscriptionTiming } from "./billin
     return cell;
   };
 
-  const calculateProjectTotals = () => {
-    const totals = { income: {}, costs: {}, unassigned: { income: 0, costs: 0 } };
-    for (const item of state.income) {
-      if (item.recognition === "sold") continue;
-      const key = item.projects?.[0] || item.project;
-      const net = (Number(item.amount) || 0) - (Number(item.platformFee) || 0);
-      if (!key) {
-        totals.unassigned.income += net;
-        continue;
-      }
-      totals.income[key] = (totals.income[key] || 0) + net;
-    }
-    for (const item of state.expenses) {
-      const key = item.projects?.[0] || item.project;
-      const businessAmount = (Number(item.amount) || 0) * (Number(item.businessUse) || 0) / 100;
-      if (!key) {
-        totals.unassigned.costs += businessAmount;
-        continue;
-      }
-      totals.costs[key] = (totals.costs[key] || 0) + businessAmount;
-    }
-    for (const item of state.fixedCosts) {
-      const monthlyBusiness = (Number(versionValue(item, "amount", item.amount)) || 0)
-        * (Number(cycles.find((cycle) => cycle.value === versionValue(item, "cycle", item.cycle))?.multiplier) || 0) / 12
-        * (Number(versionValue(item, "businessUse", item.businessUse)) || 0) / 100;
-      const allocation = versionAllocation(item).length
-        ? versionAllocation(item)
-        : (item.projects?.length ? [{ name: item.projects[0], percent: 100 }] : []);
-      if (!allocation.length) {
-        totals.unassigned.costs += monthlyBusiness;
-        continue;
-      }
-      for (const entry of allocation) {
-        if (!entry.name) continue;
-        totals.costs[entry.name] = (totals.costs[entry.name] || 0) + monthlyBusiness * (Number(entry.percent) || 0) / 100;
-      }
-    }
-    return totals;
-  };
-
-  const totalsHaveUnassigned = (totals) => Math.abs(totals.unassigned.income) > 0.005
-    || Math.abs(totals.unassigned.costs) > 0.005;
-
   const renderProjects = () => {
     const tbody = document.querySelector("[data-proto='project-rows']");
     if (!tbody) return;
-    const projectTotals = calculateProjectTotals();
+    const period = selectedMonth();
+    set("project-period", monthLabel(period));
+    const totals = projectTotals(state, period);
     tbody.innerHTML = "";
     if (!state.projects.filter((project) => !project.archived).length) {
       const row = document.createElement("tr");
@@ -573,11 +368,10 @@ import { answerForPeriod, consecutiveUnused, subscriptionTiming } from "./billin
     state.projects.filter((project) => !project.archived).forEach((project) => {
       const row = document.createElement("tr");
       const name = document.createElement("td"); name.textContent = project.name;
-      const income = document.createElement("td"); income.textContent = money(projectTotals.income[project.name] || 0);
-      const costs = document.createElement("td"); costs.textContent = money(projectTotals.costs[project.name] || 0);
-      const projectIncome = projectTotals.income[project.name] || 0;
-      const projectCosts = projectTotals.costs[project.name] || 0;
-      const profit = document.createElement("td"); profit.textContent = money(projectIncome - projectCosts);
+      const entry = totals.get(project.name);
+      const income = document.createElement("td"); income.textContent = money(entry?.income ?? 0);
+      const costs = document.createElement("td"); costs.textContent = money(entry?.costs ?? 0);
+      const profit = document.createElement("td"); profit.textContent = money(entry?.profit ?? 0);
       const actions = document.createElement("td");
       const button = document.createElement("button");
       button.type = "button";
@@ -589,14 +383,15 @@ import { answerForPeriod, consecutiveUnused, subscriptionTiming } from "./billin
       row.append(name, income, costs, profit, actions);
       tbody.appendChild(row);
     });
-    if (totalsHaveUnassigned(projectTotals)) {
+    const unassigned = totals.get("");
+    if (unassigned && (unassigned.income || unassigned.costs)) {
       const row = document.createElement("tr");
       row.className = "project-unassigned-row";
       const name = document.createElement("td"); name.textContent = messages.projects.unassigned;
-      const income = document.createElement("td"); income.textContent = money(projectTotals.unassigned.income);
-      const costs = document.createElement("td"); costs.textContent = money(projectTotals.unassigned.costs);
+      const income = document.createElement("td"); income.textContent = money(unassigned.income);
+      const costs = document.createElement("td"); costs.textContent = money(unassigned.costs);
       const profit = document.createElement("td");
-      profit.textContent = money(projectTotals.unassigned.income - projectTotals.unassigned.costs);
+      profit.textContent = money(unassigned.profit);
       const actions = document.createElement("td");
       row.append(name, income, costs, profit, actions);
       tbody.appendChild(row);
@@ -631,8 +426,7 @@ import { answerForPeriod, consecutiveUnused, subscriptionTiming } from "./billin
       const currentVersionDate = currentVersion(item)?.effectiveFrom || item.startDate;
       effective.textContent = currentVersionDate ? `${currentVersionDate}${item.endDate ? ` – ${item.endDate}` : ""}` : "";
       const cost = document.createElement("td");
-      const currentMultiplier = cycles.find((entry) => entry.value === currentCycle)?.multiplier || 0;
-      cost.textContent = dayMoney(currentAmount * currentMultiplier * currentBusinessUse / 100 / 365);
+      cost.textContent = dayMoney(roundedUsd(scale(annualCost(effectiveVersionForItem(item)), 1n, 365n)));
       const project = projectCell(item);
       const actions = document.createElement("td");
       if (isSubscription) {
@@ -701,7 +495,7 @@ import { answerForPeriod, consecutiveUnused, subscriptionTiming } from "./billin
     }
     state.income.forEach((item, index) => {
       const row = document.createElement("tr");
-      const net = (Number(item.amount) || 0) - (Number(item.platformFee) || 0);
+      const net = usd(netCents(item));
       const dateCell = document.createElement("td"); dateCell.textContent = item.date;
       const source = document.createElement("td"); source.textContent = item.client || messages.sources[item.source] || item.source;
       const recognition = document.createElement("td");
@@ -729,7 +523,7 @@ import { answerForPeriod, consecutiveUnused, subscriptionTiming } from "./billin
     }
     state.expenses.forEach((item, index) => {
       const row = document.createElement("tr");
-      const businessAmount = (Number(item.amount) || 0) * (Number(item.businessUse) || 0) / 100;
+      const businessAmount = usd(expenseCents(item));
       const dateCell = document.createElement("td"); dateCell.textContent = item.date;
       const category = document.createElement("td"); category.textContent = item.category;
       const compactDate = document.createElement("small");
@@ -860,6 +654,7 @@ import { answerForPeriod, consecutiveUnused, subscriptionTiming } from "./billin
   };
 
   const render = () => {
+    renderedDate = today();
     renderMetrics();
     renderProjects();
     renderFixedCosts();
@@ -1185,18 +980,18 @@ import { answerForPeriod, consecutiveUnused, subscriptionTiming } from "./billin
     const feeFromPercent = () => {
       if (syncingFee) return;
       syncingFee = true;
-      const amount = Math.max(0, Number(amountInput.value) || 0);
-      const percent = Math.min(100, Math.max(0, Number(percentInput.value) || 0));
-      feeInput.value = (Math.round(amount * percent) / 100).toFixed(2);
+      const amount = BigInt(Math.max(0, minorUnits(amountInput.value) ?? 0));
+      const rate = Math.min(100, Math.max(0, Number(percentInput.value) || 0));
+      feeInput.value = roundedUsd(percent(exact(amount), rate)).toFixed(2);
       syncingFee = false;
     };
     const percentFromFee = () => {
       if (syncingFee) return;
       syncingFee = true;
-      const amount = Math.max(0, Number(amountInput.value) || 0);
-      const fee = Math.min(amount, Math.max(0, Number(feeInput.value) || 0));
-      feeInput.value = fee.toFixed(2);
-      percentInput.value = amount > 0 ? (Math.round(fee / amount * 10000) / 100).toFixed(2) : "0.00";
+      const amount = Math.max(0, minorUnits(amountInput.value) ?? 0);
+      const fee = Math.min(amount, Math.max(0, minorUnits(feeInput.value) ?? 0));
+      feeInput.value = usd(fee).toFixed(2);
+      percentInput.value = amount > 0 ? roundedUsd(scale(exact(BigInt(fee)), 10_000n, BigInt(amount))).toFixed(2) : "0.00";
       syncingFee = false;
     };
     amountInput.addEventListener("input", feeFromPercent);
@@ -1371,6 +1166,7 @@ import { answerForPeriod, consecutiveUnused, subscriptionTiming } from "./billin
           fixedCosts: state.fixedCosts.filter((item) => !item.id),
           income: state.income.filter((item) => !item.id),
           expenses: state.expenses.filter((item) => !item.id),
+          timeZone: workspaceTimeZone(),
           taxReserveRate: state.taxReserveRate,
           appleFeeRate: state.appleFeeRate,
           cashOnHand: state.cashOnHand,
@@ -1453,21 +1249,24 @@ import { answerForPeriod, consecutiveUnused, subscriptionTiming } from "./billin
 
   const csvExportPeriod = document.querySelector("[data-csv-export-period]");
   const csvExportLink = document.querySelector("[data-csv-export]");
+  let csvPeriodSelected = false;
   const updateCsvExportLink = () => {
     const month = csvExportPeriod.value;
     csvExportLink.href = `/api/workspace/csv?export=income${month ? `&month=${month}` : ""}`;
   };
-  csvExportPeriod?.addEventListener("change", updateCsvExportLink);
+  csvExportPeriod?.addEventListener("change", () => {
+    csvPeriodSelected = true;
+    updateCsvExportLink();
+  });
   const renderCsvExportPeriods = () => {
     if (!csvExportPeriod) return;
-    const previousChoice = csvExportPeriod.options.length ? csvExportPeriod.value : monthKey();
+    const previousChoice = csvPeriodSelected ? csvExportPeriod.value : monthKey();
     const months = new Set([monthKey(), previousMonthKey()]);
     state.income.forEach(({ date, recognition }) => {
       if (recognition !== "sold" && /^\d{4}-(0[1-9]|1[0-2])-\d{2}$/.test(date)) months.add(date.slice(0, 7));
     });
-    const format = new Intl.DateTimeFormat(locale, { year: "numeric", month: "short", timeZone: "UTC" });
     csvExportPeriod.replaceChildren(
-      ...[...months].sort().reverse().map((month) => new Option(format.format(new Date(`${month}-01T00:00:00Z`)), month)),
+      ...[...months].sort().reverse().map((month) => new Option(monthLabel(month), month)),
       new Option(messages.csv.allDates, ""),
     );
     csvExportPeriod.value = !previousChoice || months.has(previousChoice) ? previousChoice : monthKey();
@@ -1612,6 +1411,14 @@ import { answerForPeriod, consecutiveUnused, subscriptionTiming } from "./billin
     }
   });
   const settingsForm = document.querySelector('[data-proto-form="settings"]');
+  const timeZoneSelect = settingsForm?.elements.timeZone;
+  if (timeZoneSelect) {
+    const zones = new Set(["UTC", browserTimeZone, ...(Intl.supportedValuesOf?.("timeZone") || [
+      "America/Los_Angeles", "America/New_York", "Asia/Shanghai", "Asia/Taipei", "Europe/London",
+    ])]);
+    timeZoneSelect.replaceChildren(...[...zones].sort().map((zone) => new Option(zone, zone)));
+    timeZoneSelect.value = browserTimeZone;
+  }
   settingsForm?.addEventListener("input", (event) => {
     if (dashboardMode) return;
     state.taxReserveRate = String(settingsForm.elements.taxReserveRate.value || "");
@@ -1801,7 +1608,17 @@ import { answerForPeriod, consecutiveUnused, subscriptionTiming } from "./billin
         return;
       }
       if (!response.ok || !data.authenticated) throw new Error("dashboard_load_failed");
-      applyLedger(data.ledger);
+      let ledger = data.ledger;
+      if (!ledger.workspace.timeZone) {
+        const initialization = await fetch("/api/workspace", {
+          method: "POST", credentials: "same-origin", headers: { "content-type": "application/json" },
+          body: JSON.stringify({ initTimeZone: browserTimeZone }),
+        });
+        const result = await initialization.json().catch(() => ({}));
+        if (!initialization.ok || !result.ledger?.workspace?.timeZone) throw new Error("timezone_initialization_failed");
+        ledger = result.ledger;
+      }
+      applyLedger(ledger);
       const settingsForm = document.querySelector('[data-proto-form="settings"]');
       if (settingsForm) {
         settingsForm.elements.cashOnHand.value = state.cashOnHand;
@@ -2015,6 +1832,18 @@ import { answerForPeriod, consecutiveUnused, subscriptionTiming } from "./billin
 
   const applyLedger = (ledger) => {
     if (!ledger) return;
+    const previousDate = today();
+    const previousTimeZone = state.timeZone;
+    state.timeZone = ledger.workspace?.timeZone || null;
+    if (timeZoneSelect && previousTimeZone !== state.timeZone) {
+      const zone = workspaceTimeZone();
+      if (![...timeZoneSelect.options].some((option) => option.value === zone)) timeZoneSelect.add(new Option(zone, zone));
+      timeZoneSelect.value = zone;
+    }
+    const date = today();
+    for (const input of [fixedForm?.elements.startDate, incomeForm?.elements.date, expenseForm?.elements.date]) {
+      if (input && !input.closest("dialog")?.open && (!input.value || input.value === previousDate)) input.value = date;
+    }
     if (ledger.workspace?.features) state.features = ledger.workspace.features;
     state.projects = ledger.projects || [];
     state.taxReserveRate = ledger.workspace?.taxReserveRate === null
@@ -2129,30 +1958,27 @@ import { answerForPeriod, consecutiveUnused, subscriptionTiming } from "./billin
     const runwayNode = document.querySelector("[data-flow-runway]");
     const taxNode = document.querySelector("[data-flow-tax-result]");
     if (dailyNode) dailyNode.textContent = dayMoney(result.dailyFloor);
-    const monthlyIncome = flowIncome.value === "" ? null : flowIncome.valueAsNumber;
-    const dailyIncome = monthlyIncome === null ? null : monthlyIncome * 12 / 365;
-    if (comparisonNode) comparisonNode.textContent = dailyIncome === null ? messages.flow.unset : dayMoney(dailyIncome);
+    const monthlyIncome = minorUnits(flowIncome.value);
+    const dailyIncome = monthlyIncome === null ? null : roundCents(scale(exact(BigInt(monthlyIncome)), 12n, 365n));
+    if (comparisonNode) comparisonNode.textContent = dailyIncome === null ? messages.flow.unset : dayMoney(usd(dailyIncome));
     if (gapNode) {
-      const gap = dailyIncome - result.dailyFloor;
-      if (dailyIncome !== null && gap < 0) {
-        gapNode.textContent = `${messages.flow.behind} ${dayMoney(Math.abs(gap))}`;
+      const gap = dailyIncome === null ? 0n : dailyIncome - roundCents(result.dailyRate);
+      if (gap < 0n) {
+        gapNode.textContent = `${messages.flow.behind} ${dayMoney(usd(-gap))}`;
         gapNode.hidden = false;
-      } else if (dailyIncome !== null && gap > 0) {
-        gapNode.textContent = `${messages.flow.ahead} ${dayMoney(gap)}`;
+      } else if (gap > 0n) {
+        gapNode.textContent = `${messages.flow.ahead} ${dayMoney(usd(gap))}`;
         gapNode.hidden = false;
       } else {
         gapNode.hidden = true;
       }
     }
-    const cash = flowCash.valueAsNumber;
-    if (runwayNode) {
-      runwayNode.textContent = Number.isFinite(cash) && result.dailyFloor > 0
-        ? `${Math.floor(cash / result.dailyFloor)} ${messages.flow.days}`
-        : messages.flow.unset;
-    }
+    const cash = minorUnits(flowCash.value);
+    const runway = daysCovered(cash === null ? null : BigInt(cash), result.dailyRate);
+    if (runwayNode) runwayNode.textContent = runway === null ? messages.flow.unset : `${runway} ${messages.flow.days}`;
     if (taxNode) taxNode.textContent = monthlyIncome === null || flowTax.value === ""
       ? messages.flow.unset
-      : money(monthlyIncome * flowTax.valueAsNumber / 100);
+      : money(roundedUsd(percent(exact(BigInt(monthlyIncome)), flowTax.value)));
   };
 
   const applyFlowToLedger = () => {
@@ -2225,7 +2051,7 @@ import { answerForPeriod, consecutiveUnused, subscriptionTiming } from "./billin
           fixedCostId: button.dataset.entryId,
           answer: button.dataset.reviewAnswer,
           billingPeriod: button.dataset.billingPeriod,
-          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          timeZone: workspaceTimeZone(),
         }),
       });
       const updated = [...document.querySelectorAll("[data-review-answer]")].find((candidate) =>
@@ -2289,17 +2115,20 @@ import { answerForPeriod, consecutiveUnused, subscriptionTiming } from "./billin
         choice.setAttribute("aria-pressed", String(choice === button));
       });
       renderMetrics();
+      renderProjects();
     });
   });
   if (!dashboardMode) route(Boolean(window.location.hash));
-  let billingDay = today();
-  document.addEventListener("visibilitychange", () => {
-    const date = today();
-    if (document.hidden || date === billingDay) return;
-    billingDay = date;
-    renderFixedCosts();
-    renderMetrics();
-  });
+  const refreshDay = () => {
+    if (!document.hidden && today() !== renderedDate) {
+      for (const input of [fixedForm?.elements.startDate, incomeForm?.elements.date, expenseForm?.elements.date]) {
+        if (input?.value === renderedDate && !input.closest("dialog")?.open) input.value = today();
+      }
+      render();
+    }
+  };
+  document.addEventListener("visibilitychange", refreshDay);
+  window.addEventListener("focus", refreshDay);
 
   loadDashboard().finally(() => {
     window.__gigledgerLoaded = true;

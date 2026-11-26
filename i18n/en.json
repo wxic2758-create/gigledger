@@ -712,6 +712,8 @@
       "moreNumbers": "Fees, tax reserve and other figures",
       "extras": "Subscription review, weekly summary and share cards",
       "planning": "Cash and planning",
+      "timeZone": "Reporting time zone",
+      "timeZoneNote": "Monthly totals, default dates, and reminders follow this time zone.",
       "saveSettings": "Save settings",
       "settingsSaved": "Settings saved.",
       "account": "Account and data",

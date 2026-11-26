@@ -8,17 +8,55 @@ const parseDay = (value) => {
   return Number.isNaN(date.getTime()) || isoDay(date) !== value ? null : date;
 };
 
-export function dayInTimeZone(now, timeZone) {
-  if (typeof timeZone !== "string" || !timeZone || timeZone.length > 80) return isoDay(now);
+export function validTimeZone(timeZone) {
+  if (typeof timeZone !== "string" || !/^[A-Za-z][A-Za-z0-9_+/-]{0,79}$/.test(timeZone)) return null;
   try {
-    const parts = new Intl.DateTimeFormat("en", {
-      timeZone, year: "numeric", month: "2-digit", day: "2-digit",
-    }).formatToParts(now);
-    const date = Object.fromEntries(parts.map(({ type, value }) => [type, value]));
-    return `${date.year}-${date.month}-${date.day}`;
+    return new Intl.DateTimeFormat("en", { timeZone }).resolvedOptions().timeZone;
   } catch {
-    return isoDay(now);
+    return null;
   }
+}
+
+const dateFormatters = new Map();
+
+export function dayInTimeZone(now, timeZone) {
+  if (!timeZone || timeZone === "UTC") return isoDay(now);
+  let formatter = dateFormatters.get(timeZone);
+  if (!formatter) {
+    const zone = validTimeZone(timeZone);
+    if (!zone) return isoDay(now);
+    formatter = new Intl.DateTimeFormat("en", {
+      timeZone: zone, year: "numeric", month: "2-digit", day: "2-digit",
+    });
+    if (dateFormatters.size >= 64) dateFormatters.clear();
+    dateFormatters.set(timeZone, formatter);
+  }
+  const date = Object.fromEntries(formatter.formatToParts(now).map(({ type, value }) => [type, value]));
+  return `${date.year.padStart(4, "0")}-${date.month}-${date.day}`;
+}
+
+export function monthOffset(month, offset) {
+  const date = parseDay(`${month}-01`);
+  date.setUTCMonth(date.getUTCMonth() + offset);
+  return isoDay(date).slice(0, 7);
+}
+
+export function daysInMonth(month) {
+  const date = parseDay(`${month}-01`);
+  date.setUTCMonth(date.getUTCMonth() + 1, 0);
+  return date.getUTCDate();
+}
+
+export function shiftDay(day, offset) {
+  const date = parseDay(day);
+  if (!date) return null;
+  date.setUTCDate(date.getUTCDate() + offset);
+  return isoDay(date);
+}
+
+export function weekStart(day) {
+  const date = parseDay(day);
+  return shiftDay(day, -((date.getUTCDay() + 6) % 7));
 }
 
 function shiftCharge(anchor, cycle, index) {

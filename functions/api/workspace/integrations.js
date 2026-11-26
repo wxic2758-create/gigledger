@@ -1,3 +1,4 @@
+import { stripeTransactions } from "../../lib/stripe.js";
 import { loadWorkspace, normalizeDraft, saveWorkspaceDraft } from "../../lib/ledger.js";
 import { readAuthenticatedUserId } from "../../lib/session.js";
 import { planFeatures } from "../../lib/plan.js";
@@ -52,49 +53,6 @@ const upsertIntegration = async (db, workspaceId, type, credential, label, secre
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
   ).bind(id, workspaceId, type, status, label, encrypted, timestamp, timestamp).run();
   return id;
-};
-
-const parseDate = (value) => {
-  if (!value) return null;
-  const date = new Date(Number.isFinite(Number(value)) ? Number(value) * 1000 : value);
-  return Number.isNaN(date.getTime()) ? null : date.toISOString().slice(0, 10);
-};
-
-const stripeTransactions = async (secretKey) => {
-  const transactions = [];
-  let url = "https://api.stripe.com/v1/balance_transactions?limit=100&type=charge";
-  while (url) {
-    let response;
-    try {
-      response = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${secretKey}`,
-          "Stripe-Version": "2024-06-20",
-        },
-      });
-    } catch (error) {
-      throw new Error(`stripe_network_error: ${error?.message || "fetch_failed"}`);
-    }
-    if (!response.ok) {
-      const body = await response.text().catch(() => "");
-      let error = {};
-      try { error = JSON.parse(body); } catch {}
-      throw new Error(error.error?.message || `stripe_request_failed_${response.status}`);
-    }
-    const data = await response.json();
-    for (const item of data.data || []) {
-      transactions.push({
-        date: parseDate(item.created),
-        source: "stripe",
-        amount: (item.amount || 0) / 100,
-        platformFee: (item.fee || 0) / 100,
-        client: item.description || "",
-        externalRef: item.id,
-      });
-    }
-    url = data.has_more ? `${url}&starting_after=${data.data[data.data.length - 1].id}` : null;
-  }
-  return transactions;
 };
 
 const appStoreCredential = (payload) => ({
@@ -202,7 +160,9 @@ const saveStripeTransactions = async (env, workspaceId, integrationId, transacti
 export const onRequestPost = async ({ env, request }) => {
   const userId = await readAuthenticatedUserId(env, request.headers.get("cookie"));
   if (!userId) return json({ authenticated: false }, 401);
-  const workspace = await env.DB.prepare("SELECT id FROM workspaces WHERE owner_id = ?").bind(userId).first();
+  const workspace = await env.DB.prepare(
+    "SELECT w.id, u.timezone FROM workspaces w JOIN users u ON u.id = w.owner_id WHERE u.id = ?",
+  ).bind(userId).first();
   if (!workspace) return json({ error: "workspace_not_found" }, 404);
   const features = await plan(env.DB, workspace.id);
   if (!features.sync) return json({ error: "pro_required" }, 403);
@@ -249,7 +209,7 @@ export const onRequestPost = async ({ env, request }) => {
   }
 
   try {
-    const imported = await saveStripeTransactions(env, workspace.id, integrationId, await stripeTransactions(secretKey));
+    const imported = await saveStripeTransactions(env, workspace.id, integrationId, await stripeTransactions(secretKey, workspace.timezone));
     return json({ authenticated: true, imported, ledger: await loadWorkspace(env.DB, workspace.id) });
   } catch (error) {
     const message = error?.message || "stripe_sync_failed";

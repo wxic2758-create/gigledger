@@ -1,4 +1,4 @@
-import { normalizeDraft, loadWorkspace, saveWorkspaceDraft } from "../../lib/ledger.js";
+import { nonnegativeUsd, normalizeDraft, loadWorkspace, saveWorkspaceDraft } from "../../lib/ledger.js";
 import { readAuthenticatedUserId } from "../../lib/session.js";
 import { planFeatures } from "../../lib/plan.js";
 
@@ -157,10 +157,8 @@ const importCsv = async ({ env, request }) => {
       failed.push({ line_number: rowIndex + 2, row, reason: "unsupported_currency" });
       continue;
     }
-    const item = { ...row, amount: Number(row.amount), platformFee: Number(row.platformFee) };
-    const valid = row.amount !== "" && Number.isFinite(item.amount) && item.amount >= 0
-      && Number.isFinite(item.platformFee) && item.platformFee >= 0
-      && item.platformFee <= item.amount;
+    const item = { ...row, amount: nonnegativeUsd(row.amount), platformFee: nonnegativeUsd(row.platformFee || 0) };
+    const valid = item.amount !== null && item.platformFee !== null && item.platformFee <= item.amount;
     if (!valid) {
       failed.push({ line_number: rowIndex + 2, row, reason: "invalid_amount" });
       continue;

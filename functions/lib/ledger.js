@@ -1,4 +1,6 @@
 import { planFeatures } from "./plan.js";
+import { dayInTimeZone, shiftDay, validTimeZone } from "../../billing-calendar.js";
+import { exact, minorUnits, percent, roundCents, storedUnits, usd, usdValue } from "../../money.js";
 
 export const cycles = {
   daily: 365,
@@ -12,6 +14,12 @@ export const cycles = {
 export const incomeSources = ["upwork", "fiverr", "stripe", "app_store", "paypal", "direct", "other"];
 
 const finite = (value) => Number.isFinite(value) && value >= 0;
+export const nonnegativeUsd = (value) =>
+  (typeof value === "number" || typeof value === "string") && Number(value) >= 0 ? usdValue(value) : null;
+const storedUsd = (value, cents) => {
+  const units = storedUnits(value, cents);
+  return units === null ? null : usd(units);
+};
 
 const text = (value, max = 120) => {
   const result = String(value || "").trim().slice(0, max);
@@ -24,7 +32,7 @@ const date = (value) => {
 };
 
 const expenseFields = (item) => {
-  const amount = Number(item?.amount);
+  const amount = nonnegativeUsd(item?.amount);
   const businessUse = Number(item?.businessUse ?? 100);
   const occurredOn = date(item?.date);
   const category = text(item?.category, 80);
@@ -68,6 +76,7 @@ export const normalizeDraft = async (input) => {
   const normalizedFixed = [];
   const normalizedIncome = [];
   const normalizedProjects = [];
+  const timeZone = validTimeZone(data.timeZone);
   const rawAppleFeeRate = data.appleFeeRate ?? data.apple_fee_rate;
   const appleFeeRateProvided = Object.prototype.hasOwnProperty.call(data, "appleFeeRate")
     || Object.prototype.hasOwnProperty.call(data, "apple_fee_rate");
@@ -87,11 +96,11 @@ export const normalizeDraft = async (input) => {
   }
 
   for (const item of fixedCosts) {
-    const amount = Number(item?.amount);
+    const amount = nonnegativeUsd(item?.amount);
     const businessUse = Number(item?.businessUse ?? 100);
     const cycle = cycles[item?.cycle] ? item.cycle : null;
     const name = text(item?.name);
-    const startDate = date(item?.startDate || item?.start_date) || new Date().toISOString().slice(0, 10);
+    const startDate = date(item?.startDate || item?.start_date) || dayInTimeZone(new Date(), timeZone);
     const endDate = date(item?.endDate || item?.end_date);
     const nextBillingDate = date(item?.nextBillingDate || item?.next_billing_date);
     const templateKey = text(item?.templateKey || item?.template_key, 80);
@@ -128,7 +137,7 @@ export const normalizeDraft = async (input) => {
   }
 
   for (const item of income) {
-    const amount = Number(item?.amount);
+    const amount = nonnegativeUsd(item?.amount);
     const source = incomeSources.includes(item?.source) ? item.source : null;
     const occurredOn = date(item?.date);
     const clientName = text(item?.client, 120);
@@ -138,9 +147,9 @@ export const normalizeDraft = async (input) => {
     const recognition = item?.recognition === "sold" ? "sold" : "received";
     const payoutStatus = text(item?.payoutStatus || item?.payout_status, 80);
     const integrationId = text(item?.integrationId || item?.integration_id, 80);
-    const suppliedPlatformFee = Number(item?.platformFee ?? 0);
-    const platformFee = source === "app_store" && recognition === "sold" && appleFeeRate !== null
-      ? Math.round(amount * appleFeeRate * 100) / 100
+    const suppliedPlatformFee = nonnegativeUsd(item?.platformFee ?? 0);
+    const platformFee = amount !== null && source === "app_store" && recognition === "sold" && appleFeeRate !== null
+      ? usd(roundCents(percent(exact(BigInt(minorUnits(amount))), appleFeeRate === 0.15 ? 15 : 30)))
       : suppliedPlatformFee;
     if (!source || !occurredOn || !finite(amount) || !finite(platformFee) || platformFee > amount) continue;
     normalizedIncome.push({
@@ -183,14 +192,13 @@ export const normalizeDraft = async (input) => {
 
   let cashOnHand = null;
   if (data.cashOnHand !== null && data.cashOnHand !== undefined && data.cashOnHand !== "") {
-    const cash = Number(data.cashOnHand);
+    const cash = nonnegativeUsd(data.cashOnHand);
     if (finite(cash)) cashOnHand = cash;
   }
 
   const estimate = data.monthlyIncomeEstimate;
-  const numericEstimate = Number(estimate);
-  const validEstimateAmount = ((typeof estimate === "string" && estimate.trim() !== "") || typeof estimate === "number")
-    && finite(numericEstimate);
+  const numericEstimate = nonnegativeUsd(estimate);
+  const validEstimateAmount = numericEstimate !== null;
 
   const projectNames = new Set([
     ...normalizedFixed.flatMap((item) => item.projects),
@@ -204,6 +212,7 @@ export const normalizeDraft = async (input) => {
   }
 
   return {
+    timeZone,
     projects: normalizedProjects,
     fixedCosts: normalizedFixed,
     income: normalizedIncome,
@@ -232,18 +241,11 @@ export const countNewSubscriptions = async (db, workspaceId, draft) => {
   return refs.filter((ref) => !existingRefs.has(ref)).length;
 };
 
-const previousDate = (value) => {
-  const parsed = new Date(`${value}T00:00:00Z`);
-  if (Number.isNaN(parsed.getTime())) return null;
-  parsed.setUTCDate(parsed.getUTCDate() - 1);
-  return parsed.toISOString().slice(0, 10);
-};
-
-export const saveFixedCostRevision = async (env, workspaceId, payload) => {
+export const saveFixedCostRevision = async (env, workspaceId, payload, timeZone) => {
   const db = env.DB;
   const fixedCostId = text(payload?.fixedCostId, 80);
   const effectiveFrom = date(payload?.effectiveFrom);
-  const amount = Number(payload?.amount);
+  const amount = nonnegativeUsd(payload?.amount);
   const businessUse = Number(payload?.businessUse);
   const cycle = cycles[payload?.cycle] ? payload.cycle : null;
   const name = text(payload?.name);
@@ -295,7 +297,7 @@ export const saveFixedCostRevision = async (env, workspaceId, payload) => {
   }
 
   const timestamp = new Date().toISOString();
-  const today = timestamp.slice(0, 10);
+  const today = dayInTimeZone(new Date(timestamp), timeZone);
   const allocationJson = allocation.length ? JSON.stringify(allocation) : null;
   const endDate = date(payload?.endDate);
   const nextBillingDate = date(payload?.nextBillingDate);
@@ -319,31 +321,32 @@ export const saveFixedCostRevision = async (env, workspaceId, payload) => {
      ORDER BY effective_from ASC LIMIT 1`,
   ).bind(fixedCostId, effectiveFrom).first();
   const nextVersionStart = nextVersion?.effective_from || null;
-  const versionEnd = nextVersionStart ? previousDate(nextVersionStart) : null;
+  const versionEnd = nextVersionStart ? shiftDay(nextVersionStart, -1) : null;
 
   const statements = [];
   if (previousVersion) {
     statements.push(db.prepare(
       "UPDATE fixed_cost_versions SET effective_to = ?, updated_at = ? WHERE id = ?",
-    ).bind(previousDate(effectiveFrom), timestamp, previousVersion.id));
+    ).bind(shiftDay(effectiveFrom, -1), timestamp, previousVersion.id));
   }
   if (existingVersion) {
     statements.push(db.prepare(
       `UPDATE fixed_cost_versions
-       SET effective_to = ?, amount = ?, cycle = ?, business_use = ?, allocation_json = ?, updated_at = ?
+       SET effective_to = ?, amount = ?, amount_cents = ?, cycle = ?, business_use = ?, allocation_json = ?, updated_at = ?
        WHERE id = ?`,
-    ).bind(versionEnd, amount, cycle, businessUse, allocationJson, timestamp, existingVersion.id));
+    ).bind(versionEnd, amount, minorUnits(amount), cycle, businessUse, allocationJson, timestamp, existingVersion.id));
   } else {
     statements.push(db.prepare(
       `INSERT INTO fixed_cost_versions
-        (id, fixed_cost_id, effective_from, effective_to, amount, cycle, business_use, allocation_json, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        (id, fixed_cost_id, effective_from, effective_to, amount, amount_cents, cycle, business_use, allocation_json, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     ).bind(
       crypto.randomUUID(),
       fixedCostId,
       effectiveFrom,
       versionEnd,
       amount,
+      minorUnits(amount),
       cycle,
       businessUse,
       allocationJson,
@@ -357,6 +360,7 @@ export const saveFixedCostRevision = async (env, workspaceId, payload) => {
     `UPDATE fixed_costs
      SET name = ?,
          amount = CASE WHEN ? THEN ? ELSE amount END,
+         amount_cents = CASE WHEN ? THEN ? ELSE amount_cents END,
          cycle = CASE WHEN ? THEN ? ELSE cycle END,
          business_use = CASE WHEN ? THEN ? ELSE business_use END,
          allocation_json = CASE WHEN ? THEN ? ELSE allocation_json END,
@@ -367,6 +371,8 @@ export const saveFixedCostRevision = async (env, workspaceId, payload) => {
     name,
     appliesNow ? 1 : 0,
     amount,
+    appliesNow ? 1 : 0,
+    minorUnits(amount),
     appliesNow ? 1 : 0,
     cycle,
     appliesNow ? 1 : 0,
@@ -396,19 +402,27 @@ export const saveWorkspaceDraft = async (env, workspaceId, draft) => {
   const taxReserveRate = data.taxReserveRate ?? null;
   const appleFeeRate = data.appleFeeRate ?? null;
   const appleFeeRateProvided = Boolean(data.appleFeeRateProvided);
-  const cashOnHand = data.cashOnHand ?? null;
+  const cashOnHand = nonnegativeUsd(data.cashOnHand);
+  const estimate = nonnegativeUsd(data.monthlyIncomeEstimate);
   const projects = Array.isArray(data.projects) ? data.projects : [];
   const fixedCosts = Array.isArray(data.fixedCosts) ? data.fixedCosts : [];
   const income = Array.isArray(data.income) ? data.income : [];
   const expenses = Array.isArray(data.expenses) ? data.expenses : [];
+
+  const timeZone = validTimeZone(data.timeZone);
+  if (timeZone) statements.push(db.prepare(
+    "UPDATE users SET timezone = COALESCE(timezone, ?) WHERE id = (SELECT owner_id FROM workspaces WHERE id = ?)",
+  ).bind(timeZone, workspaceId));
 
   statements.push(db.prepare(
     `UPDATE workspaces
      SET tax_reserve_rate = COALESCE(?, tax_reserve_rate),
          apple_fee_rate = CASE WHEN ? = 1 THEN ? ELSE apple_fee_rate END,
          cash_on_hand = COALESCE(?, cash_on_hand),
+         cash_on_hand_cents = COALESCE(?, cash_on_hand_cents),
          cash_on_hand_as_of = CASE WHEN ? IS NULL THEN cash_on_hand_as_of ELSE ? END,
          monthly_income_estimate = CASE WHEN ? = 1 THEN ? ELSE monthly_income_estimate END,
+         monthly_income_estimate_cents = CASE WHEN ? = 1 THEN ? ELSE monthly_income_estimate_cents END,
          updated_at = ?
      WHERE id = ?`,
   ).bind(
@@ -416,10 +430,13 @@ export const saveWorkspaceDraft = async (env, workspaceId, draft) => {
     appleFeeRateProvided ? 1 : 0,
     appleFeeRate,
     cashOnHand,
+    minorUnits(cashOnHand),
     cashOnHand,
     cashOnHand === null ? null : timestamp,
     data.monthlyIncomeEstimateProvided ? 1 : 0,
-    data.monthlyIncomeEstimate ?? null,
+    estimate,
+    data.monthlyIncomeEstimateProvided ? 1 : 0,
+    minorUnits(estimate),
     timestamp,
     workspaceId,
   ));
@@ -483,10 +500,10 @@ export const saveWorkspaceDraft = async (env, workspaceId, draft) => {
       : (item.projects?.length ? JSON.stringify(item.projects) : null);
     statements.push(db.prepare(
       `INSERT INTO fixed_costs
-        (id, workspace_id, external_ref, name, amount, cycle, business_use, source, project_id, allocation_json,
+        (id, workspace_id, external_ref, name, amount, amount_cents, cycle, business_use, source, project_id, allocation_json,
          is_subscription, is_software, template_key, product_url, manage_url, next_billing_date, start_date, end_date,
          created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'manual', NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'manual', NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(workspace_id, external_ref) DO NOTHING`,
     ).bind(
       fixedCostId,
@@ -494,6 +511,7 @@ export const saveWorkspaceDraft = async (env, workspaceId, draft) => {
       item.externalRef,
       item.name,
       item.amount,
+      minorUnits(item.amount),
       item.cycle,
       item.businessUse,
       projectJson,
@@ -510,8 +528,8 @@ export const saveWorkspaceDraft = async (env, workspaceId, draft) => {
     ));
     statements.push(db.prepare(
       `INSERT INTO fixed_cost_versions
-        (id, fixed_cost_id, effective_from, effective_to, amount, cycle, business_use, allocation_json, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (id, fixed_cost_id, effective_from, effective_to, amount, amount_cents, cycle, business_use, allocation_json, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(fixed_cost_id, effective_from) DO NOTHING`,
     ).bind(
       crypto.randomUUID(),
@@ -519,6 +537,7 @@ export const saveWorkspaceDraft = async (env, workspaceId, draft) => {
       item.startDate ?? null,
       item.endDate ?? null,
       item.amount,
+      minorUnits(item.amount),
       item.cycle,
       item.businessUse,
       projectJson,
@@ -531,8 +550,8 @@ export const saveWorkspaceDraft = async (env, workspaceId, draft) => {
   for (const item of expenses) {
     statements.push(db.prepare(
       `INSERT INTO expenses
-        (id, workspace_id, external_ref, occurred_on, category, merchant, amount, business_use, notes, source, project_id, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'manual', NULL, ?, ?)
+        (id, workspace_id, external_ref, occurred_on, category, merchant, amount, amount_cents, business_use, notes, source, project_id, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'manual', NULL, ?, ?)
        ON CONFLICT(workspace_id, external_ref) DO NOTHING`,
     ).bind(
       crypto.randomUUID(),
@@ -542,6 +561,7 @@ export const saveWorkspaceDraft = async (env, workspaceId, draft) => {
       item.category,
       item.merchant,
       item.amount,
+      minorUnits(item.amount),
       item.businessUse,
       item.notes ?? null,
       timestamp,
@@ -552,9 +572,9 @@ export const saveWorkspaceDraft = async (env, workspaceId, draft) => {
   for (const item of income) {
     statements.push(db.prepare(
       `INSERT INTO income_entries
-        (id, workspace_id, external_ref, occurred_on, source, client_name, amount, platform_fee,
+        (id, workspace_id, external_ref, occurred_on, source, client_name, amount, amount_cents, platform_fee, platform_fee_cents,
          sale_date, recognition, payout_status, integration_id, project_id, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)
        ON CONFLICT(workspace_id, external_ref) DO NOTHING`,
     ).bind(
       crypto.randomUUID(),
@@ -564,7 +584,9 @@ export const saveWorkspaceDraft = async (env, workspaceId, draft) => {
       item.source,
       item.clientName,
       item.amount,
+      minorUnits(item.amount),
       item.platformFee,
+      minorUnits(item.platformFee),
       item.saleDate ?? null,
       item.recognition ?? "received",
       item.payoutStatus ?? null,
@@ -617,10 +639,10 @@ export const updateExpense = async (db, workspaceId, payload) => {
 
   const result = await db.prepare(
     `UPDATE expenses
-     SET occurred_on = ?, category = ?, merchant = ?, amount = ?, business_use = ?, notes = ?, project_id = ?, updated_at = ?
+     SET occurred_on = ?, category = ?, merchant = ?, amount = ?, amount_cents = ?, business_use = ?, notes = ?, project_id = ?, updated_at = ?
      WHERE id = ? AND workspace_id = ?`,
   ).bind(
-    occurredOn, category, merchant, amount, businessUse, notes, project?.id ?? null,
+    occurredOn, category, merchant, amount, minorUnits(amount), businessUse, notes, project?.id ?? null,
     new Date().toISOString(), id, workspaceId,
   ).run();
   return result.meta.changes ? {} : { error: "expense_not_found", status: 404 };
@@ -632,12 +654,12 @@ export const loadWorkspace = async (db, workspaceId) => {
   ).bind(workspaceId).all();
   const projectsById = new Map((projectRows.results || []).map((item) => [item.id, item.name]));
   const workspace = await db.prepare(
-    "SELECT id, name, base_currency, tax_reserve_rate, apple_fee_rate, cash_on_hand, cash_on_hand_as_of, monthly_income_estimate, plan FROM workspaces WHERE id = ?",
+    `SELECT w.*, u.timezone FROM workspaces w JOIN users u ON u.id = w.owner_id WHERE w.id = ?`,
   ).bind(workspaceId).first();
   if (!workspace) return null;
 
   const fixedCosts = await db.prepare(
-    `SELECT id, name, amount, cycle, business_use, source, project_id, allocation_json, is_subscription, is_software, template_key,
+    `SELECT id, name, amount, amount_cents, cycle, business_use, source, project_id, allocation_json, is_subscription, is_software, template_key,
             product_url, manage_url, next_billing_date, start_date, end_date,
             created_at, updated_at
      FROM fixed_costs WHERE workspace_id = ? ORDER BY created_at DESC`,
@@ -656,8 +678,13 @@ export const loadWorkspace = async (db, workspaceId) => {
     reviewsByCost.set(row.fixed_cost_id, reviews);
   }
   const fixedCostRows = fixedCosts.results || [];
+  const legacyAllocations = new Map();
+  for (const item of fixedCostRows) {
+    const name = projectsById.get(item.project_id);
+    if (name && !item.allocation_json) legacyAllocations.set(item.id, [{ name, percent: 100 }]);
+  }
   const versionRows = fixedCostRows.length ? await db.prepare(
-    `SELECT v.fixed_cost_id, v.effective_from, v.effective_to, v.amount, v.cycle, v.business_use, v.allocation_json
+    `SELECT v.fixed_cost_id, v.effective_from, v.effective_to, v.amount, v.amount_cents, v.cycle, v.business_use, v.allocation_json
      FROM fixed_cost_versions AS v JOIN fixed_costs AS fc ON fc.id = v.fixed_cost_id
      WHERE fc.workspace_id = ? ORDER BY v.effective_from ASC`,
   ).bind(workspaceId).all() : { results: [] };
@@ -667,20 +694,20 @@ export const loadWorkspace = async (db, workspaceId) => {
     versions.push({
       effectiveFrom: row.effective_from,
       effectiveTo: row.effective_to,
-      amount: row.amount,
+      amount: storedUsd(row.amount, row.amount_cents),
       cycle: row.cycle,
       businessUse: row.business_use,
-      allocation: row.allocation_json ? JSON.parse(row.allocation_json) : [],
+      allocation: row.allocation_json ? parseAllocationJson(row.allocation_json) : legacyAllocations.get(row.fixed_cost_id) || [],
     });
     versionsByCost.set(row.fixed_cost_id, versions);
   }
   const income = await db.prepare(
-    `SELECT id, external_ref, occurred_on, source, client_name, amount, platform_fee, project_id, created_at, updated_at,
+    `SELECT id, external_ref, occurred_on, source, client_name, amount, amount_cents, platform_fee, platform_fee_cents, project_id, created_at, updated_at,
             sale_date, recognition, payout_status, integration_id
      FROM income_entries WHERE workspace_id = ? ORDER BY occurred_on DESC, created_at DESC`,
   ).bind(workspaceId).all();
   const expenses = await db.prepare(
-    `SELECT id, external_ref, occurred_on, category, merchant, amount, business_use, notes, source, project_id, created_at, updated_at
+    `SELECT id, external_ref, occurred_on, category, merchant, amount, amount_cents, business_use, notes, source, project_id, created_at, updated_at
      FROM expenses WHERE workspace_id = ? ORDER BY occurred_on DESC, created_at DESC`,
   ).bind(workspaceId).all();
 
@@ -696,11 +723,12 @@ export const loadWorkspace = async (db, workspaceId) => {
       id: workspace.id,
       name: workspace.name,
       baseCurrency: workspace.base_currency,
+      timeZone: validTimeZone(workspace.timezone),
       taxReserveRate: workspace.tax_reserve_rate,
       appleFeeRate: workspace.apple_fee_rate,
-      cashOnHand: workspace.cash_on_hand,
+      cashOnHand: storedUsd(workspace.cash_on_hand, workspace.cash_on_hand_cents),
       cashOnHandAsOf: workspace.cash_on_hand_as_of,
-      monthlyIncomeEstimate: workspace.monthly_income_estimate,
+      monthlyIncomeEstimate: storedUsd(workspace.monthly_income_estimate, workspace.monthly_income_estimate_cents),
       plan: planFeatures(workspace.plan).plan,
       features: planFeatures(workspace.plan),
     },
@@ -719,7 +747,7 @@ export const loadWorkspace = async (db, workspaceId) => {
       })(),
       id: item.id,
       name: item.name,
-      amount: item.amount,
+      amount: storedUsd(item.amount, item.amount_cents),
       cycle: item.cycle,
       businessUse: item.business_use,
       source: item.source,
@@ -742,8 +770,8 @@ export const loadWorkspace = async (db, workspaceId) => {
       date: item.occurred_on,
       source: item.source,
       client: item.client_name,
-      amount: item.amount,
-      platformFee: item.platform_fee,
+      amount: storedUsd(item.amount, item.amount_cents),
+      platformFee: storedUsd(item.platform_fee, item.platform_fee_cents),
       saleDate: item.sale_date,
       recognition: item.recognition || "received",
       payoutStatus: item.payout_status,
@@ -758,7 +786,7 @@ export const loadWorkspace = async (db, workspaceId) => {
       date: item.occurred_on,
       category: item.category,
       merchant: item.merchant,
-      amount: item.amount,
+      amount: storedUsd(item.amount, item.amount_cents),
       businessUse: item.business_use,
       notes: item.notes,
       source: item.source,

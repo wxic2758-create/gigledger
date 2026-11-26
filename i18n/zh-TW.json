@@ -717,6 +717,8 @@
       "moreNumbers": "手續費、預留稅款與其他數字",
       "extras": "訂閱體檢、每週摘要與分享卡片",
       "planning": "現金與財務規劃",
+      "timeZone": "報表時區",
+      "timeZoneNote": "月報、預設日期和扣款提醒都依此時區計算。",
       "saveSettings": "儲存設定",
       "settingsSaved": "設定已儲存。",
       "account": "帳號與資料",

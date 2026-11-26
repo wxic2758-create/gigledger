@@ -625,7 +625,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
 
     <section class="workspace-overview shell" id="dashboard" ${workspace ? 'data-dashboard data-workspace-view="overview" aria-busy="true"' : 'data-guest-panel hidden'}>
       <div class="workspace-heading">
-        <div><h1>${esc(w.overview)}</h1><p class="workspace-currency">USD</p></div>
+        <div><h1>${esc(w.overview)}</h1><p class="workspace-currency" data-proto="report-context">USD</p></div>
         ${addMenu}
       </div>
       <div class="workspace-period" role="group" aria-label="${esc(w.period)}">
@@ -748,6 +748,8 @@ const appPage = ({ locale, t, mode = "app" }) => {
           <label><span>${esc(t.app.appleFeeLabel)}</span><select name="appleFeeRate"><option value="">${esc(t.app.appleFeeUnset)}</option><option value="15">15%</option><option value="30">30%</option></select></label>
           <label><span>${esc(t.app.cashLabel)}</span><input id="cash-settings" name="cashOnHand" type="number" min="0" step="0.01"></label>
           <label><span>${esc(t.app.monthlyIncomeEstimateLabel)}</span><input name="monthlyIncomeEstimate" type="number" min="0" step="0.01"></label>
+          <label><span>${esc(w.timeZone)}</span><select name="timeZone" aria-describedby="workspace-time-zone-note" required></select></label>
+          <p class="app-note" id="workspace-time-zone-note">${esc(w.timeZoneNote)}</p>
           <p class="app-note">${esc(t.app.monthlyIncomeEstimateNote)}</p>
           <p class="app-note">${esc(t.app.taxReference)} ${esc(t.app.appleFeeNote)}</p>
           <button class="button button-dark" type="submit">${esc(w.saveSettings)}</button>
@@ -835,6 +837,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
     <section class="app-section shell" id="projects" ${workspace ? "data-ledger-panel" : "data-guest-panel"} hidden>
       <div class="app-section-head">
         <h2>${esc(t.app.projects.title)}</h2>
+        <p data-proto="project-period"></p>
         <p>${esc(t.app.projects.body)}</p>
         ${entryLink("project-entry", t.app.projects.add)}
       </div>
@@ -999,7 +1002,7 @@ const appPage = ({ locale, t, mode = "app" }) => {
       <a href="/${t.alternatePath}${workspace ? "dashboard" : "app"}">${esc(t.nav.switchTo)}</a>
     </div>
   </footer>
-  <script type="module" src="/app-ledger.js?v=20261126-01"></script>
+  <script type="module" src="/app-ledger.js?v=20261126-02"></script>
   <script src="/app.js?v=20261121-03" defer></script>
 </body>
 </html>`;
@@ -1158,7 +1161,7 @@ ${locales
 const dist = join(root, "dist");
 const publicFiles = [
   "_redirects", "index.html", "robots.txt", "sitemap.xml",
-  "app.js", "app-ledger.js", "billing-calendar.js", "styles.css", "proto.css",
+  "app.js", "app-ledger.js", "billing-calendar.js", "ledger-report.js", "money.js", "styles.css", "proto.css",
   "assets/favicon-32.png", "assets/logo-mark-192.png", "assets/logo-mark-64.png", "assets/og.png",
   ...locales.flatMap(({ folder }) =>
     ["index.html", "privacy.html", "tax-disclaimer.html", "app/index.html", "dashboard/index.html", "product/index.html", "pricing/index.html", "faq/index.html"]

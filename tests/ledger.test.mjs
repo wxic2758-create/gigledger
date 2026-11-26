@@ -7,18 +7,22 @@ import { onRequestGet as googleCallback } from "../functions/api/auth/google/cal
 import { onRequestGet as getMe } from "../functions/api/me.js";
 import { onRequestDelete as removeEntry, onRequestPost as updateWorkspace, onRequestPut as editEntry } from "../functions/api/workspace.js";
 import { onRequestGet as exportCsv, onRequestPost as importCsv } from "../functions/api/workspace/csv.js";
-import { loadWorkspace, normalizeDraft, saveWorkspaceDraft } from "../functions/lib/ledger.js";
+import { loadWorkspace, normalizeDraft, saveFixedCostRevision, saveWorkspaceDraft } from "../functions/lib/ledger.js";
 import { createSessionToken, sessionCookie } from "../functions/lib/session.js";
-import { answerForPeriod, consecutiveUnused, subscriptionTiming } from "../billing-calendar.js";
+import { answerForPeriod, consecutiveUnused, dayInTimeZone, subscriptionTiming } from "../billing-calendar.js";
+import { buildReport, projectTotals } from "../ledger-report.js";
+import { minorUnits } from "../money.js";
+import { stripeTransactions } from "../functions/lib/stripe.js";
 
 const origin = "https://gigledger.xyz";
 
-function fixture(t) {
+function fixture(t, { migrateMinorUnits = true } = {}) {
   const sqlite = new DatabaseSync(":memory:");
   t.after(() => sqlite.close());
   sqlite.exec("PRAGMA foreign_keys = ON");
   const migrations = new URL("../migrations/", import.meta.url);
   for (const name of readdirSync(migrations).sort()) {
+    if (!migrateMinorUnits && name === "0011_ledger_minor_units.sql") break;
     sqlite.exec(readFileSync(new URL(name, migrations), "utf8"));
   }
   const DB = {
@@ -49,6 +53,107 @@ function fixture(t) {
   const env = { DB, SESSION_SECRET: "fixture-session", GOOGLE_CLIENT_ID: "fixture-client", GOOGLE_CLIENT_SECRET: "fixture-secret" };
   return { sqlite, env };
 }
+
+test("report components round in cents after proration, with pace based on the published Daily Floor", () => {
+  assert.equal(minorUnits("1.005"), 101);
+  assert.equal(minorUnits("2.675"), 268);
+  assert.equal(minorUnits("-1.005"), -101);
+  const ledger = {
+    income: [{ date: "2026-11-01", amount: 200, platformFee: 0, projects: ["Studio"] }],
+    fixedCosts: [{ amount: 900, cycle: "monthly", businessUse: 100, startDate: "2026-11-01",
+      allocation: [{ name: "Studio", percent: 100 }] }],
+    expenses: [1, 2].map(() => ({ date: "2026-11-06", amount: 0.01, businessUse: 50, projects: ["Studio"] })),
+    cashOnHand: "8000",
+    taxReserveRate: "28",
+  };
+  const report = buildReport(ledger, "2026-11-13");
+  assert.equal(report.dailyFloor, 29.59);
+  assert.equal(report.requiredToDate, 384.67);
+  assert.equal(report.comparison, -184.67);
+  assert.equal(report.monthlyExpenses, 0.02);
+  assert.equal(report.trueProfit, -700.02);
+  assert.equal(report.taxReserve, 56);
+  assert.equal(report.noNewWorkRunway, 270);
+  assert.deepEqual(projectTotals(ledger, "2026-11").get("Studio"), { income: 200, costs: 900.02, profit: -700.02 });
+  assert.equal(buildReport(ledger, "2026-11-13", "2026-10").trueProfit, 0);
+
+  ledger.fixedCosts[0] = {
+    amount: 1, cycle: "monthly", businessUse: 100, startDate: "2028-02-01", endDate: "2028-02-15",
+    versions: [{ effectiveFrom: "2028-02-01", effectiveTo: null, amount: 1, cycle: "monthly", businessUse: 100 }],
+  };
+  assert.equal(buildReport(ledger, "2028-02-15").monthlyFixedCosts, 0.52);
+});
+
+test("D1 minor units retain old records and write integer cents for all new amount fields", async (t) => {
+  const { env, sqlite } = fixture(t, { migrateMinorUnits: false });
+  const owner = await account(sqlite, env, "owner");
+  sqlite.prepare(`INSERT INTO income_entries
+    (id, workspace_id, external_ref, occurred_on, source, amount, platform_fee, created_at, updated_at)
+    VALUES ('old', ?, 'old', '2026-10-31', 'direct', 10.10, 1.005, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`)
+    .run(owner.workspace);
+  sqlite.exec(readFileSync(new URL("../migrations/0011_ledger_minor_units.sql", import.meta.url), "utf8"));
+  const saved = sqlite.prepare("SELECT amount, amount_cents, platform_fee, platform_fee_cents FROM income_entries WHERE id = 'old'").get();
+  assert.equal(saved.amount_cents, 1010);
+  assert.equal(saved.platform_fee_cents, null);
+  assert.equal(saved.platform_fee, 1.005);
+  const [old] = (await loadWorkspace(env.DB, owner.workspace)).income;
+  assert.equal(old.platformFee, 1.01);
+  assert.equal(old.date, "2026-10-31");
+
+  await saveWorkspaceDraft(env, owner.workspace, await normalizeDraft({
+    timeZone: "Asia/Shanghai", cashOnHand: "2.675", monthlyIncomeEstimate: "4.005", appleFeeRate: 15,
+    fixedCosts: [{ name: "Monthly gear", amount: "2.675", cycle: "monthly", startDate: "2026-11-01" }],
+    income: [{ date: "2026-11-01", source: "app_store", recognition: "sold", amount: "0.10", externalRef: "new" }],
+    expenses: [{ date: "2026-11-02", category: "Gear", amount: "3.005" }],
+  }));
+  const ledger = await loadWorkspace(env.DB, owner.workspace);
+  const [cost] = ledger.fixedCosts;
+  assert.equal(sqlite.prepare("SELECT amount_cents FROM fixed_costs").get().amount_cents, 268);
+  assert.equal(sqlite.prepare("SELECT amount_cents FROM fixed_cost_versions").get().amount_cents, 268);
+  assert.equal(sqlite.prepare("SELECT amount_cents FROM expenses").get().amount_cents, 301);
+  assert.equal(sqlite.prepare("SELECT platform_fee_cents FROM income_entries WHERE external_ref = 'new'").get().platform_fee_cents, 2);
+  assert.equal(sqlite.prepare("SELECT cash_on_hand_cents FROM workspaces").get().cash_on_hand_cents, 268);
+  assert.equal(sqlite.prepare("SELECT monthly_income_estimate_cents FROM workspaces").get().monthly_income_estimate_cents, 401);
+  for (const amount of ["1.005", "1.015"]) {
+    await saveFixedCostRevision(env, owner.workspace, {
+      fixedCostId: cost.id, name: cost.name, effectiveFrom: "2026-11-02",
+      cycle: "monthly", businessUse: 100, amount,
+    }, "Asia/Shanghai");
+  }
+  assert.equal(sqlite.prepare("SELECT amount_cents FROM fixed_cost_versions WHERE effective_from = '2026-11-02'").get().amount_cents, 102);
+
+  sqlite.prepare("UPDATE income_entries SET amount = 20.2 WHERE id = 'old'").run();
+  const legacyWrite = (await loadWorkspace(env.DB, owner.workspace)).income.find((item) => item.id === "old");
+  assert.equal(legacyWrite.amount, 20.2);
+});
+
+test("a saved reporting zone wins over the device zone and sets Stripe date boundaries", async (t) => {
+  const { env, sqlite } = fixture(t);
+  const owner = await account(sqlite, env, "owner");
+  const post = (payload) => updateWorkspace({
+    env,
+    request: new Request(`${origin}/api/workspace`, { method: "POST", headers: { cookie: owner.cookie }, body: JSON.stringify(payload) }),
+  });
+  assert.equal((await post({ initTimeZone: "invalid zone" })).status, 400);
+  assert.equal((await post({ initTimeZone: "Asia/Shanghai" })).status, 200);
+  const secondDevice = await post({ initTimeZone: "America/Los_Angeles" });
+  assert.equal((await secondDevice.json()).ledger.workspace.timeZone, "Asia/Shanghai");
+  const settings = { cashOnHand: "", taxReserveRate: "", monthlyIncomeEstimate: "", appleFeeRate: "" };
+  const updated = await post({ settings: { ...settings, timeZone: "America/Los_Angeles" } });
+  assert.equal((await updated.json()).ledger.workspace.timeZone, "America/Los_Angeles");
+
+  const instant = new Date("2026-10-31T16:30:00Z");
+  assert.equal(dayInTimeZone(instant, "Asia/Shanghai"), "2026-11-01");
+  assert.equal(dayInTimeZone(instant, "America/Los_Angeles"), "2026-10-31");
+  t.mock.method(globalThis, "fetch", async () => Response.json({
+    data: [{ id: "txn_test", currency: "usd", created: instant.getTime() / 1000, amount: 268, fee: 23 }],
+    has_more: false,
+  }));
+  const [stripe] = await stripeTransactions("fixture", "Asia/Shanghai");
+  assert.equal(stripe.date, "2026-11-01");
+  assert.equal(stripe.amount, 2.68);
+  assert.equal(stripe.platformFee, 0.23);
+});
 
 async function account(sqlite, env, name) {
   const workspace = `workspace-${name}`;

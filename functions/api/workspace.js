@@ -1,7 +1,8 @@
-import { countNewSubscriptions, normalizeDraft, saveFixedCostRevision, saveWorkspaceDraft, loadWorkspace, updateExpense } from "../lib/ledger.js";
+import { countNewSubscriptions, nonnegativeUsd, normalizeDraft, saveFixedCostRevision, saveWorkspaceDraft, loadWorkspace, updateExpense } from "../lib/ledger.js";
 import { planFeatures } from "../lib/plan.js";
 import { clearedSessionCookie, readAuthenticatedUserId } from "../lib/session.js";
-import { dayInTimeZone, subscriptionTiming } from "../../billing-calendar.js";
+import { dayInTimeZone, subscriptionTiming, validTimeZone } from "../../billing-calendar.js";
+import { minorUnits } from "../../money.js";
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), {
   status,
@@ -37,7 +38,9 @@ export const onRequestExportGet = async ({ env, request }) => {
 export const onRequestPost = async ({ env, request }) => {
   const userId = await readAuthenticatedUserId(env, request.headers.get("cookie"));
   if (!userId) return json({ authenticated: false }, 401);
-  const workspace = await env.DB.prepare("SELECT id FROM workspaces WHERE owner_id = ?").bind(userId).first();
+  const workspace = await env.DB.prepare(
+    "SELECT w.id, u.timezone FROM workspaces w JOIN users u ON u.id = w.owner_id WHERE u.id = ?",
+  ).bind(userId).first();
   if (!workspace) return json({ error: "workspace_not_found" }, 404);
   let payload;
   try {
@@ -45,29 +48,44 @@ export const onRequestPost = async ({ env, request }) => {
   } catch {
     return json({ error: "invalid_json" }, 400);
   }
+  if (payload && Object.hasOwn(payload, "initTimeZone")) {
+    const timeZone = validTimeZone(payload.initTimeZone);
+    if (!timeZone) return json({ error: "invalid_time_zone" }, 400);
+    if (!validTimeZone(workspace.timezone)) {
+      await env.DB.prepare("UPDATE users SET timezone = ? WHERE id = ? AND timezone IS ?")
+        .bind(timeZone, userId, workspace.timezone).run();
+    }
+    return json({ authenticated: true, ledger: await loadWorkspace(env.DB, workspace.id) });
+  }
   if (payload?.settings) {
-    const { cashOnHand, taxReserveRate, monthlyIncomeEstimate, appleFeeRate } = payload.settings;
-    const optionalAmount = (value, max = Infinity) => value === ""
-      || (typeof value === "string" && value.trim() !== "" && Number.isFinite(Number(value))
-        && Number(value) >= 0 && Number(value) <= max);
-    if (!optionalAmount(cashOnHand) || !optionalAmount(taxReserveRate, 100)
+    const { cashOnHand, taxReserveRate, monthlyIncomeEstimate, appleFeeRate, timeZone: requestedTimeZone } = payload.settings;
+    const optionalAmount = (value) => value === "" || (typeof value === "string" && nonnegativeUsd(value) !== null);
+    const validTax = taxReserveRate === "" || (optionalAmount(taxReserveRate) && Number(taxReserveRate) <= 100);
+    const timeZone = validTimeZone(requestedTimeZone);
+    if (!optionalAmount(cashOnHand) || !validTax
       || !optionalAmount(monthlyIncomeEstimate) || !["", "15", "30"].includes(appleFeeRate)) {
       return json({ error: "invalid_settings" }, 400);
     }
+    if (requestedTimeZone !== undefined && !timeZone) return json({ error: "invalid_time_zone" }, 400);
     const draft = await normalizeDraft(payload.settings);
     const timestamp = new Date().toISOString();
-    await env.DB.prepare(
+    const cashCents = minorUnits(draft.cashOnHand);
+    const statements = [env.DB.prepare(
       `UPDATE workspaces SET cash_on_hand_as_of = CASE
           WHEN ? IS NULL THEN NULL WHEN cash_on_hand IS ? THEN cash_on_hand_as_of ELSE ? END,
-         cash_on_hand = ?, tax_reserve_rate = ?, apple_fee_rate = ?, monthly_income_estimate = ?, updated_at = ?
+         cash_on_hand = ?, cash_on_hand_cents = ?, tax_reserve_rate = ?, apple_fee_rate = ?,
+         monthly_income_estimate = ?, monthly_income_estimate_cents = ?, updated_at = ?
        WHERE id = ?`,
     ).bind(
-      draft.cashOnHand, draft.cashOnHand, timestamp, draft.cashOnHand, draft.taxReserveRate,
-      draft.appleFeeRate, draft.monthlyIncomeEstimate, timestamp, workspace.id,
-    ).run();
+      cashCents, draft.cashOnHand, timestamp, draft.cashOnHand, cashCents, draft.taxReserveRate,
+      draft.appleFeeRate, draft.monthlyIncomeEstimate, minorUnits(draft.monthlyIncomeEstimate), timestamp, workspace.id,
+    )];
+    if (timeZone) statements.push(env.DB.prepare("UPDATE users SET timezone = ?, updated_at = ? WHERE id = ?")
+      .bind(timeZone, timestamp, userId));
+    await env.DB.batch(statements);
     return json({ authenticated: true, ledger: await loadWorkspace(env.DB, workspace.id) });
   }
-  const draft = await normalizeDraft(payload);
+  const draft = await normalizeDraft({ ...payload, timeZone: validTimeZone(workspace.timezone) || payload?.timeZone });
   const workspaceRecord = await env.DB.prepare("SELECT plan FROM workspaces WHERE id = ?").bind(workspace.id).first();
   const features = planFeatures(workspaceRecord?.plan);
   const subscriptionCount = await countNewSubscriptions(env.DB, workspace.id, draft);
@@ -87,7 +105,9 @@ export const onRequestPost = async ({ env, request }) => {
 export const onRequestPut = async ({ env, request }) => {
   const userId = await readAuthenticatedUserId(env, request.headers.get("cookie"));
   if (!userId) return json({ authenticated: false }, 401);
-  const workspace = await env.DB.prepare("SELECT id FROM workspaces WHERE owner_id = ?").bind(userId).first();
+  const workspace = await env.DB.prepare(
+    "SELECT w.id, u.timezone FROM workspaces w JOIN users u ON u.id = w.owner_id WHERE u.id = ?",
+  ).bind(userId).first();
   if (!workspace) return json({ error: "workspace_not_found" }, 404);
 
   let payload;
@@ -106,7 +126,7 @@ export const onRequestPut = async ({ env, request }) => {
       const ledger = await saveFixedCostRevision(env, workspace.id, {
         ...payload.revision,
         fixedCostId: payload.revision.fixedCostId || payload.fixedCostId,
-      });
+      }, workspace.timezone);
       return json({ authenticated: true, ledger });
     } catch (error) {
       return json(
@@ -123,7 +143,7 @@ export const onRequestPut = async ({ env, request }) => {
   const workspaceRecord = await env.DB.prepare("SELECT plan FROM workspaces WHERE id = ?").bind(workspace.id).first();
   if (!planFeatures(workspaceRecord?.plan).subscriptionReview) return json({ error: "pro_required" }, 403);
   const now = new Date();
-  const today = dayInTimeZone(now, payload.timeZone);
+  const today = dayInTimeZone(now, validTimeZone(workspace.timezone) || payload.timeZone);
   const fixedCost = await env.DB.prepare(
     `SELECT fc.updated_at AS updatedAt, fc.next_billing_date AS nextBillingDate,
       fc.start_date AS startDate, fc.end_date AS endDate,
