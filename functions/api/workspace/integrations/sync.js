@@ -33,7 +33,7 @@ async function syncAppStore(env, workspace, request) {
     const code = expected ? error.message : "app_store_sync_failed";
     await env.DB.prepare("UPDATE integrations SET last_error = ? WHERE id = ? AND encrypted_credentials = ?")
       .bind(code, integration.id, integration.encrypted_credentials).run();
-    return json({ error: code }, expected ? error.status : 500);
+    return json({ error: code, ...(expected ? error.context : {}) }, expected ? error.status : 500);
   }
 }
 

@@ -105,6 +105,7 @@ export const onRequestPost = async ({ env, request }) => {
       const expected = error instanceof AppStoreReportError;
       return json({
         error: expected ? error.message : "app_store_connect_failed",
+        ...(expected ? error.context : {}),
       }, expected ? error.status : 500);
     }
   }

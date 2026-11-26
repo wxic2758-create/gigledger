@@ -198,6 +198,8 @@ test("App Store self-service verifies a team key, syncs each report, and only co
       Buffer.from(signature, "base64url"), Buffer.from(`${header}.${payload}`)), true);
     assert.equal(url.searchParams.get("filter[vendorNumber]"), key.vendorNumber);
     if (appleMode === "denied") return Response.json({ details: "untrusted response body" }, { status: 403 });
+    if (appleMode === "upstream") return endpoint === "/v1/salesReports" ? new Response(null, { status: 404 })
+      : Response.json({ errors: [{ code: "PARAMETER_ERROR.INVALID", detail: "private diagnostic text" }] }, { status: 400 });
     if (appleMode === "missing") return new Response(null, { status: 404 });
     if (appleMode === "malformed") return new Response("unknown\theaders\n");
     let report;
@@ -240,6 +242,12 @@ test("App Store self-service verifies a team key, syncs each report, and only co
   assert.equal(denied.status, 403);
   assert.deepEqual(await denied.json(), { error: "app_store_permission_denied" });
   assert.equal(sqlite.prepare("SELECT COUNT(*) AS count FROM integrations").get().count, 0);
+  appleMode = "upstream";
+  const upstream = await call(connectIntegration, other, { body: key });
+  assert.equal(upstream.status, 424);
+  assert.deepEqual(await upstream.json(), {
+    error: "app_store_download_failed", reportKind: "finance", appleStatus: 400, appleCode: "PARAMETER_ERROR.INVALID",
+  });
   appleMode = "valid";
   const connected = await call(connectIntegration, owner, { body: key });
   assert.equal(connected.status, 200);

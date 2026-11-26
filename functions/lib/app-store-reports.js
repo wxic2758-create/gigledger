@@ -10,9 +10,10 @@ const MAX_DOWNLOAD_BYTES = 4 * 1024 * 1024;
 const MAX_REPORT_BYTES = 8 * 1024 * 1024;
 
 export class AppStoreReportError extends Error {
-  constructor(code, status) {
+  constructor(code, status, context) {
     super(code);
     this.status = status;
+    this.context = context;
   }
 }
 
@@ -202,14 +203,26 @@ export async function downloadAppStoreReport(credential, kind, period) {
       redirect: "error",
       signal: AbortSignal.timeout(12000),
     });
-  } catch {
-    throw new AppStoreReportError("app_store_unreachable", 502);
+  } catch (error) {
+    const transport = /redirect/i.test(error?.message ?? "") ? "redirect"
+      : /timeout|abort/i.test(error?.name ?? "") ? "timeout" : "network";
+    throw new AppStoreReportError("app_store_unreachable", 424, { reportKind: kind, transport });
   }
   if (response.status === 404) return null;
   if (response.status === 401) throw new AppStoreReportError("app_store_auth_failed", 400);
   if (response.status === 403) throw new AppStoreReportError("app_store_permission_denied", 403);
   if (response.status === 429) throw new AppStoreReportError("app_store_rate_limited", 429);
-  if (!response.ok) throw new AppStoreReportError("app_store_download_failed", 502);
+  if (!response.ok) {
+    let appleCode;
+    try {
+      const bytes = await boundedBytes(response.body, 16_384);
+      const code = JSON.parse(new TextDecoder().decode(bytes)).errors?.[0]?.code;
+      if (typeof code === "string" && /^[A-Z][A-Z0-9_.-]{0,79}$/.test(code)) appleCode = code;
+    } catch {}
+    throw new AppStoreReportError("app_store_download_failed", 424, {
+      reportKind: kind, appleStatus: response.status, ...(appleCode ? { appleCode } : {}),
+    });
+  }
   try {
     const text = await reportText(response);
     return kind === "sales" ? parseSalesReport(text, period) : parseFinanceReport(text);
